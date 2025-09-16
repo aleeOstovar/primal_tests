@@ -1,0 +1,94 @@
+{
+  "name": "Get_stock_price",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n  \"ticker\":\"ticker name\"\n}"
+      },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        260,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "95ce652a-005e-4d5d-bc38-71225cb06ec0",
+              "name": "ticker",
+              "value": "={{ $json.ticker }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        340
+      ],
+      "id": "8f623230-4cea-4f9d-bcb7-7cd622c208e8",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "// For direct testing in n8n\nmodule.exports = async function() {\n  // Create a test item if none are provided\n  const items = this.getInputData();\n  \n  if (items.length === 0) {\n    // Test with a hardcoded ticker\n    const ticker = 'AAPL';\n    const apiKey = 'cveufg9r01qjugsf1stgcveufg9r01qjugsf1su0';\n    const url = `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${apiKey}`;\n    \n    const response = await this.helpers.httpRequest({\n      method: 'GET',\n      url: url,\n      json: true,\n    });\n    \n    return [{\n      json: {\n        ticker,\n        currentPrice: response.c || null,\n        highPrice: response.h || null,\n        lowPrice: response.l || null,\n        openPrice: response.o || null,\n        previousClose: response.pc || null,\n        timestamp: response.t || null,\n      }\n    }];\n  }\n  \n  // Process normal items\n  return Promise.all(items.map(async (item) => {\n    const ticker = item.json?.ticker;\n    \n    if (!ticker) {\n      throw new Error('ticker is required');\n    }\n    \n    const apiKey = 'cveufg9r01qjugsf1stgcveufg9r01qjugsf1su0';\n    const url = `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${apiKey}`;\n    \n    const response = await this.helpers.httpRequest({\n      method: 'GET',\n      url: url,\n      json: true,\n    });\n    \n    return {\n      json: {\n        ticker,\n        currentPrice: response.c || null,\n        highPrice: response.h || null,\n        lowPrice: response.l || null,\n        openPrice: response.o || null,\n        previousClose: response.pc || null,\n        timestamp: response.t || null,\n      }\n    };\n  }));\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        340
+      ],
+      "id": "fe11bee7-e8f5-479b-adad-76d5ad0cd978",
+      "name": "Code"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "ticker": "AAPL"
+        }
+      }
+    ]
+  },
+  "triggerCount": 0,
+  "meta": null
+}

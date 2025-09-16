@@ -1,0 +1,326 @@
+{
+  "name": "My workflow 4",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        0
+      ],
+      "id": "20bdf4f9-7400-42b2-af85-2c4d8e020efd",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://py2.springsfern.in/stream/1484864?hash=d13b1a&d=true",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        160,
+        0
+      ],
+      "id": "1286d486-19d7-4519-836f-03ab43f70b4e",
+      "name": "HTTP Request",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.content }}",
+        "options": {
+          "systemMessage": "=You are CSVStorageAgent, responsible for appending structured tabular data to a Google Sheet. You must use two tools in sequence, first pass to preprocessData, wait untill it return a result after that pass it's output to addToCsv :\n\npreprocessData: for validating and possibly transforming the data (without changing its structural format).\n\naddToCsv: for appending the final processed data to the Google Sheet.\n\nYour role is to pass the json input to preprocessData tool then pass the result of that tool to the addToCsv tool. Follow the instructions below exactly.\n\n🔹 Task Objective\n* You will receive a JSON object\n* Your job is to:\n\n  - Pass the raw input JSON to preprocessData.\n\n  - Pass the output from preprocessData (untouched) to addToCsv.\n\n\n⚠️ Important:\n\nNever alter the structure of the input manually. All processing should go through the preprocessData tool.\n\n🔹 Tool Invocation Workflow\nFirst, pass data to preprocessData.\nIf preprocessing is successful, then pass preprocessData output to addToCsv \n\n✅ Only pass the output of preprocessData to addToCsv.\n🚫 Never use the original input directly with addToCsv.\n\n🔹 Response Rules\nAfter the tools execute:\n\nOn success:\n✅ \"Data appended successfully.\"\n\nOn error (from either tool):\n❌ \"Error during processing: <error message>\"\n\nReport only based on actual tool responses. Never guess or assume.\n\n🔹 Output Style\nBe concise, professional, and clear.\n\nIf there's an error, briefly explain it (e.g., “Row 2 has only 3 values but 4 columns were expected.”).\n\nAvoid excessive verbosity or speculation.\n\n🔹 Example Procedure\nReceive input JSON.\n\nPass the JSON to preprocessData.\n\nIf preprocessing is successful, pass the result to addToCsv.\n\nRespond based on the result of addToCsv.\n\n",
+          "passthroughBinaryImages": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "eaae1975-ea48-4b3e-bb5d-4f2dc2824ecf",
+      "name": "AI Agent",
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": "mistralai/mistral-small-3.1-24b-instruct:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        860,
+        320
+      ],
+      "id": "5ac19f55-58d8-4293-b665-18c4142d8131",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "VXrVH3CxR9uCUJ4X",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "this tool is addToCsv , call this tool to store data into a csv file",
+        "workflowId": {
+          "__rl": true,
+          "value": "LlUwI9e7Qlz2JbRL",
+          "mode": "list",
+          "cachedResultName": "addToCsv"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1340,
+        320
+      ],
+      "id": "1fb95301-bec5-474b-9f6d-662caa19d14e",
+      "name": "Call n8n Workflow Tool"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.ocr.space/parse/image",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\",\n    \"Accept\": \"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8\",\n    \"Accept-Language\": \"en-US,en;q=0.9\",\n    \"Accept-Encoding\": \"gzip, deflate, br\",\n    \"Connection\": \"keep-alive\",\n    \"Upgrade-Insecure-Requests\": \"1\"\n}",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "K89182017288957"
+            },
+            {
+              "name": "language",
+              "value": "eng"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "filetype",
+              "value": "jpeg"
+            },
+            {
+              "name": "OCREngine",
+              "value": "2"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "6bd514d1-b974-4e89-885c-f7257b4f3ed5",
+      "name": "HTTP Request1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "96166a31-2039-4f19-9460-7f01ce8f00e0",
+              "name": "content",
+              "value": "={{ $json.ParsedResults[0].ParsedText}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        680,
+        0
+      ],
+      "id": "57975369-2430-4576-a267-4898caf6945b",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "description": "this tool is preprocessData, call this tool to perform preprocessing on json input ",
+        "workflowId": {
+          "__rl": true,
+          "value": "8kg2dAarX3W5IIW7",
+          "mode": "list",
+          "cachedResultName": "My Sub-Workflow 1"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1100,
+        320
+      ],
+      "id": "7912e424-7865-4ac3-bdc3-a5b090a82315",
+      "name": "preprocessData"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-pro-exp",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        540,
+        400
+      ],
+      "id": "671813c3-8f85-44bb-bc91-25c441205d19",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "s03mjiGtP7PKN2qw",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call n8n Workflow Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "preprocessData": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {
+    "Edit Fields1": [
+      {
+        "json": {
+          "content": "Original Asset Name\n18579.wem\n32660.wem\n33681.wem\n56883.wem\n65714.wem\n66117.wem\n148445.wem\n154644.wem\n161111.wem\n246530.wem\n258927.wem\n261116.wem\n276151.wem\n286352.wem\n292345.wem\n328157.wem\n329234.wem\n375295.wem\n403378.wem\n418023.wem\n425887.wem\n427088.wem\n435133.wem\n441931.wem\n489527.wem\n492761.wem\n504290.wem\nReplacing File Name\nE000000000004893\nE000000\n00007F94\nEO000I\n008391\nE0000\n00DE33\nE00000\n00100B2\nE0000000\n0010245\nE000000C\n0000243DD\nE000000000025C14\nE000000000027557\nE00000000003C302\nE00000000003F36F\nE00000000003FBFC\nE00000\n0436B7\nE000000000045E90\nE0000000000475F9\nE0000000000501DD\nE000000000050612\nE00000000005B9FF\nE0000000000627B2\nE0000000000660E7\nE000000000067F9F\nE000000000068450\nE00000000006A3BD\nE00000000006BE4B\nE000000000077837\nE0000000000784D9\nE00000000007B1E2"
+        }
+      }
+    ]
+  },
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

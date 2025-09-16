@@ -1,0 +1,61 @@
+{
+  "name": "My workflow 4",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Get the URL from the Telegram message\nconst url = $json.url;\n\n// Split the URL by the '/' character and take the last part\n// This gives us the unique ID of the GIF\nconst gifId = url.split('/').pop();\n\n// Return the ID for the next node to use\nreturn {\n  gifId: gifId\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        40,
+        -220
+      ],
+      "id": "6e30e3f7-6ab7-44ea-b4fe-f60a4c603106",
+      "name": "Code",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "url": "=https://api.redgifs.com/v2/gifs/{{ $json.gifId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36\",\n  \"Accept\": \"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7\",\n  \"Accept-Encoding\": \"gzip, deflate, br\",\n  \"Accept-Language\": \"en-US,en;q=0.9\",\n  \"Referer\": \"https://www.google.com/\",\n  \"Upgrade-Insecure-Requests\": \"1\",\n  \"Sec-Fetch-Dest\": \"document\",\n  \"Sec-Fetch-Mode\": \"navigate\",\n  \"Sec-Fetch-Site\": \"cross-site\",\n  \"Sec-Fetch-User\": \"?1\",\n  \"Connection\": \"keep-alive\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        -220
+      ],
+      "id": "c7b335c1-6a66-46de-be3f-7432f8b577bc",
+      "name": "HTTP Request1",
+      "disabled": true
+    }
+  ],
+  "connections": {
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 1,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

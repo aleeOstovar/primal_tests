@@ -1,0 +1,713 @@
+{
+  "name": "test_bot_analysis",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cf5f7210-5b54-4f4a-abf7-87873be82df4",
+              "name": "ticker",
+              "value": "={{ $json.query }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        512,
+        736
+      ],
+      "id": "cf888e83-a6f5-4e03-ba2e-d6130f9132a5",
+      "name": "Set Ticker1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.chart-img.com/v2/tradingview/advanced-chart/storage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "qEV3dXqftl8EuoEZL5Oft83Uy7uaCXa3aDSVUymT"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"symbol\": \"{{ $json.ticker }}\",\n  \"theme\": \"dark\",\n  \"studies\": [\n    {\n      \"name\": \"Bollinger Bands\"\n    },\n    {\n      \"name\": \"Relative Strength Index\"\n    },\n    {\n      \"name\": \"MACD\"\n    }\n    \n  ]\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        736
+      ],
+      "id": "c3d3a250-0239-4e26-a0d6-00d0fcbe3655",
+      "name": "Get Chart URL1"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        928,
+        736
+      ],
+      "id": "5358496f-f4f0-4f10-96ba-343cc20cafa1",
+      "name": "Download Chart1"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "text": "=# Role\n\nYou are an expert financial analyst specializing in technical analysis of stock charts. Your role is to analyze financial charts provided to you and offer comprehensive insights into the technical aspects, including candlestick patterns, MACD indicators, volume trends, and overall market sentiment. You must provide a detailed breakdown of the chart, highlighting key areas of interest and actionable insights.\n\nWhen analyzing a stock chart, always include the following:\n\n1. **Candlestick Analysis**:\n   - Identify and explain any significant candlestick patterns (e.g., bullish engulfing, doji, hammer).\n   - Comment on the overall trend (bullish, bearish, or sideways).\n   - Highlight any breakout or pullback zones.\n\n2. **MACD Analysis**:\n   - Describe the current state of the MACD line and Signal line (e.g., bullish crossover, bearish crossover).\n   - Discuss the MACD histogram and its implications for momentum.\n   - Identify any divergences between the MACD and the price action.\n\n3. **Bollinger Bands**:\n   - Highlight any significant changes in trading volume.\n   - Explain how volume supports or contradicts price movements.\n   - Indicate any unusual spikes in volume that may suggest institutional activity.\n\n4. **RSI**:\n   - Highlight any significant changes in trading volume.\n   - Explain how RSI supports or contradicts price movements.\n   - Indicate any unusual spikes in RSI that may suggest institutional activity.\n\n5. **Support and Resistance Levels**:\n   - Identify key support and resistance zones based on the chart.\n   - Discuss the importance of these levels for potential reversals or breakouts.\n\n6. **Actionable Insights**:\n   - Provide clear guidance on potential buy, sell, or hold strategies.\n   - Suggest what to watch for in the near term, including confirmation signals or potential risks.\n\n7. ** considerable trading strategy**\n   -A: Identify Price Extremes: Buy when the price touches the lower Bollinger Band and RSI is below 30; sell when it touches the upper band and RSI is above 70.\n   -B: Confirm Momentum: Wait for MACD to cross above the signal line for a buy or below for a sell.\n   -C: Enter & Exit: Enter after confirmation, set a stop-loss near recent highs/lows, and take profit at the middle Bollinger Band or based on a risk-reward ratio.\n\n8. **Other Observations**:\n   - Note any patterns or indicators that are relevant to the analysis.\n   - Offer insights into market sentiment or other broader trends based on the chart.\n\n\nBe clear, concise, and data-driven in your analysis. Your goal is to provide actionable information that traders and investors can use to make informed decisions. Always explain your reasoning for any conclusions you draw from the chart.\n",
+        "inputType": "base64",
+        "simplify": false,
+        "options": {
+          "detail": "auto"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        1136,
+        736
+      ],
+      "id": "69d13e40-4bf2-4613-8c0e-ed111ce5eb4d",
+      "name": "Technical Analysis1",
+      "credentials": {
+        "openAiApi": {
+          "id": "N6A8LE2NbR2qTBzY",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fdf7e016-7082-4146-9038-454139023990",
+              "name": "response",
+              "value": "={{ $('Technical Analysis1').item.json.choices[0].message.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1328,
+        736
+      ],
+      "id": "1c374979-d22c-4232-a8fd-7f7fbd86a08e",
+      "name": "response1"
+    },
+    {
+      "parameters": {
+        "content": "# GET CHART"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        208,
+        672
+      ],
+      "id": "9d47c034-8a4a-4b13-89dd-da863876a0b3",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "95ce652a-005e-4d5d-bc38-71225cb06ec0",
+              "name": "ticker",
+              "value": "={{ $json.ticker }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1424,
+        480
+      ],
+      "id": "33c5c8b3-ae09-4e7a-b9d2-b6a3200900f5",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "// For direct testing in n8n\nmodule.exports = async function() {\n  // Create a test item if none are provided\n  const items = this.getInputData();\n  \n  if (items.length === 0) {\n    // Test with a hardcoded ticker\n    const ticker = 'AAPL';\n    const apiKey = 'cveufg9r01qjugsf1stgcveufg9r01qjugsf1su0';\n    const url = `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${apiKey}`;\n    \n    const response = await this.helpers.httpRequest({\n      method: 'GET',\n      url: url,\n      json: true,\n    });\n    \n    return [{\n      json: {\n        ticker,\n        currentPrice: response.c || null,\n        highPrice: response.h || null,\n        lowPrice: response.l || null,\n        openPrice: response.o || null,\n        previousClose: response.pc || null,\n        timestamp: response.t || null,\n      }\n    }];\n  }\n  \n  // Process normal items\n  return Promise.all(items.map(async (item) => {\n    const ticker = item.json?.ticker;\n    \n    if (!ticker) {\n      throw new Error('ticker is required');\n    }\n    \n    const apiKey = 'cveufg9r01qjugsf1stgcveufg9r01qjugsf1su0';\n    const url = `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${apiKey}`;\n    \n    const response = await this.helpers.httpRequest({\n      method: 'GET',\n      url: url,\n      json: true,\n    });\n    \n    return {\n      json: {\n        ticker,\n        currentPrice: response.c || null,\n        highPrice: response.h || null,\n        lowPrice: response.l || null,\n        openPrice: response.o || null,\n        previousClose: response.pc || null,\n        timestamp: response.t || null,\n      }\n    };\n  }));\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1648,
+        480
+      ],
+      "id": "e80f3347-fbf4-4d8e-8c27-b154216eccc2",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "8cd6baab-2d0a-4bb5-ab7c-cd7e9f5544b6",
+      "typeVersion": 1.1,
+      "name": "Workflow Input Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        272,
+        736
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        1248,
+        480
+      ],
+      "id": "5ae6b41f-8660-4591-a6c5-396bdeacf3f8",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "content": "# GET PRICE"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1152,
+        416
+      ],
+      "id": "a8b6df03-855a-466f-8869-fa1868531a67",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        1616,
+        -48
+      ],
+      "id": "eba706d6-aee1-4406-bd4e-dcefd1319504",
+      "name": "Telegram Trigger",
+      "webhookId": "ae275266-3971-4b84-b1db-6962a5b6b092",
+      "credentials": {
+        "telegramApi": {
+          "id": "7hnQv4dQqIynqpv9",
+          "name": "Jenny_English Teacher"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "19ec337d-50ba-4f9f-98fb-01ac5c3c67df",
+                    "leftValue": "={{ $json.message.voice.file_id }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1792,
+        -48
+      ],
+      "id": "799deb23-5c70-4cb3-8ac4-cec6fe394869",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2080,
+        48
+      ],
+      "id": "ab02917b-25b7-4c87-85c1-42052aef962b",
+      "name": "Telegram",
+      "webhookId": "026d1f72-b50f-40f3-9b4f-29dd1eab831f",
+      "credentials": {
+        "telegramApi": {
+          "id": "yRmQ6CUiGTiXbpOx",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        2272,
+        48
+      ],
+      "id": "82ee99e5-e3f5-4ecf-a185-44dff876c0c7",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "N6A8LE2NbR2qTBzY",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "=you are \"Big D\" developed and Created by AI team in Nexira. a financial assistant equipped with tools to fetch cryptocurrency prices and provide technical analysis. \n\nWhen a user requests the price of a specific cryptocurrency, construct the CoinMarketCap API URL using the template: `https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol={symbol}`. Replace the `{symbol}` placeholder with the symbol provided by the user to fetch the correct data.\n\nWhen discussing technical analysis related to stocks or cryptocurrencies, pass a standard prompt to the Technical_analysis tool, where a specialized agent can assist with the analysis.\n\n# Steps\n\n1. **Cryptocurrency Price Fetching:**\n   - Identify the user's request for a cryptocurrency price.\n   - Use the provided cryptocurrency symbol to construct the API URL.\n   - Fetch cryptocurrency prices using the CoinMarketCap API.\n\n2. **Technical Analysis Discussion:**\n   - Recognize requests for technical analysis on stocks or cryptocurrencies.\n   - Prepare a standard prompt to pass to the Technical_analysis tool.\n\n# Output Format\n\n- For cryptocurrency prices: Provide the current price in USD with additional information if available (like price changes in past 24h or market rank).\n- For technical analysis requests: Confirm receipt, present an smooth key elements of the analysis if applicable.\n\n# Examples\n\n**Example 1: Cryptocurrency Price Request**\n\n- *User Input:* \"What is the price of BTC?\"\n  \n- *Process:* \n  - Identify 'BTC' as the symbol.\n  - Construct the API URL: `https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=BTC`\n  - Fetch and provide the current price of BTC in USD.\n\n**Example 2: Technical Analysis Request**\n\n- *User Input:* \"Can you perform a technical analysis on ETH?\"\n  \n- *Process:*\n  - Recognize the request for technical analysis on 'ETH'.\n  - Pass a standard prompt to the Technical_analysis tool.\n  - Summarize the analysis received from the tool.\n\n# Notes\n\n- Always confirm which cryptocurrency or stock the user is inquiring about before proceeding.\n- The CoinMarketCap API URL should always be checked for accuracy with the user's input.\n- Ensure the standard prompt for technical analysis is engaging and clear for the specialized agent to deliver effective results.\n- your response to user must be in the same language user talked to you.\n- never mention  or add external links or urls except www.capitalino.io.\n- if user asked about analysis at the end of your response always invite them to visit WWW.capitalino.io for more consults and professional advices"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        2592,
+        -48
+      ],
+      "id": "5f841f11-77fe-4456-9879-6a5708df6cdf",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2496,
+        272
+      ],
+      "id": "240dbc53-3043-45cd-8830-01ee258cd57b",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YUA487zJjgANPYyH",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Switch').item.json.message.chat.id }}\n228598959",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3024,
+        -48
+      ],
+      "id": "1c83a127-fe9e-4382-8ce6-d7cbc6aa6546",
+      "name": "Telegram1",
+      "webhookId": "c1252f4e-55a7-43a8-9fb2-d305ab4a8947",
+      "credentials": {
+        "telegramApi": {
+          "id": "7hnQv4dQqIynqpv9",
+          "name": "Jenny_English Teacher"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Function to fetch cryptocurrency price by using CoinMarketCap API",
+        "url": "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol={symbol}",
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [
+            {
+              "name": "=X-CMC_PRO_API_KEY",
+              "valueProvider": "fieldValue",
+              "value": "092920d0-3b51-42c0-8ffc-a84589149e8d"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        2736,
+        272
+      ],
+      "id": "8767d95a-09c2-49a3-babd-080fdff1ea9a",
+      "name": "fetch_crypto_price"
+    },
+    {
+      "parameters": {
+        "name": "Technical_analysis",
+        "workflowId": {
+          "__rl": true,
+          "value": "tb6siCOPquhslfeT",
+          "mode": "list",
+          "cachedResultName": "TechnicalAnalysis workflow"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2,
+      "position": [
+        2928,
+        272
+      ],
+      "id": "bb9354ad-eb6c-437f-b6d8-a2947573eb9a",
+      "name": "Technical_analysis"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "41e48c8c-9f85-4c67-bd5a-c47e37d9371f",
+              "name": "text",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2176,
+        -144
+      ],
+      "id": "db5001fd-288f-4017-9f49-0b9340114e28",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://prod-16.uksouth.logic.azure.com:443/workflows/609d7fdea4194779882b838fa1f6ae11/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XXOZZzCudeOivvtqtNXZ5bnxHrdizF0qB7kA-At7sSY",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "={{ $json['Final output'] }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {}
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3456,
+        1600
+      ],
+      "id": "53ed2035-c712-423a-a763-edb6ef6185e3",
+      "name": "Send response in Teams"
+    }
+  ],
+  "connections": {
+    "Set Ticker1": {
+      "main": [
+        [
+          {
+            "node": "Get Chart URL1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Chart URL1": {
+      "main": [
+        [
+          {
+            "node": "Download Chart1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Chart1": {
+      "main": [
+        [
+          {
+            "node": "Technical Analysis1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Technical Analysis1": {
+      "main": [
+        [
+          {
+            "node": "response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Input Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Ticker1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Telegram1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch_crypto_price": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Technical_analysis": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

@@ -1,0 +1,945 @@
+{
+  "name": "DialPadDataStoring - UserCalls_Anomaly_Check_AI",
+  "nodes": [
+    {
+      "parameters": {
+        "collection": "DialPad_Transcripts",
+        "options": {
+          "sort": "{\n    \"call_datetime\": -1\n}"
+        },
+        "query": "={\n  \"agent_id\": \"{{ $json.id }}\",\n  \"call_datetime\": {\n    \"$gte\": \"{{ (Date.now() - 24 * 60 * 60 * 1000).toString() }}\"\n  }\n}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        -1664,
+        2272
+      ],
+      "id": "98f0f26e-0762-4432-8f89-7bfbe5bbceff",
+      "name": "GetTranscriptsOrdered1",
+      "retryOnFail": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5e09f359-6154-426f-9c7c-873dae443605",
+              "name": "AI_Results",
+              "value": "={{ $json.message.content }}",
+              "type": "object"
+            },
+            {
+              "id": "c4b824bf-63c9-4b28-9362-344bd14a7a42",
+              "name": "call_id",
+              "value": "={{ $('Loop Over Items2').item.json.call_id }}",
+              "type": "string"
+            },
+            {
+              "id": "7df54218-c923-4e13-9382-1026844f7377",
+              "name": "agent_id",
+              "value": "={{ $('Loop Over Items2').item.json.agent_id }}",
+              "type": "string"
+            },
+            {
+              "id": "2e99cfb1-e6d6-4006-b976-fc8b64ce26a2",
+              "name": "call_datetime",
+              "value": "={{ $('Loop Over Items2').item.json.call_datetime }}",
+              "type": "string"
+            },
+            {
+              "id": "70271513-733d-4cb1-ad70-e4fb5a2df472",
+              "name": "is_processed",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "f9986c31-0ef8-4c7c-b59a-6cd2fbfa2314",
+              "name": "agent_name",
+              "value": "={{ $('Loop Over Items2').item.json.agent_name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        368,
+        2576
+      ],
+      "id": "3189580a-4fea-426f-a98d-06412621b046",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "collection": "AI_Agent_anomaly_Scoring",
+        "options": {
+          "limit": 5,
+          "projection": "{\n  \"call_id\":1,\n  \"agent_id\":1,\n  \"call_datetime\":1,\n  \"is_processed\":1\n}"
+        },
+        "query": "={\n  \"agent_id\": \"{{ $json.id }}\",\n  \"is_processed\": {\n    \"$exists\": true\n  }\n}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        -1664,
+        2464
+      ],
+      "id": "892cbc7f-941f-4239-93f1-eff31bbff782",
+      "name": "GetPreviousScores1",
+      "retryOnFail": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "AI_Agent_anomaly_Scoring",
+        "updateKey": "call_id",
+        "fields": "=call_id, agent_id,agent_name, call_datetime, AI_Results, is_processed",
+        "upsert": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        2576
+      ],
+      "id": "a551a81f-effb-4ba3-8072-5eb6262b7ad9",
+      "name": "MongoDB4",
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -816,
+        2368
+      ],
+      "id": "e360d91f-e351-4e8c-bcf9-13a4916f5b5e",
+      "name": "Loop Over Items2",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        2576
+      ],
+      "id": "2b1a52a1-9c3b-445e-91ff-4cf56362f5c1",
+      "name": "Wait5",
+      "webhookId": "100f23a3-2cd7-43c1-af7d-eb35064846db"
+    },
+    {
+      "parameters": {
+        "content": "The workflow now runs every 24 hours to score anomalies\n",
+        "height": 180,
+        "width": 360,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2544,
+        2320
+      ],
+      "typeVersion": 1,
+      "id": "5b7c82a7-d94a-4b67-bbc1-e4a98f1912f4",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "advanced": true,
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "call_id",
+              "field2": "call_id"
+            }
+          ]
+        },
+        "joinMode": "keepNonMatches",
+        "outputDataFrom": "input1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -1376,
+        2368
+      ],
+      "id": "b796432e-f090-44c2-a364-de4f70aa036d",
+      "name": "Merge2",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "52922fdf-860b-41c2-b738-204b64e717c2",
+              "leftValue": "={{ $json.call_duration }}",
+              "rightValue": 60000,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -1120,
+        2368
+      ],
+      "id": "591a4156-67bc-4698-b962-3e4bee9190d0",
+      "name": "HighDurationCalls2",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "content": "# Ai Anomaly Scoring for calls more than 60 seconds\n",
+        "height": 200,
+        "width": 420,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2544,
+        2112
+      ],
+      "id": "0ee65c35-0004-4884-8fb6-c778ae4d953e",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=✅ FINAL PROMPT – Anomaly Detective (Clean, Non-Overlapping Version)\n\nYou are **Anomaly Detective**, an AI performance analyst specializing in identifying **behavioral anomalies, professional issues, and social/moral red flags** in recorded phone calls related to **Express Homebuyers (EHB)**.\n\nYou will be provided with structured data from a single interaction between a company representative (referred to as the **agent**) and a customer.\n\nEach call includes the following fields:\n\n- `call_id`: Unique identifier for the call  \n- `agent_id`: Unique identifier for the agent  \n- `agent_name`: Full name of the agent  \n- `call_datetime`: ISO 8601 timestamp of when the call occurred  \n- `transcript`: Verbatim dialogue between agent and customer, labeled by speaker\n\n---\n\n### ⚠️ CALL FILTERING – EHB Relevance Only\n\nIf the transcript clearly shows the call is **not related to Express Homebuyers** (e.g. misdial, wrong number, unrelated inquiry, or internal calls), skip analysis and return:\n\n```json\n{\n  \"AI_summary\": \"No scoring required – call is not related to Express Homebuyers.\",\n  \"details\": {},\n  \"overall_score\": 0,\n\"not_related\": true\n}\n\nDo not score calls unrelated to EHB.\n\n⸻\n\n🎯 YOUR TASK\n\nYour task is to:\n    1.\tfirst of all, DO NOT Evaluate or Scoring any calls that is NOT RELATED TO  **Express Homebuyers** it includes internal calls between employees.\n\t2.\tEvaluate only the agent’s behavior and professionalism, not sales process or script usage.\n\t3.\tDetect behavioral anomalies, tone issues, emotional missteps, or ethical risks from either the agent or the customer.\n\t4.\tScore the call in terms of professionalism and communication clarity.\n\t5.\tFocus on whether the agent puts the customer first, maintains a respectful tone, and handles the conversation with integrity.\n\t6.\tEnsure no moral or reputational risks are present.\n    7.  Any complains from customer in the transcript **should be** outputed in the model summary output.\n\n⸻\n\n📊 EVALUATION CRITERIA\n\nScore each category from 0 (worst) to 10 (excellent), or use “N/A” if not applicable:\n\t1.\tAggressive tone or passive disinterest\n\t2.\tInterrupting the customer\n\t3.\tFailure to handle objections\n\t4.\tNot listening or responding clearly\n\t5.\tNot building rapport\n\t6.\tIncomplete or incorrect product/service explanations\n\t7.\tUnprofessional language or demeanor\n\t8.\tCustomer frustration or confusion\n\t9.\tMissed opportunity for follow-up or conversion\n\n⸻\n\n📤 OUTPUT FORMAT\n\nReturn a valid JSON:\n\n{\n  \"AI_summary\": \"<3–6 sentence neutral evaluation starting with agent name and call_id>\",\n  \"details\": {\n    \"Aggressive or disinterested tone\": 0–10 or \"N/A\",\n    \"Interrupting the customer\": 0–10 or \"N/A\",\n    \"Handling objections\": 0–10 or \"N/A\",\n    \"Clarity and active listening\": 0–10 or \"N/A\",\n    \"Rapport building\": 0–10 or \"N/A\",\n    \"Product/service explanation\": 0–10 or \"N/A\",\n    \"Professionalism and language\": 0–10 or \"N/A\",\n    \"Customer frustration/confusion\": 0–10 or \"N/A\",\n    \"Follow-up or conversion\": 0–10 or \"N/A\"\n  },\n  \"overall_score\": 0–100\n}\n\n\t•\tIf any criteria are \"N/A\", exclude them from the average.\n\t•\tScale overall_score to 100 based on valid numeric inputs.\n\n⸻\n\n✅ RULES TO FOLLOW\n\t•\tOnly score calls relevant to EHB.\n\t•\tDo not evaluate script usage, VA question flow, appointment setting, or EHB scoring system requirements — those are handled by a separate AI.\n\t•\tDo not hallucinate or speculate. Use only direct transcript cues.\n\t•\tStart AI_summary with:\n“Agent [agent_name] in call id [call_id]…”\n\t•\tFocus on behavioral flaws or ethical signals that could indicate risk or underperformance.",
+              "role": "system"
+            },
+            {
+              "content": "={{ $json.data}}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -256,
+        2384
+      ],
+      "id": "fc3063dd-4658-4eca-9a64-37e785f94254",
+      "name": "Message a model",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "openAiApi": {
+          "id": "obrCoVwP9hvbq5OW",
+          "name": "EHB_App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -608,
+        2032
+      ],
+      "id": "177fd034-ba7c-4ab6-8ff5-793093a201bd",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "const jsonString = JSON.stringify($input.first().json);\n\n// Return the new items to be passed to the next node.\nreturn [{data: jsonString}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -528,
+        2384
+      ],
+      "id": "1206465c-e7a3-4185-8b3a-1f10a55e00ee",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "content": "send a report with only top details. if an agent score is below 50 then make their result bold and give more explanantion. if the result is good just say this agent name did X number of calls and ",
+        "height": 180,
+        "width": 360,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -128,
+        1872
+      ],
+      "typeVersion": 1,
+      "id": "b1e9df39-8f0e-4279-bf8b-fdee7bb45c26",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "099ec958-0bf7-4ee0-b536-b0bffba372aa",
+              "name": "data[0].call_datetime",
+              "value": "={{ new Date(Number($json.cleaned_scorings[0].call_datetime)).toLocaleDateString('en-US') }}",
+              "type": "string"
+            },
+            {
+              "id": "432e86e8-9435-4145-a814-c9b7ec0378d3",
+              "name": "cleaned_data",
+              "value": "={{ JSON.stringify( $json.cleaned_scorings ) }}",
+              "type": "string"
+            },
+            {
+              "id": "fea18dda-df1b-45e4-8a9c-ff75ba5d7b61",
+              "name": "=total_calls",
+              "value": "={{ $json.processed_calls_count }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -48,
+        2032
+      ],
+      "id": "e8656855-1a86-48aa-9d7f-aab691fa0975",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "20592270-d47e-48ee-90d9-91329ca2baeb",
+              "leftValue": "={{ $json.message.content.not_related }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        96,
+        2384
+      ],
+      "id": "38da8d79-bebf-45bf-a411-c1d25050cb5a",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "toRecipients": "sadegh@expresshomebuyers.com, dex@expresshomebuyers.com, tonya@expresshomebuyers.com, brad@expresshomebuyers.com",
+        "subject": "={{ $json.message.content.Subject }}",
+        "bodyContent": "={{ $json.message.content.Message }}",
+        "additionalFields": {
+          "bccRecipients": "aleeostovar@gmail.com",
+          "bodyContentType": "html"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        592,
+        2032
+      ],
+      "id": "0e1e00a8-f11c-4224-be0f-4178688dd778",
+      "name": "Send a message",
+      "webhookId": "57d057cb-0e99-4c5a-88f0-cb2bc61bd12b",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "HM4jf8X5yyFbnBxX",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "o3",
+          "mode": "list",
+          "cachedResultName": "O3"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are **Email Composer Agent**, an AI system responsible for composing a **HTML email summary** of agent performance over the past 24 hours based on AI-evaluated call data.\n\nYou will receive a **list of agent performance reports**, each representing one evaluated call made in the past 24 hours. Each item in the list contains:\n\n* `agent_name`: Full name of the agent\n* `agent_id`: Unique agent identifier\n* `call_id`: Unique identifier of the call\n* `call_datetime`: Timestamp (in Epoch Unix milliseconds) when the call took place\n* `AI_Results`: An object that includes:\n\n  * `AI_summary`: A brief natural-language analysis of the agent’s behavior in the call\n  * `details`: A dictionary with scoring dimensions (or \"N/A\")\n  * `overall_score`: A number from 0 to 100 representing the agent’s score for that call\n\n---\n\n### 🎯 Your Goal\n\nCompose a **professional short daily performance summary email in well-formatted HTML** \n\nThe email must begin with a formal paragraph mentioning N and M.\nWhere:\n\n* N = total number of calls which is \"{{ $json.total_calls }}\"\n* M = number of unique agents who had calls\n\nThe email must only contain one formal paragraph as mrentioned above, agent feedbacks and signed as:\n\"Regards<br>\nEHB AI Agent - Conduct Monitoring\"\n---\n\n### 🧠 Instructions\n\n1. Group all calls by agent.\n2. For each agent:\n\n   * Aggregate all their calls.\n   * Use `AI_summary` and `details` to create a feedback comment. Only agents with actual negative summary or rude behavior or ones that they received any sort of varbal complains in their transcripts should have longer feedback comments. Those with good and positive feedbacks do not need explanations.\n   * Do **not** include any score.\n3. Sort agents from highest to lowest based on their **average `overall_score`**, but do not display or mention the score.\n4. Do **not** use any category labels like \"Top Performer\", \"Satisfactory\", or \"Below Expectations\".\n5. For any agent that has a negative point or bad feedback in any of their transcriptions (AI_Summary), you need to mention those negative feedbacks and for the related call_id, create a hyperlink. The link's text should be the call_id itself, and it should point to https://dialpad.com/callhistory/callreview/{call_id}. Also, mention their strength points (if his/her performance was overall good, do not miss mentioning it).\n5. Each agent block must be presented in the following format:\n\n#### ➕ If there was **no negative point or bad feedback**:\n```\n<br>* Agent: FULL NAME <br>\n  Calls: N <br>\n  Feedback: <1 line comment based on AI_summary and details><br>\n```\n\n#### ❗ If **any negative point or bad feedback** existed:\n```\n<br>*Agent: FULL NAME<br>\nCalls: N<br>\nFeedback: <1 line comment based on AI_summary and details with mentioning individual related call <a href=\"https://dialpad.com/callhistory/callreview/{call_id}\">call_id</a> inside report><br><br>\n```\n\n* Use lines (`<br>────`) and bullet points (`*`) to organize sections\n* Use empty lines between agents for readability\n* Keep everything plain-text and structured cleanly for email clients\n---\n\n### Output Routing\n\nYou **must not print or display the message directly**.\n\nInstead, your output must be a **JSON object** with the following keys:\n\n* `Subject`: Set to `\"AI Agent -Daily VA Calls Summary - {{ $json.data[0].call_datetime }}\"`\n* `Message`: The complete plain-text email body you composed\n\n> Example:\n>\n> ```json\n> {\n>   \"Subject\": \"AI Agent - Daily VA Calls Summary - 2025-8-7\",\n>   \"Message\": \"Generated Message ... \"\n> }\n> ```\n\nThis JSON is passed to the **Sent_Outlook** tool to dispatch the email.\n\n---\n\n### Important Rules\n\n* If **no calls** were recorded in the past 24 hours, return **nothing at all** — do not output a subject or message.\n* Each agent must appear **only once**, aggregated by all their calls.\n* ***Do not include agent scores in the email content.***\n* ***Do not include any category labels. Sort agents top-down by simple mathematical average of overall_score items.***\n",
+              "role": "system"
+            },
+            {
+              "content": "={{ $json.cleaned_data }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        208,
+        2032
+      ],
+      "id": "db01605e-353a-40ef-b965-3d9d6abd1518",
+      "name": "Message a model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "obrCoVwP9hvbq5OW",
+          "name": "EHB_App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the input data array from the previous node.\n// Assumes your data is in the 'data' property of the first input item.\nconst allItems = items[0].json.data;\n\nconst cleanedScorings = [];\n\n// Iterate through each item to find and process the valid calls.\nfor (const item of allItems) {\n  // A valid call must have a 'call_id' and must NOT have the 'not_related' flag.\n  if (item.call_id && !(item.AI_Results && item.AI_Results.not_related === true)) {\n    \n    // Create a new, clean object for the valid call data.\n    const flatCallObject = {\n      call_id: item.call_id,\n      agent_id: item.agent_id,\n      agent_name: item.agent_name,\n      // The call_datetime is now kept in its original timestamp format.\n      call_datetime: item.call_datetime,\n      ai_summary: item.AI_Results.AI_summary,\n      overall_score: item.AI_Results.overall_score,\n    };\n\n    // If AI_Results.details exists, unpack its properties into the main object.\n    if (item.AI_Results.details) {\n      for (const [key, value] of Object.entries(item.AI_Results.details)) {\n        // Clean up the key to be more computer-friendly (e.g., 'Rapport building' -> 'rapport_building').\n        const cleanKey = key.toLowerCase().replace(/[\\s\\/]/g, '_');\n        flatCallObject[cleanKey] = value;\n      }\n    }\n    \n    cleanedScorings.push(flatCallObject);\n  }\n}\n\n// Create the final output object with only the requested fields.\nconst finalOutput = {\n  processed_calls_count: cleanedScorings.length,\n  cleaned_scorings: cleanedScorings\n};\n\n\nreturn [{ json: finalOutput }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        2032
+      ],
+      "id": "b497cb12-c698-431a-bfa9-b736e741a7ff",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dda42c7d-bb6e-4100-805d-6236be9679e3",
+              "name": "qualified_users",
+              "value": "[   \"5408706734882816\",   \"6464188853551104\",   \"5748144442736640\",   \"4907206958940160\",   \"6550221330874368\",   \"6109616138125312\",   \"5319930968834048\",   \"6467482745339904\",   \"6566003456638976\",   \"5372095091474432\",   \"6369078602137600\",   \"5729377724841984\",   \"6660120618500096\",\"6472302152941568\",\"5444833580859392\", \"6092509897998336\" ]",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1504,
+        3104
+      ],
+      "id": "0f6bf160-6d46-4fd3-b422-4ca779c9001c",
+      "name": "WorkflowSettings"
+    },
+    {
+      "parameters": {
+        "collection": "DialPad_Users",
+        "options": {
+          "projection": "{\n  \"id\":1,\n  \"status\":1,\n  \"display_name\":1\n}"
+        },
+        "query": "={}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        -1248,
+        3104
+      ],
+      "id": "f5fd7b42-5562-4c32-8caa-089a9e3cd8c4",
+      "name": "GetPreviousScores",
+      "retryOnFail": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -784,
+        3104
+      ],
+      "id": "411f5360-efe0-4230-b782-58e265656f65",
+      "name": "Loop Over Items",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the qualified users list\nconst qualifiedUsers = $('WorkflowSettings').first().json.qualified_users\n\n// Assume input data has many items, each with an `id` field\n// Example: [{ id: \"5408706734882816\" }, { id: \"someOtherId\" }, ...]\nconst allItems = $input.all();\n\n// Filter items whose ID is in the qualified users list\nconst matchedItems = allItems.filter(item =>\n  qualifiedUsers.includes(item.json.id)\n);\n\n// Return the matched items\nreturn matchedItems;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1040,
+        3104
+      ],
+      "id": "fbaaf4fe-1318-4e77-aa54-0e0a8b4db455",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e313c2ff-785d-4454-a1b7-9625207a1399",
+              "name": "qualified_in_AI",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "0ab64853-582d-4ad4-835b-e9d38fa02b8d",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -512,
+        3168
+      ],
+      "id": "0d118261-3981-4b94-89e2-57441f64db7c",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "DialPad_Users",
+        "fields": "=qualified_in_AI",
+        "upsert": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        -160,
+        3168
+      ],
+      "id": "83c2de25-49c8-495f-9a4a-6d9dfbcd3871",
+      "name": "MongoDB",
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "collection": "DialPad_Users",
+        "options": {
+          "projection": "{\n  \"id\":1,\n  \"status\":1,\n  \"display_name\":1\n}"
+        },
+        "query": "={\n\"qualified_in_AI\":true\n}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        -2016,
+        2368
+      ],
+      "id": "6ceee41e-9fb5-457f-ace2-60d15e2227b0",
+      "name": "getAgents",
+      "retryOnFail": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -2304,
+        2368
+      ],
+      "id": "092cd437-e7c2-4da2-898b-25660851311e",
+      "name": "Schedule Trigger3"
+    }
+  ],
+  "pinData": {
+    "Edit Fields1": [
+      {
+        "json": {
+          "qualified_in_AI": true,
+          "id": "6467482745339904"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "GetTranscriptsOrdered1": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "MongoDB4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GetPreviousScores1": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "MongoDB4": {
+      "main": [
+        [
+          {
+            "node": "Wait5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items2": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait5": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "HighDurationCalls2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HighDurationCalls2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Wait5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WorkflowSettings": {
+      "main": [
+        [
+          {
+            "node": "GetPreviousScores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GetPreviousScores": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "MongoDB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "getAgents": {
+      "main": [
+        [
+          {
+            "node": "GetTranscriptsOrdered1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GetPreviousScores1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger3": {
+      "main": [
+        [
+          {
+            "node": "getAgents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "524771e9-2ed1-42aa-8cef-0ac5a7297b9a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1492f4d88835c9aa4ef9f92114084d45e62f070cbfca1060935e9b804d7507de"
+  },
+  "id": "WK7JSQRkRAMjUahI",
+  "tags": []
+}

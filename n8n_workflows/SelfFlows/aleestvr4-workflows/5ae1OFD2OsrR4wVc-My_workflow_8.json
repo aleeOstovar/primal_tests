@@ -1,0 +1,406 @@
+{
+  "name": "My workflow 8",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1040,
+        96
+      ],
+      "id": "2ee72432-60e1-41e3-bff0-3d6decb0fef4",
+      "name": "Telegram Trigger",
+      "webhookId": "97b6b439-c81d-41cb-be47-4841801c42fb",
+      "credentials": {
+        "telegramApi": {
+          "id": "PuDDiCMQycYHru9z",
+          "name": "Telegram account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "d19044af-c93c-4244-8f50-6ef317442a10"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "text input"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "667d8912-a2f7-4475-a881-98e304a0e755",
+                    "leftValue": "={{ $json.message.voice.mime_type }}",
+                    "rightValue": "audio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio input"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -688,
+        96
+      ],
+      "id": "08e44da0-f0ff-4449-abbe-515545750d74",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -480,
+        208
+      ],
+      "id": "06964c7d-890f-46cf-8d70-6d6fe687ff39",
+      "name": "Get a file",
+      "webhookId": "03e62bdc-75d3-4a8c-bc03-b6e06aac91b2",
+      "credentials": {
+        "telegramApi": {
+          "id": "2LmW0ctq0iF2USwq",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "db50fb65-30a3-4703-9b95-6ff60220ec01",
+              "name": "user_prompt",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "e52bfcbb-537f-42da-94c7-d9741c91f17e",
+              "name": "message.chat.id",
+              "value": "={{ $('Switch').item.json.message.chat.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3c542333-fdbb-4f6f-8c6a-7a62a1d662bc",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1697b616-e28a-44e4-acc3-c5506caf66ce",
+              "name": "user_prompt",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "e727b20e-e8b4-4934-b83f-cc64b500ebfa",
+              "name": "message.chat.id",
+              "value": "={{ $('Switch').item.json.message.chat.id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        208
+      ],
+      "id": "14885474-ba6d-45ce-afbb-046c15e5e280",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "translate",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -256,
+        208
+      ],
+      "id": "d295200a-5000-4f7d-99b6-10c08bbeebef",
+      "name": "Translate a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "8aiUOz1yDSTgmvPU",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "o1",
+          "mode": "list",
+          "cachedResultName": "O1"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a Retrieval-Augmented Generation (RAG) Developer Expert Agent with deep expertise in building advanced, scalable, and production-ready RAG systems using Python, LangGraph, LangChain, Qdrant, embedding models (BGE, E5, OpenAI), hybrid search (dense + sparse), and re-ranking (e.g., cross-encoders).\n\nYour goal is to help the user (an experienced ML engineer) with brainstorming, planning, implementing, and debugging sophisticated RAG systems—including multimodal inputs (PDF, DOCX, images, tables, CSV), web search fallback, and LangGraph orchestration.\n\nYou can:\n\nBreak down complex RAG architectures into modular LangGraph/LangChain components.\n\nRecommend optimal pipelines for chunking, embedding, hybrid search, and re-ranking.\n\nSuggest best practices for retrieval quality, latency reduction, scalability, and hallucination mitigation.\n\nOffer implementation templates or patterns for production-ready systems (e.g., multi-stage retrieval, fallback to Tavily or Bing search, streaming, and caching).\n\nDiagnose architectural bottlenecks, bugs, and inefficiencies in Python codebases.\n\nStay up to date with the latest research and tooling around LangGraph, LangChain, vector stores, embedding models, and open-source LLMs (like LLaMA, Mistral, Claude, etc.).\n\nRecommend tools for document parsing (LlamaParse, Unstructured.io), OCR (PaddleOCR, Tesseract), and multimodal embedding.\n\nYou are direct, solution-oriented, and opinionated. You provide context and rationale, but you prioritize clarity and actionability over vague theory. If the user’s idea is flawed or suboptimal, you respectfully suggest a better design.\n\nWhen giving code, aim for clean, production-style Python with clear structure, typed function signatures, modular classes or LangGraph Nodes, and appropriate error handling.\n\nAssume the user is capable of understanding advanced architectural and code-level advice—no need to oversimplify.\n\n",
+              "role": "system"
+            },
+            {
+              "content": "={{ $json.user_prompt }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        432,
+        96
+      ],
+      "id": "d42ebb62-8949-4aff-a6e8-8a82fb271e95",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "8aiUOz1yDSTgmvPU",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $('Code').item.json.textChunk }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "message_thread_id": 0
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1504,
+        48
+      ],
+      "id": "d9e77bb6-580b-4050-8fbe-247b1c7c839d",
+      "name": "Send a text message",
+      "webhookId": "9c43a464-d906-4222-85a0-d681a3efaebd",
+      "credentials": {
+        "telegramApi": {
+          "id": "2LmW0ctq0iF2USwq",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const TELEGRAM_CHAR_LIMIT = 4000;\nconst longText = $input.first().json.message.content\nconst paragraphs = longText.split('\\n\\n');\n\nconst messageChunks = [];\nlet currentChunk = '';\n\nfor (const paragraph of paragraphs) {\n  if ((currentChunk.length + paragraph.length + 2) > TELEGRAM_CHAR_LIMIT) {\n    messageChunks.push(currentChunk);\n    currentChunk = paragraph;\n  } else {\n\n    if (currentChunk.length > 0) {\n      currentChunk += '\\n\\n' + paragraph;\n    } else {\n      currentChunk = paragraph;\n    }\n  }\n}\nif (currentChunk) {\n  messageChunks.push(currentChunk);\n}\n\nreturn messageChunks.map(chunk => {\n  return {\n    json: {\n      textChunk: chunk\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        48
+      ],
+      "id": "ad1490e0-9eba-434f-a52f-35e46b3a0725",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9b0d7ed3-02b7-4d32-9c15-7ec32fd99a1a",
+              "name": "textChunk",
+              "value": "={{ $json.textChunk }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1200,
+        48
+      ],
+      "id": "6d6210df-ea96-431f-ada8-2984fb53f431",
+      "name": "Edit Fields"
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Translate a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Translate a recording": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 1,
+  "meta": null
+}

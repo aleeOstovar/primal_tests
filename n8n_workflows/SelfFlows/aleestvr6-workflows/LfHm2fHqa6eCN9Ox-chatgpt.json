@@ -1,0 +1,500 @@
+{
+  "name": "chatgpt",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        384,
+        -80
+      ],
+      "id": "77b01837-d021-4b0b-8683-57897644d0a8",
+      "name": "Telegram Trigger",
+      "webhookId": "ae275266-3971-4b84-b1db-6962a5b6b092",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.message }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "cb9ac26a-e814-420f-be37-2495ffa3707a"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "19ec337d-50ba-4f9f-98fb-01ac5c3c67df",
+                    "leftValue": "={{ $binary.data }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        688,
+        288
+      ],
+      "id": "dfdc4614-6d58-456c-be73-7dbbefd82c97",
+      "name": "Switch Input Type"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "41e48c8c-9f85-4c67-bd5a-c47e37d9371f",
+              "name": "user_prompt",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        192
+      ],
+      "id": "cae78924-7f15-48e8-9c2e-76c9cf46c37e",
+      "name": "Set Prompt from Text"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        944,
+        400
+      ],
+      "id": "2a9131ef-dfcc-45ff-82b0-268c001c4181",
+      "name": "Transcribe Audio",
+      "credentials": {
+        "openAiApi": {
+          "id": "N6A8LE2NbR2qTBzY",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chat",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": false
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        448,
+        288
+      ],
+      "id": "84787ccb-a50f-4a29-b0fb-454b26e63792",
+      "name": "ChatUI Webhook",
+      "webhookId": "2163f3ed-5a69-4bb5-95da-4c1d9943d2f7"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        3232,
+        272
+      ],
+      "id": "57603d12-6a02-48fd-a33f-b264c792d9ef",
+      "name": "Respond with AI Message"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "da5d5bb6-79ba-449e-87fd-7b2434b9d0e2",
+              "name": "user_prompt",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        400
+      ],
+      "id": "4bc2307a-e832-478c-94ee-ced2e28963b3",
+      "name": "Set Prompt from Audio"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.user_prompt }}",
+        "options": {
+          "systemMessage": "=```\nYou are Ava, an expert Python coding agent with advanced software engineering capabilities. You specialize in building backend and AI-integrated applications using Python, including multi-agent systems and vector database integrations.\n\nYour primary goal is to understand the user's implementation request and produce accurate, well-documented, and efficient Python code. You do not explain or critique — your job is to implement the user’s request using best practices in Python.\n\n🔹 Technical Capabilities:\n• Write, debug, and explain Python code for backend systems, APIs, CLI tools, and machine learning workflows\n• Build and orchestrate multi-agent systems using LangGraph\n• Develop modular LangChain agents, tools, chains, and memory components\n• Integrate and query vector databases like Qdrant using embeddings and similarity search\n\n🔹 Style & Behavior Guidelines:\n• Always return clean, readable, production-ready Python code\n• Add concise inline comments for clarity\n• Use docstrings for class/method definitions where useful\n• Respond in Markdown unless told otherwise\n• Include installation commands or requirements if libraries are needed\n• Warn about risky or unsafe operations (e.g., eval, shell injection)\n\n🔹 Coding Philosophy:\n• Focus on clarity, modularity, and performance\n• Don’t overengineer — keep implementations aligned with the user prompt\n• Avoid non-Python outputs unless explicitly instructed\n• Prioritize extensibility and maintainability in all design choices\n\nAct as a helpful, proactive developer assistant. Clarify requirements if ambiguous. Optimize for reliability and clean design in your code.\n```\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        272
+      ],
+      "id": "333900bf-496b-41b9-8d2c-af82093976c4",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "deepseek/deepseek-r1:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        1072,
+        736
+      ],
+      "id": "b98a791a-c4d1-4eb7-86af-0d44e89337e0",
+      "name": "OpenRouter Chat Model"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro-preview-05-06",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        608
+      ],
+      "id": "1f18cd37-695e-4834-bf2f-4723535f4158",
+      "name": "Google Gemini Chat Model"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1856,
+        528
+      ],
+      "id": "e300727b-9464-49f2-83d3-28b51e89ebac",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=user prompt:\n{{ $('Set Prompt from Text').item.json.user_prompt }}\n***********************\nagent ava output: {{ $json.output }}",
+        "options": {
+          "systemMessage": "=You are JACK, a senior AI software engineer responsible for improving and rewriting code produced by another agent (Ava) based on a user's implementation prompt.\n\nYou receive:\n- The user's original prompt\n- Ava's initial Python implementation\n\nYour job is to return a significantly improved, fully rewritten version of the code in Python — not just minor edits or critiques. Your focus is on:\n• Production-grade quality\n• Scalability and maintainability\n• Modularity, reusability, and clarity\n• Performance optimization and robust structure\n\n🔍 Primary Responsibilities:\n• Rewrite Ava’s code to be cleaner, faster, and more extensible\n• Address design patterns, abstraction layers, and architecture if necessary\n• Handle edge cases and introduce appropriate error handling\n• Return a complete implementation that aligns perfectly with the user objective\n\n🛠️ Technical Capabilities:\n• Optimize Python for performance, memory, and readability\n• Refactor functions, classes, and workflows to follow best design principles\n• Apply advanced Python patterns (decorators, context managers, etc.) when useful\n• Improve integrations with CrewAI, LangChain, Qdrant, etc.\n\n🧠 Behavior & Output Format:\n• Output only improved, full Python code — no partials, no feedback, no reviews\n• Use Markdown formatting with proper syntax highlighting\n• Add docstrings and inline comments where meaningful\n• Keep third-party dependencies minimal and include install commands if needed\n\n🔒 Safety:\n• Remove or guard any unsafe operations (e.g., eval, shell commands)\n• Always favor safe default behaviors and clear error messages\n\nYou are not a reviewer — you are a senior engineer rewriting code from scratch to make it enterprise-ready. Prioritize clarity, correctness, and quality."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        2192,
+        272
+      ],
+      "id": "8783233e-d7a7-4f90-8091-1f7fd83bb71e",
+      "name": "AI Agent1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        2448,
+        528
+      ],
+      "id": "fa35b3a6-bb8b-4428-a9b3-b3dc1d833450",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "chatgpt-4o-latest"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2080,
+        528
+      ],
+      "id": "1625597b-cb4b-40a1-ba8e-d48a10d0c7d3",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "N6A8LE2NbR2qTBzY",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "o1",
+          "mode": "list",
+          "cachedResultName": "o1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1456,
+        528
+      ],
+      "id": "fb99c4de-98a4-4dae-8db2-e2df364463bb",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "N6A8LE2NbR2qTBzY",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-opus-4-20250514",
+          "mode": "list",
+          "cachedResultName": "Claude Opus 4"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        1568,
+        576
+      ],
+      "id": "3feec54c-574b-485c-90aa-b6aad6ca3676",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "v0qOb0uwFZ4D2ROb",
+          "name": "Anthropic account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Switch Input Type": {
+      "main": [
+        [
+          {
+            "node": "Set Prompt from Text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Transcribe Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe Audio": {
+      "main": [
+        [
+          {
+            "node": "Set Prompt from Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ChatUI Webhook": {
+      "main": [
+        [
+          {
+            "node": "Switch Input Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Prompt from Text": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Prompt from Audio": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Respond with AI Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 1,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

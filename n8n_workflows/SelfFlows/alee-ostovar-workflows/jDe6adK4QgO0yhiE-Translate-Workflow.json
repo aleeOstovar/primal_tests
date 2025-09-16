@@ -1,0 +1,383 @@
+{
+  "name": "Translate Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={ title: {{ $json.title }}\ncreator: {{ $json.creator }}\ncontent: {{ $json.content }}\npubDate: {{ $json.pubDate }}\ncontentSnippet: {{ $json.contentSnippet }}\ncategories: {{ $json.categories }},\nsourceURL:{{ $json.sourceURL }}\nenclosureUrl:{{ $json.enclosureUrl }}\nadditionalUrls:{{ $json.additionalUrls }}\n}",
+        "options": {
+          "systemMessage": "=you are a highly expert financial news translator and reporter. Translate and structure news  into smooth and native Persian, ensuring all translations are accurate, smooth, integrated. output formatted must be in a JSON structure.\n\nUse the `gemini_translator` tool for initial translations of the \"json.content\" field, then refine to ensure native Persian fluency, preserving the original meaning and integrity between words and sentences. you should translate the title and creator and categories values yourself\n\n# Steps\n\n1. **Initial Translation**\n   - Use the `gemini_translator` tool to translate the \"content\" field of the original JSON. you should pass only the content to that tool, restrictly avoid passing any other fields to gemini_translator . do not translate or process on links and urls\n\n2. **Translation Refinement**\n   - Adjust the initial translation to ensure smooth and native Persian, maintaining the original context and meaning and integrity. dont forget to translate title and creator and categories values.\n\n3. **Summary Creation**\n   - Write a concise Persian summary of the translated content for the \"contentSnippet\" field.\n\n4. **Format JSON Output**\n   - Structure the translated content into the specified JSON format.\n\n# Output Format\n\nThe output should be a JSON object formatted as follows:\n```json\n{\n  \"creator\": \"creator name\",\n  \"title\": \"title of the news post\",\n  \"sourceURL\": \"original source URL\",\n  \"pubDate\": \"publication date in ISO format\",\n  \"content\": \"full translated content of the news in Persian\",\n  \"contentSnippet\": \"short summary or snippet of the content in Persian\",\n  \"categories\": {\n    \"primary\": \"primary category\",\n    \"secondary\": [\"list of secondary categories if any\"]\n  }\n\"enclosureURL\":\"url\",\n\"additionalUrls\":[\"urls\"],\n}\n```\n\n# Examples\n\n**Example 1**\n\n**Input:**\n{ \n- Original Language Content: Lorem ipsum...\n- Additional Details: \n  - \"creator\": \"John Doe\"\n  - \"title\": \"The Impact of AI on Modern Technology\"\n  - \"sourceURL\": \"http://example.com/article\"\n  - \"pubDate\": \"2023-10-15T09:30:00Z\"\n  - \"categories\": {\n    \"primary\": \"Technology\",\n    \"secondary\": [\"AI\", \"Innovation\"]\n  }}\n\n**Output:**\n```json\n{\n  \"creator\": \"John Doe\",\n  \"title\": \"The Impact of AI on Modern Technology\",\n  \"sourceURL\": \"http://example.com/article\",\n  \"pubDate\": \"2023-10-15T09:30:00Z\",\n  \"content\": \"[ترجمه کامل محتوای خبر با محتوای روان و آسان فارسی]\",\n  \"contentSnippet\": \"[یک مرور کوتاه از نقش AI در تکنولوژی به فارسی روان]\",\n  \"categories\": {\n    \"primary\": \"Technology\",\n    \"secondary\": [\"AI\", \"Innovation\"]\n  }\n  \"enclosureURL\":\"url\",\n  \"additionalUrls\":[\"urls\"],\n}\n```\n(Note: Actual translations should be complete and accurately reflect the context in smooth Persian.)\n\n# Notes\n\n- Ensure the translation captures the essence of the original content while reading smoothly in Persian.\n- Maintain technical or specialized vocabulary where necessary to preserve the integrity of the information.\n-do not change date and calender of source news to persian (like never convert Gregorian calendar into the solar calendar)\n- Verify that publication dates conform to ISO format.\n- Adjust category labels to suit the translated content's context effectively."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        180,
+        -220
+      ],
+      "id": "cfb78068-72eb-427a-8534-f96969bbbe9d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "o3-mini",
+          "mode": "list",
+          "cachedResultName": "o3-mini"
+        },
+        "options": {
+          "responseFormat": "json_object"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -280,
+        280
+      ],
+      "id": "a6915c27-fe19-456f-80d3-81350a84b803",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "CWJYp93mxQT3xD4V",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "59c14030-de14-4da4-9986-4d77907ccb91",
+              "leftValue": "={{ $json.enclosureURL }} ",
+              "rightValue": "^.{3,}$",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        620,
+        0
+      ],
+      "id": "f8344a37-affc-42c4-acca-703c57cefd16",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.enclosureURL }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        -300
+      ],
+      "id": "969a4313-6d55-4fcc-bdd4-dc6421280941",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "// For each item, construct a new JSON object with the desired fields\nreturn items.map(item => {\n  // Extract the required fields from the original item\n  const title = item.json.title;\n  const creator = item.json.creator || item.json[\"dc:creator\"];\n  const rawContent = item.json['content:encoded']|| \"\";\n  const enclosureUrl = item.json.enclosure?.url ||item.json.enclosureUrl || \"\";\n  const pubDate = item.json.pubDate;\n  const contentSnippet = item.json.contentSnippet;\n  const categories = item.json.categories;\n  const sourceURL = item.json.link\n\n  // 1. Remove HTML tags from content\n  let contentClean = rawContent.replace(/<[^>]*>/g, \" \");\n  // Normalize whitespace\n  contentClean = contentClean.replace(/\\s+/g, \" \").trim();\n\n  // 2. Extract URLs from the cleaned content using a regex\n  const urlRegex = /\\bhttps?:\\/\\/\\S+/gi;\n  const urlsFound = contentClean.match(urlRegex) || [];\n\n  // 3. Compare each URL with the enclosure URL and build an additionalUrls array\n  const additionalUrls = [];\n  urlsFound.forEach(url => {\n    if (url !== enclosureUrl) {\n      additionalUrls.push(url);\n    }\n  });\n\n  // 4. Remove all URLs from the content\n  contentClean = contentClean.replace(urlRegex, \"\").trim();\n\n  // Return the new mapped object including the additional fields\n  return {\n    json: {\n      title,\n      creator,\n      content: contentClean,\n      sourceURL,\n      enclosureUrl,      \n      additionalUrls,    \n      pubDate,\n      contentSnippet,\n      categories\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        -60
+      ],
+      "id": "a9999861-3329-493c-8dde-c31379befe3b",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "e2d14354-2709-4ed0-b7bb-f536a8a8f73d",
+      "typeVersion": 1.1,
+      "name": "Workflow Input Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -460,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Define your raw JSON data as a string\nlet rawData = $input.first().json.output\nrawData = rawData.trim();\n\nif (rawData.startsWith(\"```json\")) {\n  rawData = rawData.substring(7).trim();\n  if (rawData.endsWith(\"```\")) {\n    rawData = rawData.substring(0, rawData.length - 3).trim();\n  }\n}\n\nlet parsedData;\ntry {\n  // Attempt to parse the raw JSON string\n  parsedData = JSON.parse(rawData);\n  \n  // Convert pubDate to Tehran timezone if it exists\n  if (parsedData.pubDate) {\n    const date = new Date(parsedData.pubDate);\n    \n    // Create formatter for Tehran timezone\n    const tehranFormatter = new Intl.DateTimeFormat('fa-IR', {\n      timeZone: 'Asia/Tehran',\n      year: 'numeric',\n      month: '2-digit',\n      day: '2-digit',\n      hour: '2-digit',\n      minute: '2-digit',\n      second: '2-digit',\n      hour12: false\n    });\n    \n    // Format the date\n    parsedData.pubDate = tehranFormatter.format(date);\n  }\n} catch (error) {\n  // If parsing fails, throw an error to signal the workflow\n  throw new Error(\"Failed to parse JSON: \" + error.message);\n}\n\nreturn [{ json: parsedData }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        -220
+      ],
+      "id": "9666836f-028e-40ec-b745-d85859365a05",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "name": "gemini_translator",
+        "workflowId": {
+          "__rl": true,
+          "value": "600vO7Jpy0QM4OLB",
+          "mode": "list",
+          "cachedResultName": "Gemini_translator"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2,
+      "position": [
+        160,
+        280
+      ],
+      "id": "13904f35-cd9d-4608-93ab-51b283c7bd90",
+      "name": "gemini_translator"
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "228598959",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": "={{ $json.contentSnippet }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        860,
+        -80
+      ],
+      "id": "01e86e53-af18-49a4-87fe-bf9c47b12381",
+      "name": "Telegram",
+      "webhookId": "93c35af6-6617-488a-ae81-f84ecdcca456",
+      "credentials": {
+        "telegramApi": {
+          "id": "wcRwgQk08JW2CkOy",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "228598959",
+        "text": "={{ $json.title }}\n{{ $json.creator }}\nمنتشر شده در تاریخ: {{ $json.pubDate }}\n\n{{ $json.content }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        920,
+        240
+      ],
+      "id": "dc65bf26-dff4-4850-b636-59c8f8819867",
+      "name": "Telegram1",
+      "webhookId": "72e645ad-c355-4bc5-8942-e0278683bb65",
+      "credentials": {
+        "telegramApi": {
+          "id": "wcRwgQk08JW2CkOy",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "228598959",
+        "text": "={{ $('HTTP Request').item.json.title }}\n{{ $('HTTP Request').item.json.creator }}\nمنتشر شده در تاریخ: {{ $('HTTP Request').item.json.pubDate }}\n\n{{ $('HTTP Request').item.json.content }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        -80
+      ],
+      "id": "10451e50-394e-4905-9223-77ca2fad6d25",
+      "name": "Telegram2",
+      "webhookId": "72e645ad-c355-4bc5-8942-e0278683bb65",
+      "credentials": {
+        "telegramApi": {
+          "id": "wcRwgQk08JW2CkOy",
+          "name": "Telegram account 2"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Input Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gemini_translator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram": {
+      "main": [
+        [
+          {
+            "node": "Telegram2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {
+    "Workflow Input Trigger": [
+      {
+        "json": {
+          "creator": "Shinobi",
+          "title": "The Next Decade, Part 1: The Road Behind",
+          "link": "https://bitcoinmagazine.com/culture/the-next-decade-part-1-the-road-behind",
+          "pubDate": "Mon, 17 Feb 2025 17:13:07 GMT",
+          "content:encoded": "<p>It’s a new year, and with that new year come all the normal social media circle jerking centered around predictions of “what will happen in 2020!” I wanted to extend that out a bit, and look at the next decade. But first, I wanted to spend a minute going over the last (yeah, I know I’m a year late, blah blah) to really drill in how far things have come.</p><h2>Mining and Network Security</h2><p>In 2010 the network was secured by hobbyists desktop CPUs, trivially over powered by any large resourceful actor. At the start of 2020 it is secured by billions of dollars of hardware consuming the collective electricity requirements of entire small nations, supplied to the operators by many different companies valued at billions of dollars (given, pie in the sky valuations, but still). In 10 years, the security mechanism of the network shifted from consumer hardware and hobbyists to specialized ASIC equipment and professionally managed data center operations.</p><h2>Protocol Development</h2><p>In 2010 you could send Bitcoin to public keys (or IP addresses), timelock transactions(JUST the transaction, not the UTXO), do raw multisig which were massive and expensive even to send to, and oh yeah: anyone could spend any coins using OP_RETURN due to a bug. And yes, I know the script system had much more back then, I’m talking about what was practically doable for an average person. In 2020…well I think I have to bullet point this:</p><ul><li>Use P2SH to make sending money to more advanced scripts (like multisig) cheaper for the sending party.</li><li>Timelock an actual UTXO to an absolute blockheight or UNIX timestamp.</li><li>Timelock an actual UTXO to a relative blockheight or UNIX timestamp interval from it’s creation.</li><li>Construct transactions that do not have malleable TXIDs for second layer protocols/chained transactions thanks to Segregated Witness. (Also, we can now upgrade script easier due to SegWit having its own versioning. There are only so many undefined OPs in Bitcoin script that can be defined to add new script functions to Bitcoin script. SegWit versioning allows adding new functions by using new Witness versions instead of using up very scarce undefined OPs.)</li><li>Utilize a basic in-development version of the Lightning Protocol, a second layer enabled by the malleable fix implemented in SegWit.</li><li>Have actually deployed sidechains in which more advanced and/or experimental features can be deployed and tested easier.</li></ul><p>Ten years has produced an impressive amount of primitives with which to build upon the core foundation of Bitcoin’s base network and blockchain. Especially considering the complexity and difficulty of trying to ascertain consensus on upgrades, and then implementing and deploying such upgrades if it is present.</p><h2>Political Relevance</h2><p>In 2010, Bitcoin was just an insignificant blip on the radar. The CIA had <em>only just</em> noticed and taken interest in it. Their response was to have a developer come in and give a talk, resulting in the disappearance of Satoshi Nakamoto. Other than that, people weren’t paying attention, politicians weren’t paying attention, most agencies weren’t paying attention (except Alphabet ones we might not know about now). Bitcoin was an obscure nothing.</p><p>In 2020…Bitcoin has spawned an entire market and industry worth hundreds of billions of dollars. Exchanges have made billions in revenue from trading fees. Miners have made billions of dollars collectively in return for their operational investments. Tens of millions, possibly hundreds of millions, of people own Bitcoin (metrics here are very vague and hard to really distill meaningful information from). We’ve gone from the CIA barely taking interest, to essentially every meaningful government in the world regularly having legislature or committee meetings to discuss Bitcoin and everything it has spawned in terms of its macro-economic and geopolitical consequences, and how to respond to them. Nations have launched cryptocurrencies. Nations have sanctioned cryptocurrency addresses. They are officially at the table. Back in 2010 only one agency that is notorious for having their nose everywhere was paying attention (that we know), now the entire world is paying attention.</p><p>Things have changed. As the metaphor goes, good luck stopping the train.</p><p>(This is just Part 1 of 4, read the next part tomorrow). </p><p><em>This is a guest post by Shinobi. Opinions expressed are entirely their own and do not necessarily reflect those of BTC Inc or Bitcoin Magazine.</em></p>",
+          "content:encodedSnippet": "It’s a new year, and with that new year come all the normal social media circle jerking centered around predictions of “what will happen in 2020!” I wanted to extend that out a bit, and look at the next decade. But first, I wanted to spend a minute going over the last (yeah, I know I’m a year late, blah blah) to really drill in how far things have come.\nMining and Network Security\nIn 2010 the network was secured by hobbyists desktop CPUs, trivially over powered by any large resourceful actor. At the start of 2020 it is secured by billions of dollars of hardware consuming the collective electricity requirements of entire small nations, supplied to the operators by many different companies valued at billions of dollars (given, pie in the sky valuations, but still). In 10 years, the security mechanism of the network shifted from consumer hardware and hobbyists to specialized ASIC equipment and professionally managed data center operations.\nProtocol Development\nIn 2010 you could send Bitcoin to public keys (or IP addresses), timelock transactions(JUST the transaction, not the UTXO), do raw multisig which were massive and expensive even to send to, and oh yeah: anyone could spend any coins using OP_RETURN due to a bug. And yes, I know the script system had much more back then, I’m talking about what was practically doable for an average person. In 2020…well I think I have to bullet point this:\n\nUse P2SH to make sending money to more advanced scripts (like multisig) cheaper for the sending party.\nTimelock an actual UTXO to an absolute blockheight or UNIX timestamp.\nTimelock an actual UTXO to a relative blockheight or UNIX timestamp interval from it’s creation.\nConstruct transactions that do not have malleable TXIDs for second layer protocols/chained transactions thanks to Segregated Witness. (Also, we can now upgrade script easier due to SegWit having its own versioning. There are only so many undefined OPs in Bitcoin script that can be defined to add new script functions to Bitcoin script. SegWit versioning allows adding new functions by using new Witness versions instead of using up very scarce undefined OPs.)\nUtilize a basic in-development version of the Lightning Protocol, a second layer enabled by the malleable fix implemented in SegWit.\nHave actually deployed sidechains in which more advanced and/or experimental features can be deployed and tested easier.\n\nTen years has produced an impressive amount of primitives with which to build upon the core foundation of Bitcoin’s base network and blockchain. Especially considering the complexity and difficulty of trying to ascertain consensus on upgrades, and then implementing and deploying such upgrades if it is present.\nPolitical Relevance\nIn 2010, Bitcoin was just an insignificant blip on the radar. The CIA had only just noticed and taken interest in it. Their response was to have a developer come in and give a talk, resulting in the disappearance of Satoshi Nakamoto. Other than that, people weren’t paying attention, politicians weren’t paying attention, most agencies weren’t paying attention (except Alphabet ones we might not know about now). Bitcoin was an obscure nothing.\nIn 2020…Bitcoin has spawned an entire market and industry worth hundreds of billions of dollars. Exchanges have made billions in revenue from trading fees. Miners have made billions of dollars collectively in return for their operational investments. Tens of millions, possibly hundreds of millions, of people own Bitcoin (metrics here are very vague and hard to really distill meaningful information from). We’ve gone from the CIA barely taking interest, to essentially every meaningful government in the world regularly having legislature or committee meetings to discuss Bitcoin and everything it has spawned in terms of its macro-economic and geopolitical consequences, and how to respond to them. Nations have launched cryptocurrencies. Nations have sanctioned cryptocurrency addresses. They are officially at the table. Back in 2010 only one agency that is notorious for having their nose everywhere was paying attention (that we know), now the entire world is paying attention.\nThings have changed. As the metaphor goes, good luck stopping the train.\n(This is just Part 1 of 4, read the next part tomorrow). \nThis is a guest post by Shinobi. Opinions expressed are entirely their own and do not necessarily reflect those of BTC Inc or Bitcoin Magazine.",
+          "enclosure": {
+            "url": "https://bitcoinmagazine.com/.image/c_fit%2Ch_800%2Cw_1200/MjEyOTAyNTQwNTk2MDI4OTM3/leonardo_phoenix_10_a_person_with_a_contemplative_expression_d_0.jpg",
+            "length": "0",
+            "type": "image/jpeg"
+          },
+          "dc:creator": "Shinobi",
+          "content": "A republication of a series of posts by Shinobi from January 2020, predicting the course of Bitcoin through the 2020s.",
+          "contentSnippet": "A republication of a series of posts by Shinobi from January 2020, predicting the course of Bitcoin through the 2020s.",
+          "guid": "https://bitcoinmagazine.com/culture/the-next-decade-part-1-the-road-behind",
+          "categories": [
+            "Opinion",
+            "2020s",
+            "Culture"
+          ],
+          "isoDate": "2025-02-17T17:13:07.000Z",
+          "isPersian": false
+        }
+      }
+    ]
+  },
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

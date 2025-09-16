@@ -1,0 +1,108 @@
+{
+  "name": "generate_image",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "987aab59-2374-4259-b23c-064bdffdb62d",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        880,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dfc12e47-945e-4175-8223-64be735a783b",
+              "name": "prompt",
+              "value": "={{ $json.query}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1100,
+        -40
+      ],
+      "id": "5c47df74-f775-437c-8c17-02d9a18ce270",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "prompt": "={{ $json.prompt}}",
+        "options": {
+          "quality": "standard",
+          "size": "1024x1792",
+          "returnImageUrls": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        1320,
+        -40
+      ],
+      "id": "b35e72f7-c129-489d-ae6a-93e24f24ba87",
+      "name": "OpenAI",
+      "retryOnFail": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "CWJYp93mxQT3xD4V",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {
+    "Edit Fields": [
+      {
+        "json": {
+          "prompt": "Create a portrait in a 3D-rendered style with smooth, glossy textures, exaggerated proportions, vibrant colors, and a polished, animated look, similar to modern CGI animations or high-quality video game art. The portrait should feature a 40-50-year-old Persian woman with a natural facial expression, wearing a stylish Persian hijab that reflects elegance and cultural heritage. Her attire is sophisticated and modern, symbolizing her high income of more than 30 million toman, while she confidently interacts with bold financial symbols like a rocket and upward trending charts that represent her extremely high risk tolerance and aggressive investment strategy. She is surrounded by elements that subtly incorporate cryptocurrencies and financial graphs, set against a luxurious, futuristic backdrop that combines modern urban elements with traditional Persian motifs such as calligraphic details and intricate tile work. The vertical 1024x1792 frame composition highlights her poised stance and the dynamic environment, emphasizing the potential for significant financial growth and innovative investment opportunities."
+        }
+      }
+    ]
+  },
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

@@ -1,0 +1,339 @@
+{
+  "name": "My workflow 3",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "event": "fileUpdated",
+        "watch": "selectedFolder",
+        "folderId": {
+          "__rl": true,
+          "value": "0621700EB574EBA3%21s002b3c5bcfa64b69895402c4345107a6",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftOneDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "593bd5a5-6956-426d-967a-a5cb19447896",
+      "name": "Microsoft OneDrive Trigger",
+      "credentials": {
+        "microsoftOneDriveOAuth2Api": {
+          "id": "N96dK32KtlMA3g10",
+          "name": "Microsoft Drive account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": "621700EB574EBA3%21sb8ca08935e7f4edda4459cbd79a05826"
+      },
+      "type": "n8n-nodes-base.microsoftOneDrive",
+      "typeVersion": 1,
+      "position": [
+        220,
+        0
+      ],
+      "id": "3cda3485-57cd-4f3f-b131-fe0dce7949cd",
+      "name": "Download a file",
+      "credentials": {
+        "microsoftOneDriveOAuth2Api": {
+          "id": "N96dK32KtlMA3g10",
+          "name": "Microsoft Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.cloud.llamaindex.ai/api/v1/parsing/upload",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        0
+      ],
+      "id": "f5aca35e-331c-484d-9400-e578770dcc46",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "TsITyP70B5kTX1DB",
+          "name": "Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a highly accurate data extraction agent specialized in converting OCR-processed markdown content into structured JSON format.\n\n### 🎯 Your Objective:\nFrom the input markdown content (converted from scanned documents using OCR), **only extract and structure data that belongs to tables**.\n\nYou will:\n- Ignore all non-tabular text (headers, paragraphs, notes, etc.).\n- Identify and extract only tabular data, including:\n  - Column headers\n  - Row values\n- Handle tables even if formatting is inconsistent due to OCR issues.\n\n### 🧾 Output Format:\nReturn the extracted data in **pure JSON** structured like this:\n```json\n[\n  {\n    \"Column A\": \"Value 1\",\n    \"Column B\": \"Value 2\",\n    ...\n  },\n  ...\n]\nThis JSON should be compatible for conversion to an Excel table directly.\n\n✅ Output Constraints:\nOnly one valid JSON object as output. No commentary, no explanation.\n\nEnsure column names are clean and deduplicated.\n\nHandle multiple tables by either:\n\nReturning a list of separate tables with a key per table (\"Table 1\": [...], \"Table 2\": [...]), or\n\nMerging them if they share the same schema (same headers).\n\n🧪 Input Format:\nThe input you receive will be OCR-generated markdown text from a document. It may include:\n\nMultiple tables\n\nNon-table sections like headers, footnotes, or page numbers\n\nInconsistencies in spacing and alignment due to OCR noise\n\nBe resilient and focus only on parsing structured tabular data.\n\n",
+              "role": "system"
+            },
+            {
+              "content": "={{ $json.markdown }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        1060,
+        0
+      ],
+      "id": "dd508521-a155-44c9-92d3-5b6d47ab1250",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "8aiUOz1yDSTgmvPU",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.microsoftOneDrive",
+      "typeVersion": 1,
+      "position": [
+        1940,
+        0
+      ],
+      "id": "7a9efb4b-ff07-4f30-865a-adba0e4b5141",
+      "name": "Upload a file",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "delete"
+      },
+      "type": "n8n-nodes-base.microsoftOneDrive",
+      "typeVersion": 1,
+      "position": [
+        2160,
+        0
+      ],
+      "id": "e1e657d1-103b-410b-aa8c-efeeeed980ed",
+      "name": "Delete a file"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "fileId": "={{ $json.id }}"
+      },
+      "type": "n8n-nodes-base.microsoftOneDrive",
+      "typeVersion": 1,
+      "position": [
+        640,
+        300
+      ],
+      "id": "44a4d9d8-31d8-48a0-8b4d-cd815ee86f31",
+      "name": "Microsoft OneDrive"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -20,
+        240
+      ],
+      "id": "980c4f07-5d3a-4f30-8227-376adc27e31e",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "folderId": "01WL6XH3W55RGNS5BRGZDZPXIIS4QV5FTX"
+      },
+      "type": "n8n-nodes-base.microsoftOneDrive",
+      "typeVersion": 1,
+      "position": [
+        360,
+        300
+      ],
+      "id": "281928bb-9284-4d7b-a51d-e50bc9da769a",
+      "name": "Get items in a folder"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.cloud.llamaindex.ai/api/v1/parsing/job/{{ $json.id }}/result/markdown",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        740,
+        0
+      ],
+      "id": "3f345293-55fc-4df4-bfe5-027b27448082",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "TsITyP70B5kTX1DB",
+          "name": "Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "binaryPropertyName": "={{ $json.message.content }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1420,
+        0
+      ],
+      "id": "bee89598-5699-428f-8c43-8ae87a0ff7e5",
+      "name": "Convert to File1"
+    }
+  ],
+  "connections": {
+    "Microsoft OneDrive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download a file": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Convert to File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a file": {
+      "main": [
+        [
+          {
+            "node": "Delete a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Download a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get items in a folder": {
+      "main": [
+        [
+          {
+            "node": "Microsoft OneDrive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File1": {
+      "main": [
+        [
+          {
+            "node": "Upload a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 0,
+  "meta": null
+}

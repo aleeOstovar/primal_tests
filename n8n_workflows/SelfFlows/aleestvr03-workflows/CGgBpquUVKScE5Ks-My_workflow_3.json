@@ -1,0 +1,145 @@
+{
+  "name": "My workflow 3",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9059cd3b-084c-4568-8369-c0c1debdf685",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "84ff7fe0-afa2-4549-90a8-9f30bf922f93",
+              "name": "",
+              "value": "=",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        0
+      ],
+      "id": "e129a19d-eb55-40eb-8d3d-90c5ce00f945",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query }}",
+        "options": {
+          "systemMessage": "=💻 System Prompt for Coding Agent (Implementation Agent)\nYou are a senior-level software engineer and AI systems developer. You write clean, modular, and production-ready Python code using best practices. You are currently operating as an implementation agent within a multi-agent architecture.\n\nYour goal is to take detailed implementation instructions and convert them into a complete, working codebase — typically in the form of a  Notebook or Python module.\n\n🧠 Your Capabilities:\nPython (3.10+), Notebooks\n\nLangChain, CrewAI, HuggingFace Transformers\n\nPandas, Matplotlib, Seaborn, NumPy\n\nPyMuPDF / pdfplumber / tabula-py / camelot for PDFs\n\nModular, class-based or functionally structured code\n\nCommenting and Markdown explanation for non-dev users\n\nUse of local LLM endpoints (e.g., vLLM, LM Studio, Ollama)\n\n📌 Your Responsibilities:\nUnderstand the Task Prompt Thoroughly\nParse and interpret user instructions precisely before writing code. Identify when a task requires:\n\nFile parsing\n\nAgent orchestration\n\nNatural language processing\n\nData visualization\n\nLLM integration\n\nDesign Before Coding\nBreak the solution into logical components:\n\nData ingestion\n\nAgent setup\n\nTask delegation\n\nResult aggregation\n\nOutput formatting\n\nImplement Step-by-Step\nFor each block of functionality:\n\nUse clear and minimal code\n\nAdd helpful comments\n\nFollow consistent naming and file structure\n\nModularity\nWrite reusable functions or classes wherever applicable. Never hard-code file paths or secrets.\n\nAgent Communication\nEnsure each agent has the correct context and tools:\n\nUse CrewAI or custom orchestration logic\n\nPass shared memory or prior results if required\n\n\n✅ Coding Rules\nNo unnecessary complexity\n\nNo usage of OpenAI API — use open-source models\n\nMinimize external dependencies unless essential\n\nDo not hallucinate functionality — only code what is asked\n\nAlways test a function or block before moving to the next\n\nIf a third-party tool is required (e.g., pdfplumber, tabula-py), write installation instructions too\n\n🧪 Output Format\nFull one file python style \n\nFunctional and executable without manual modification\n\nStructured with headings: Setup → Agents → Tasks → Output\n\n📎 Example Scenario\nIf the prompt says:\n\nImplement a multi-agent system to analyze a PDF with tables and compare it against HR policy\n\nYou should:\n\nLoad the PDF\n\nExtract text and tables separately\n\nCreate Reader, Table Analyst, and Policy Checker agents\n\nRoute data accordingly\n\nGenerate a final structured report via a Writer Agent\n\nLet me know if you want variants of this for:\n\nFastAPI backends\n\nStreamlit frontends\n\nCLI-based data tools\n\nOr a fine-tuned coding style (e.g., functional vs OOP vs LangChain Agents only)"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        620,
+        0
+      ],
+      "id": "28e8e550-9379-4cb6-953c-90c6311c9680",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "o1-pro-2025-03-19",
+          "mode": "list",
+          "cachedResultName": "o1-pro-2025-03-19"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        420,
+        260
+      ],
+      "id": "d67c6053-9fe7-492b-9035-228fd977035a",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "egHGPYURl27nrRPI",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {
+          "text": "You are a senior AI engineer and notebook developer.\n\nCreate a full-featured, modular, and well-documented **Notebook** that implements a **Multi-Agent AI Pipeline** using **LangChain**, **CrewAI**, **Pandas**, and an **open-source LLM** (e.g., Mistral-7B, Falcon, etc.).\n\n---\n\n## 🎯 SYSTEM GOAL:\nA user uploads a file (PDF or CSV).\nThe system automatically:\n1. Detects content type (text, tables, policy-based documents, etc.)\n2. Delegates subtasks to specialized agents (Reader Agent, Table Analyst Agent, Policy Checker Agent)\n3. Aggregates all results\n4. Sends them to a **Writer Agent** to generate a coherent report\n\n---\n\n## ✅ Requirements\n\n### 💾 Part 1: Environment Setup\n- Install all required dependencies: langchain, crewai, pandas, PyMuPDF or pdfplumber, huggingface_hub, chromadb or faiss, matplotlib/seaborn.\n- Set up any model loading logic for HuggingFace or local inference via LangChain.\n\n---\n\n### 📁 Part 2: File Upload + Detection\n- Simulate a file upload: support `.pdf`, `.csv`, `.docx`.\n- Detect file type and extract:\n  - PDF text using PyMuPDF/pdfplumber\n  - Tables (from PDF or Excel) using `tabula-py` or `camelot` if possible\n  - CSV using `pandas.read_csv`\n\n---\n\n### 🤖 Part 3: Agent Definition (Use CrewAI)\nDefine the following agents:\n\n#### 1. 📖 Reader Agent\n- Summarizes general text from PDF or DOCX\n- Extracts key topics, entities, action items\n- Calls LLM via LangChain\n\n#### 2. 📊 Table Analyst Agent\n- Accepts tabular data (from PDF or CSV)\n- Performs statistical analysis (mean, trends, grouping)\n- Answers questions like: “What are the top products?”\n- Optional: generates charts using matplotlib\n\n#### 3. 📏 Policy Checker Agent\n- Compares extracted document content against predefined company policies\n- Flags any deviations or risks\n- Uses embeddings and similarity check via LangChain\n\n#### 4. ✍️ Writer Agent\n- Receives summarized content from all other agents\n- Produces a full report: “Summary, Analysis, Risk Flags”\n- Output can be HTML, Markdown, or DOCX\n\nOptional:\n- Add a Planner Agent to delegate tasks\n- Enable memory if time permits\n\n---\n\n### 💬 Part 4: End-to-End Flow Example\n\n- Show how user uploads a **policy document PDF** with **embedded tables**\n- The system:\n  - Extracts text + tables\n  - Reader Agent → summarization\n  - Table Analyst → analyzes table stats\n  - Policy Checker → flags inconsistencies\n  - Writer Agent → compiles full audit report\n\n---\n\n### 💡 Design Goals:\n- Modular functions (per agent/task)\n- Use local HuggingFace models (no OpenAI)\n- Notebook should be runnable offline (if model weights are available)\n- Use clear markdown cells to explain each block\n\n---\n\n"
+        }
+      }
+    ],
+    "Edit Fields": [
+      {
+        "json": {
+          "query": "i want to make a production level Agentic RAG. make a guidance for me step by step from implementation to release"
+        }
+      }
+    ]
+  },
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

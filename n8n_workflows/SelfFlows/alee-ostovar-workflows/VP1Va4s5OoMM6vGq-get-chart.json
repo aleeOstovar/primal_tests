@@ -1,0 +1,226 @@
+{
+  "name": "get chart",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cf5f7210-5b54-4f4a-abf7-87873be82df4",
+              "name": "ticker",
+              "value": "={{ $json.query }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        160,
+        -20
+      ],
+      "id": "39623365-4922-4dee-8a4a-c5bc9e392997",
+      "name": "Set Ticker1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.chart-img.com/v2/tradingview/advanced-chart/storage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "qEV3dXqftl8EuoEZL5Oft83Uy7uaCXa3aDSVUymT"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"symbol\": \"{{ $json.ticker }}\",\n  \"theme\": \"dark\",\n  \"studies\": [\n    {\n      \"name\": \"Bollinger Bands\"\n    },\n    {\n      \"name\": \"Relative Strength Index\"\n    },\n    {\n      \"name\": \"MACD\"\n    }\n    \n  ]\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        380,
+        -20
+      ],
+      "id": "9876e079-f140-4d8d-93da-ba12ca1f44af",
+      "name": "Get Chart URL1"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        600,
+        -20
+      ],
+      "id": "8be529bd-a8f5-4e25-bd4e-1b166390064c",
+      "name": "Download Chart1"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "text": "=# Role\n\nYou are an expert financial analyst specializing in technical analysis of stock charts. Your role is to analyze financial charts provided to you and offer comprehensive insights into the technical aspects, including candlestick patterns, MACD indicators, volume trends, and overall market sentiment. You must provide a detailed breakdown of the chart, highlighting key areas of interest and actionable insights.\n\nWhen analyzing a stock chart, always include the following:\n\n1. **Candlestick Analysis**:\n   - Identify and explain any significant candlestick patterns (e.g., bullish engulfing, doji, hammer).\n   - Comment on the overall trend (bullish, bearish, or sideways).\n   - Highlight any breakout or pullback zones.\n\n2. **MACD Analysis**:\n   - Describe the current state of the MACD line and Signal line (e.g., bullish crossover, bearish crossover).\n   - Discuss the MACD histogram and its implications for momentum.\n   - Identify any divergences between the MACD and the price action.\n\n3. **Bollinger Bands**:\n   - Highlight any significant changes in trading volume.\n   - Explain how volume supports or contradicts price movements.\n   - Indicate any unusual spikes in volume that may suggest institutional activity.\n\n4. **RSI**:\n   - Highlight any significant changes in trading volume.\n   - Explain how RSI supports or contradicts price movements.\n   - Indicate any unusual spikes in RSI that may suggest institutional activity.\n\n5. **Support and Resistance Levels**:\n   - Identify key support and resistance zones based on the chart.\n   - Discuss the importance of these levels for potential reversals or breakouts.\n\n6. **Actionable Insights**:\n   - Provide clear guidance on potential buy, sell, or hold strategies.\n   - Suggest what to watch for in the near term, including confirmation signals or potential risks.\n\n7. ** considerable trading strategy**\n   -A: Identify Price Extremes: Buy when the price touches the lower Bollinger Band and RSI is below 30; sell when it touches the upper band and RSI is above 70.\n   -B: Confirm Momentum: Wait for MACD to cross above the signal line for a buy or below for a sell.\n   -C: Enter & Exit: Enter after confirmation, set a stop-loss near recent highs/lows, and take profit at the middle Bollinger Band or based on a risk-reward ratio.\n\n8. **Other Observations**:\n   - Note any patterns or indicators that are relevant to the analysis.\n   - Offer insights into market sentiment or other broader trends based on the chart.\n\n\nBe clear, concise, and data-driven in your analysis. Your goal is to provide actionable information that traders and investors can use to make informed decisions. Always explain your reasoning for any conclusions you draw from the chart.\n",
+        "inputType": "base64",
+        "simplify": false,
+        "options": {
+          "detail": "auto"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        800,
+        -20
+      ],
+      "id": "cfb75af2-e7c9-4f2d-975d-df71f20b7f59",
+      "name": "Technical Analysis1",
+      "credentials": {
+        "openAiApi": {
+          "id": "CWJYp93mxQT3xD4V",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fdf7e016-7082-4146-9038-454139023990",
+              "name": "response",
+              "value": "={{ $('Technical Analysis1').item.json.choices[0].message.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1000,
+        -20
+      ],
+      "id": "a3e13efe-044d-4d39-adaa-f281c39b7e16",
+      "name": "response1"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "47b6ec2a-74c8-4b88-b391-2afd06cf28b7",
+      "typeVersion": 1.1,
+      "name": "Workflow Input Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -40,
+        -20
+      ]
+    }
+  ],
+  "connections": {
+    "Set Ticker1": {
+      "main": [
+        [
+          {
+            "node": "Get Chart URL1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Chart URL1": {
+      "main": [
+        [
+          {
+            "node": "Download Chart1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Chart1": {
+      "main": [
+        [
+          {
+            "node": "Technical Analysis1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Technical Analysis1": {
+      "main": [
+        [
+          {
+            "node": "response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Input Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Ticker1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {
+    "Set Ticker1": [
+      {
+        "json": {
+          "ticker": "BINANCE:BTCUSDT"
+        }
+      }
+    ],
+    "Workflow Input Trigger": [
+      {
+        "json": {
+          "ticker": "BINANCE:BTCUSDT"
+        }
+      }
+    ]
+  },
+  "triggerCount": 0,
+  "meta": null
+}

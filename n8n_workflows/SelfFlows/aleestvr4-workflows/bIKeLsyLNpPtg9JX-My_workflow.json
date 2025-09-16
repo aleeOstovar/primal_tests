@@ -1,0 +1,481 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "26a316ff-cc8f-4fd1-980f-9043d2e4cff2",
+      "name": "When clicking ‘Test workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        40,
+        360
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Article Title: {{ $json.title }}\nArticle Link: {{ $json.link }}\nArticle Content: {{ $json.clean_content }}",
+        "options": {
+          "systemMessage": "=You are a content marketing assistant. Based on the article metadata (ID, title) and cleaned content, generate a short LinkedIn promotional message for a professional audience.\n\nFollow this structure:\n\nStart with a hook that grabs attention (a bold insight, surprising fact, or thought-provoking question).\n\nBriefly summarize the article’s value — what readers will learn or gain from it.\n\nInclude a clear call-to-action encouraging readers to read the article.\n\nEnd with this author signature and invitation:\n“—\nSamir Saci\nSupply Chain Data Scientist & Founder of LogiGreen\n📩 Contact me: https://logi-green.com/contactus”\n\nUse a professional and engaging tone. Do not include hashtags or Markdown formatting."
+        }
+      },
+      "id": "97dddeda-9852-4064-8e38-1fb7f312ac24",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        1400,
+        500
+      ],
+      "typeVersion": 1.8
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "id": "b11bdb14-4e48-43af-8e64-9cc7bb47d795",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        1340,
+        660
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "jsCode": "const htmlContent = $input.first().json.content;\n\nconst cleanText = htmlContent\n  .replace(/<[^>]*>/g, '') // remove  tags\n  .replace(/\\s+/g, ' ')    // normalize spaces\n  .replace(/&nbsp;/g, ' ') // decode common entity\n  .trim();\n\nreturn [\n  {\n    json: {\n      clean_content: cleanText\n    }\n  }\n];\n"
+      },
+      "id": "34935687-d7e5-407a-a795-38f91a33c345",
+      "name": "Clean HTML",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        960,
+        460
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "source": "adminApi",
+        "operation": "getAll",
+        "limit": 3,
+        "options": {}
+      },
+      "id": "b9ec2ac9-4d75-4300-81c2-45053f763099",
+      "name": "Extract Blog Posts",
+      "type": "n8n-nodes-base.ghost",
+      "position": [
+        260,
+        360
+      ],
+      "notesInFlow": true,
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "00b337cd-1c61-4f19-8c51-b76f3a8dece1",
+              "name": "id",
+              "type": "string",
+              "value": "={{ $json.id }}"
+            },
+            {
+              "id": "8d38f4bc-bca6-4343-8c5e-5d9fd9cbe178",
+              "name": "title",
+              "type": "string",
+              "value": "={{ $json.title }}"
+            },
+            {
+              "id": "c34ddd76-0db6-4225-82fa-04d5542f9c7c",
+              "name": "featured_image",
+              "type": "string",
+              "value": "={{ $json.feature_image }}"
+            },
+            {
+              "id": "c0f9593c-0d5a-4659-9e25-91b098318bd6",
+              "name": "excerpt",
+              "type": "string",
+              "value": "={{ $json.excerpt }}"
+            },
+            {
+              "id": "0d11d3d5-49f8-473a-8602-b49769f88005",
+              "name": "content",
+              "type": "string",
+              "value": "={{ $json.html }}"
+            },
+            {
+              "id": "ec89a00d-9d76-4594-a8ce-98aa177e6737",
+              "name": "link",
+              "type": "string",
+              "value": "={{ $json.url }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8a829ef2-2d7b-4f77-95ee-fc7cc59ffc40",
+      "name": "Extract Post Content",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        480,
+        360
+      ],
+      "notesInFlow": true,
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "content": "### 1. Workflow Trigger\nThis workflow uses simple trigger.\n\n#### How to setup?\n*Nothing to do.*\n",
+        "height": 520,
+        "width": 200,
+        "color": 7
+      },
+      "id": "ecbd7a6d-38c3-453f-9970-0c6394b4be6d",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### 2. Extract Blog Posts Content\nThe Ghost node extracts all the posts of your blog with content and metadata. In the second node, we extract description, URL, content and features image url.\n\n#### How to setup?\n- **Ghost Account API**:\n   1. Add your Ghost Blog Account Credentials\n   2. Select the number of Blog Posts you want to collect\n  [Learn more about the Ghost Node](https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.ghost)\n\n",
+        "height": 520,
+        "width": 400,
+        "color": 7
+      },
+      "id": "6e82f42a-e824-4575-aa15-081f28aa3fe8",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        220,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### 3. Generate a Linkedin Post for each Post with an AI Agent\nThis block loops through all the posts pulled by the Ghost Node, send the content to the AI agent that generates a Linkedin post. The results are combined and pulled in a Google Sheet.\n\n#### How to setup?\n- **AI Agent with the Chat Model**:\n   1. Add a **chat model** with the required credentials *(Example: Open AI 4o-mini)*\n   2. Adapt the system prompt with your **post signature** and additional points you want to add in your posts\n  [Learn more about the AI Agent Node](https://docs.n8n.io/integrations/builtin/cluster-nodes/root-nodes/n8n-nodes-langchain.agent)\n- **Record Long Break in the Google Sheet Node**:\n   1. Add your Google Sheet API credentials to access the Google Sheet file\n   2. Select the file using the list, an URL or an ID\n   3. Select the sheet in which you want to record your working sessions\n   4. Map the fields\n  [Learn more about the Google Sheet Node](https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.googlesheets)\n\n",
+        "height": 800,
+        "width": 1520,
+        "color": 7
+      },
+      "id": "87330f1b-5e88-4e71-b4bd-cb82f00a0848",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        660,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "=",
+          "cachedResultUrl": "=",
+          "cachedResultName": "="
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "=",
+          "cachedResultName": "="
+        },
+        "columns": {
+          "value": {
+            "id": "={{ $json.id }}",
+            "title": "={{ $json.title }}",
+            "content": "={{ $json.content }}",
+            "excerpt": "={{ $json.excerpt }}",
+            "clean_content": "={{ $json.clean_content }}",
+            "linkedin_post": "={{ $json.output }}",
+            "featured_image": "={{ $json.featured_image }}"
+          },
+          "schema": [
+            {
+              "id": "id",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "id",
+              "defaultMatch": true,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "title",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "title",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "featured_image",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "featured_image",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "excerpt",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "excerpt",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "content",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "content",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "clean_content",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "clean_content",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "linkedin_post",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "linkedin_post",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "id"
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "5bd087ee-c7a3-4b3d-838c-79d615304595",
+      "name": "Record the posts",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        2020,
+        600
+      ],
+      "notesInFlow": true,
+      "typeVersion": 4.5
+    },
+    {
+      "parameters": {
+        "mode": "combineBySql"
+      },
+      "id": "56231585-493b-4c4d-99f9-28042e7b3f08",
+      "name": "Merge Linkedin",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        1780,
+        360
+      ],
+      "notesInFlow": true,
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "mode": "combineBySql"
+      },
+      "id": "6fddfb42-40ca-41e0-b72e-f77d33175d7b",
+      "name": "Add Clean HTML",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        1200,
+        360
+      ],
+      "notesInFlow": true,
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "b3e52f70-7ae1-402f-89af-c2044081f7c6",
+      "name": "Loop Over Posts",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        760,
+        360
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "content": "### [📺Complete Tutorial](https://www.youtube.com/watch?v=Lhi6hV6rWEo)\n![Thumbnail](https://www.samirsaci.com/content/images/2025/04/temp-4.png)\n",
+        "height": 460,
+        "width": 660
+      },
+      "id": "32a03a25-06da-4fd6-b177-cd8a893a71e0",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        540
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge Linkedin",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Clean HTML": {
+      "main": [
+        [
+          {
+            "node": "Add Clean HTML",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Add Clean HTML": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Linkedin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Linkedin": {
+      "main": [
+        [
+          {
+            "node": "Record the posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Posts": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Clean HTML",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Add Clean HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record the posts": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Blog Posts": {
+      "main": [
+        [
+          {
+            "node": "Extract Post Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Post Content": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Extract Blog Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 0,
+  "meta": null
+}

@@ -1,0 +1,79 @@
+{
+  "name": "Error DeBugg",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "79c7d149-4405-4e83-b785-33afe8bd1a3e",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        780,
+        -20
+      ],
+      "id": "0f1c5afd-ba6f-4daf-9450-8d49e16fd505",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "workflowId": {
+          "__rl": true,
+          "value": "Ndmc8QzA1omXQMnW",
+          "mode": "id"
+        },
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.n8n",
+      "typeVersion": 1,
+      "position": [
+        220,
+        0
+      ],
+      "id": "fabd1cd2-6442-4fe2-8f40-ed7d901d8700",
+      "name": "n8n"
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "n8n",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n8n": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 0,
+  "meta": null
+}

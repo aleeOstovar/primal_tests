@@ -1,0 +1,221 @@
+{
+  "name": "PostScheduler",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        272,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "destinationKey": "base64",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        352
+      ],
+      "id": "a224dce1-bfd0-4a5d-90e7-2c1464266606",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        368,
+        608
+      ],
+      "id": "78d6c135-9ab7-4905-92c1-106aeea20de7",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        96,
+        608
+      ],
+      "id": "0d773435-788d-4d82-9154-b7bd8a562858",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "iCal",
+        "title": "={{ $json.title }}",
+        "start": "={{ $json.startDate }}",
+        "end": "={{ $json.endDate }}",
+        "allDay": true,
+        "additionalFields": {
+          "description": "={{ $json.description }}",
+          "location": "={{ $json.location }}"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1152,
+        352
+      ],
+      "id": "c2273f78-23be-4517-b606-3ba1f15cf7da",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bec1eb09-15a2-46f3-b796-fd71136cebda",
+              "name": "startDate",
+              "value": "={{ $json.startDate }}",
+              "type": "string"
+            },
+            {
+              "id": "2c7c72f3-c8e4-41ba-9381-9c3a1d997733",
+              "name": "endDate",
+              "value": "={{ $json.endDate }}",
+              "type": "string"
+            },
+            {
+              "id": "c9b915a3-f675-43b6-8430-865b52b2dc14",
+              "name": "title",
+              "value": "={{ $json.summary }}",
+              "type": "string"
+            },
+            {
+              "id": "065e859f-0de1-42e9-b4d8-2a38ed1a4fb4",
+              "name": "description",
+              "value": "={{ $json.description }}",
+              "type": "string"
+            },
+            {
+              "id": "4dccf2e2-21fd-4661-9aec-eb4845f461b7",
+              "name": "location",
+              "value": "={{ $json.location }}",
+              "type": "string"
+            },
+            {
+              "id": "b538443d-3c29-4a20-8dda-2b339964510f",
+              "name": "timezone",
+              "value": "={{ $json.timezone }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        912,
+        352
+      ],
+      "id": "49580ebb-91e9-4580-a585-73178ee0681d",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "// The input data is available in the 'items' variable.\n// This code will iterate through each item provided to the node.\n\nconst result = [];\n\nfor (const item of items) {\n  // The 'query' field is a string, so we need to parse it into a JSON object.\n  const parsedQuery = JSON.parse(item.json.query);\n\n  // We add the parsed object to our result array.\n  result.push({ json: parsedQuery });\n}\n\n// The node will output the data in the 'result' array.\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        656,
+        352
+      ],
+      "id": "16c82696-a0c8-42f2-b3f9-aba2873f7760",
+      "name": "Code"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        []
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {
+    "Edit Fields1": [
+      {
+        "json": {
+          "query": "{\"startDate\":\"2025-08-06T18:30:00+03:30\",\"endDate\":\"2025-08-06T19:30:00+03:30\",\"summary\":\"Scheduled Event\",\"description\":\"Set a reminder or arrange an event to occur tomorrow at 9 pm, ensuring timely notification or preparation. #schedule #reminder #appointment\",\"location\":\"linkedIn\",\"timezone\":\"UTC\"}"
+        }
+      }
+    ]
+  },
+  "triggerCount": 0,
+  "meta": null
+}

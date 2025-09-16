@@ -1,0 +1,436 @@
+{
+  "name": "SF_Tasks_Summary - AI",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -848,
+        704
+      ],
+      "id": "7ad2f9b4-ab71-4e59-a39f-0b2b1bb2fefa",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "collection": "DialPad_Transcripts",
+        "options": {},
+        "query": "={ \"call_id\" : \"{{ $json.entry_point_call_id }}\" }"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        -176,
+        608
+      ],
+      "id": "3d911828-b93f-43c1-b611-55bf1a5d7eb5",
+      "name": "MongoDB",
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "summarize user input. min 3 lines and max 5 lines. make sure the important points from sales and customer service point of view are highlighted. \n\ndetails included like why customer is selling and mortgage balance and asking prices are important and should be in the summary.",
+              "role": "system"
+            },
+            {
+              "content": "={{ $('MongoDB').item.json.transcript }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        272,
+        528
+      ],
+      "id": "58ed0c85-5ec2-41b5-9d4a-315ee6931a71",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "obrCoVwP9hvbq5OW",
+          "name": "EHB_App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "collection": "DialPad_Calls",
+        "options": {},
+        "query": "{\n  \"$and\": [\n    { \"SF_Task_ID\": { \"$exists\": true, \"$ne\": \"\" } },\n    { \"SF_Task_AI_Summary\": { \"$exists\": false } },\n    { \"entry_point_call_id\": { \"$ne\": null } }\n  ]\n}\n"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        -624,
+        608
+      ],
+      "id": "e91c1b17-6ef3-4735-97b6-4512c6b0142b",
+      "name": "MongoDB3",
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "batchSize": "=1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        48,
+        608
+      ],
+      "id": "542ba813-d02d-471a-895f-1e9300079de4",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1520,
+        608
+      ],
+      "id": "c70fa8ae-db91-4a48-b1d1-260c1129f153",
+      "name": "Wait",
+      "webhookId": "b6094269-e4c0-4700-8761-5de1842d29c6"
+    },
+    {
+      "parameters": {
+        "resource": "task",
+        "operation": "update",
+        "taskId": "={{ $('MongoDB3').item.json.SF_Task_ID }}",
+        "updateFields": {
+          "description": "={{ $json.Description }}\n\nAI Summary:\n{{ $('Message a model').item.json.message.content.summary }}"
+        }
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1,
+      "position": [
+        864,
+        528
+      ],
+      "id": "b19f7dd6-1a83-4570-8c90-10397fd7f31e",
+      "name": "Update a task",
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "CBdxVaEpIAhpORgk",
+          "name": "Salesforce account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "task",
+        "operation": "get",
+        "taskId": "={{ $('MongoDB3').item.json.SF_Task_ID }}"
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1,
+      "position": [
+        640,
+        528
+      ],
+      "id": "f3767978-b083-4205-a23d-e6fb3404ba55",
+      "name": "Get a task",
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "CBdxVaEpIAhpORgk",
+          "name": "Salesforce account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "DialPad_Calls",
+        "updateKey": "call_id",
+        "fields": "=SF_Task_AI_Summary",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        1296,
+        528
+      ],
+      "id": "e9367c5a-3563-47ba-a9e9-b153053bc228",
+      "name": "MongoDB1",
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2b55e7da-e14b-4adc-897c-7eeca675af3e",
+              "name": "call_id",
+              "value": "={{ $('MongoDB3').item.json.call_id }}",
+              "type": "string"
+            },
+            {
+              "id": "23900e04-4882-437c-9e88-415a15f56300",
+              "name": "SF_Task_AI_Summary",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1088,
+        528
+      ],
+      "id": "fac72f0d-f3e2-4c6c-82ef-db6336b2c2fd",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "content": "## AI Task SF\n**Insert AI summary of each call into its SF Task page.**\nThis automation takes in the tasks from SF which are generated by DialPad app on SF, gets the call transcriptions, gets the summary by GPT and inserts it into SF tasks in comments. Runs once per day\n",
+        "height": 360,
+        "width": 340,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -960,
+        304
+      ],
+      "typeVersion": 1,
+      "id": "ead58cc2-fcde-4820-a15c-c54f59646d3f",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -848,
+        512
+      ],
+      "id": "60f7044b-c2cf-4356-a10e-f39ba39e063e",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "52922fdf-860b-41c2-b738-204b64e717c2",
+              "leftValue": "={{ $json.total_duration }}",
+              "rightValue": 180000,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -400,
+        608
+      ],
+      "id": "ce1f8c23-153c-4fd0-9a1e-10701b4c25bc",
+      "name": "HighDurationCalls1",
+      "alwaysOutputData": false
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "MongoDB3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Get a task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB3": {
+      "main": [
+        [
+          {
+            "node": "HighDurationCalls1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a task": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a task": {
+      "main": [
+        [
+          {
+            "node": "Update a task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB1": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "MongoDB1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "MongoDB3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HighDurationCalls1": {
+      "main": [
+        [
+          {
+            "node": "MongoDB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "66f283c6-3550-4c90-b50a-35af0b7d6d53",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1492f4d88835c9aa4ef9f92114084d45e62f070cbfca1060935e9b804d7507de"
+  },
+  "id": "mwOtvRMFNVSGdZFk",
+  "tags": []
+}

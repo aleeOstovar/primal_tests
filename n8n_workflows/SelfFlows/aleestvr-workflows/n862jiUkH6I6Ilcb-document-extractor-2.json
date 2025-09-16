@@ -1,0 +1,240 @@
+{
+  "name": "document extractor 2",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        160,
+        60
+      ],
+      "id": "56d6a491-8644-4285-a613-f18393fa6506",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://google.github.io/adk-docs/get-started/",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36\",\n    \"Accept\": \"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8\",\n    \"Accept-Language\": \"en-US,en;q=0.9\",\n    \"Accept-Encoding\": \"gzip, deflate, br\",\n    \"Connection\": \"keep-alive\",\n    \"Upgrade-Insecure-Requests\": \"1\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        380,
+        60
+      ],
+      "id": "561cfbb7-3d10-40fc-9227-1269e45dd2b7",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.data }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "links",
+              "description": "Array of all <a href=\"…\"> URLs"
+            },
+            {
+              "name": "snippets",
+              "description": "Array of extracted code blocks"
+            }
+          ]
+        },
+        "options": {
+          "systemPromptTemplate": "You are a Documentation Extraction Agent.  \nYour task is to accept a base URL, recursively crawl all pages within the same origin, extract every hyperlink and its page content, and output a structured JSON array.  \nUse HTTP requests to fetch raw HTML, parse with CSS selectors to identify links and content sections (headings, paragraphs, code blocks, lists), and batch your requests to manage concurrency.  \nAlways obey the site’s robots.txt rules, respect rate limits, and handle errors gracefully via retries or logging.  \nProduce valid JSON where each object has:  \n  - “url”: the page’s absolute URL  \n  - “title”: the page’s `<title>` text  \n  - “content”: a nested structure of extracted text and code snippets  \nLimit your crawl to the given domain and do not follow external links.  "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1,
+      "position": [
+        620,
+        60
+      ],
+      "id": "a0735490-94d8-4a3a-bfaa-77fc2a01d9cc",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "model": "microsoft/phi-4-reasoning-plus:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        400,
+        340
+      ],
+      "id": "7c9a66c0-5d2d-4122-8d81-103aa6d8e5f7",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "VXrVH3CxR9uCUJ4X",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6436a66e-36f1-4a25-a8c6-5157410138b0",
+              "name": "links",
+              "value": "={{ $json.output.links }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1000,
+        -160
+      ],
+      "id": "b9eeab2f-3044-45f8-acbc-a1df3ac1a39f",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1180,
+        60
+      ],
+      "id": "f4a6f98b-3dfe-44c3-a7ff-eb1b9ce95e51",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Function node code\n// Assumes your previous node output looks like:\n// [\n//   {\n//     json: {\n//       links: \"https://.../get-started/ https://.../installation/ …\"\n//     }\n//   }\n// ]\n\nconst newItems = [];\n\nfor (const item of items) {\n  // grab the raw string\n  const linksString = item.json.links || '';\n  // split on whitespace, filter out any empty strings\n  const urls = linksString.split(/\\s+/).filter(u => u);\n  \n  // push each url as its own item\n  for (const url of urls) {\n    newItems.push({\n      json: { url }\n    });\n  }\n}\n\nreturn newItems;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        60
+      ],
+      "id": "e1d6027a-649f-41d5-a746-bf0df1d631e0",
+      "name": "Code"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1320,
+        200
+      ],
+      "id": "6c1f85ad-9816-4663-b296-b904632745c3",
+      "name": "Wait",
+      "webhookId": "df1e9df4-3c55-48b6-8901-c64971ef2cc2"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 0,
+  "meta": null
+}

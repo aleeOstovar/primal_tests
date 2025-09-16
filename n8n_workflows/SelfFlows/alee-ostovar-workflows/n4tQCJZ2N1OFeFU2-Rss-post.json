@@ -1,0 +1,571 @@
+{
+  "name": "Rss post",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3000/api/v1/rss-posts/check-exists",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "link",
+              "value": "={{ $json.link }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1840,
+        220
+      ],
+      "id": "ee01ece9-0c22-4973-a455-37c087c3d17f",
+      "name": "HTTP Request",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "40c8cb80-d99c-4e3a-a92a-11b6d8c45c7e",
+              "leftValue": "={{ $json.isExist }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1840,
+        440
+      ],
+      "id": "72e10fd0-d909-48cd-a8b3-07fda740a59d",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 1
+            }
+          ]
+        }
+      },
+      "name": "Cron",
+      "type": "n8n-nodes-base.cron",
+      "position": [
+        240,
+        860
+      ],
+      "typeVersion": 1,
+      "id": "c65eb198-2c99-4a59-9763-ae8b5eafcf73"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.feedUrl }}",
+        "options": {}
+      },
+      "id": "27da5e82-99ef-4383-aff0-6b5e863f43f2",
+      "name": "RSS Feed Read",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "position": [
+        920,
+        880
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "21c1be49-9803-4cc8-ba69-7c32942ca089",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        680,
+        860
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "jsCode": "return[\n  { \"feedUrl\": \"https://cointelegraph.com/rss\" },\n  { \"feedUrl\": \"https://www.coindesk.com/arc/outboundfeeds/rss/\" },\n  { \"feedUrl\": \"https://cryptopotato.com/feed/\" },\n  { \"feedUrl\": \"https://ambcrypto.com/feed/\" },\n  { \"feedUrl\": \"https://decrypt.co/feed\" },\n  // { \"feedUrl\": \"https://theblockcrypto.com/feed\" }403\n];"
+      },
+      "id": "977a51b9-097d-4652-9bc5-873534512b8c",
+      "name": "RSS Addresses",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        460,
+        860
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "6ou11MjmAbfBWKlT",
+          "mode": "list",
+          "cachedResultName": "RSS_Translation"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2240,
+        660
+      ],
+      "id": "3dabfa7a-efdd-4d70-a48d-21d855f8cf58",
+      "name": "content creator team Workflow",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Retrieve the last processed timestamp from workflow static data.\n// If not set, default to 0 (i.e., epoch start).\nconst feedUrl = $input.first().json.link;\nconst staticData = $getWorkflowStaticData('global');\nconst lastCycleTimestamp = staticData[feedUrl] || 0;\nconst twoHA = Date.now() - (2*60*60*1000) \n// Assume each article has a 'pubDate' field with a valid date string.\n// Filter out articles older than or equal to the stored timestamp.\nconst newArticles = items.filter(item => {\n  const pubDate = new Date(item.json.pubDate).getTime();\n  return pubDate > twoHA;\n});\n\n// If there are any new articles, sort them by publication date descending.\n// if (newArticles.length > 0) {\n//   newArticles.sort((a, b) => new Date(b.json.pubDate) - new Date(a.json.pubDate));\n  \n//   // Update the stored timestamp with the newest article's publication date.\n//   const newestTimestamp = new Date(newArticles[0].json.pubDate).getTime();\n//   staticData.lastCycleTimestamp = newestTimestamp;\n  \n//   // Return only the latest article.\n//   return newArticles;\n// }\n\nif (newArticles.length > 0) {\n  newArticles.sort((a, b) => new Date(b.json.pubDate) - new Date(a.json.pubDate));\n  const newestTimestamp = new Date(newArticles[0].json.pubDate).getTime();\n  // Store the timestamp under the feed's URL\n  staticData[feedUrl] = newestTimestamp;\n  return newArticles;\n}\n\nreturn [];\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        940
+      ],
+      "id": "43b221c7-2dd0-47e0-87fe-cce89b0243b7",
+      "name": "Get news from n Hours past",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2560,
+        660
+      ],
+      "id": "69f9e137-f023-44d2-b6fc-d6ef5bf120c3",
+      "name": "delay reading next news",
+      "webhookId": "75fb56a4-ce94-4fbc-9951-6bd37894d256"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1520,
+        1040
+      ],
+      "id": "5ce84828-62ef-4507-95bb-ffe0186478e3",
+      "name": "delay reading next sources",
+      "webhookId": "75fb56a4-ce94-4fbc-9951-6bd37894d256"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "news",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        980
+      ],
+      "id": "95050dd3-1d6d-4f56-b944-b7060b60ead2",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1120,
+        600
+      ],
+      "id": "5c2d1e62-8a8c-4998-8acd-d0b2afcf943f",
+      "name": "Loop Over Items1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "news",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        900,
+        600
+      ],
+      "id": "0520b381-9858-4103-9790-a56c8b371f6a",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "rXj7PoG3AwCe5XbE",
+          "mode": "list",
+          "cachedResultName": "My Sub-Workflow 1"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2020,
+        660
+      ],
+      "id": "b1b09ac4-33a2-4f81-ac7f-70dc83e9d8a1",
+      "name": "Standardize Post"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2b13f8e7-117b-4d58-95d7-b76a91dd0709",
+              "name": "data",
+              "value": "={{ $('Loop Over Items1').item.json}}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1840,
+        600
+      ],
+      "id": "d7fcd5bd-7f02-4b5e-b36b-9554f823cd0a",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7c58ba56-4808-46c6-acb3-3765be354d6b",
+              "name": "link",
+              "value": "={{ $json.link }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1400,
+        240
+      ],
+      "id": "1542feda-a72f-4eb7-965d-719b3ba7ebb1",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "98c5dd59-87db-4d95-aaaa-525484cf9476",
+              "leftValue": "={{ $json.link }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1620,
+        20
+      ],
+      "id": "33781c6e-0634-4c6f-ac07-e8ab5afd2bf1",
+      "name": "If1"
+    }
+  ],
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "delay reading next news",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cron": {
+      "main": [
+        [
+          {
+            "node": "RSS Addresses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Feed Read": {
+      "main": [
+        [
+          {
+            "node": "Get news from n Hours past",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "RSS Feed Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Addresses": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "content creator team Workflow": {
+      "main": [
+        [
+          {
+            "node": "delay reading next news",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get news from n Hours past": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delay reading next news": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delay reading next sources": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "delay reading next sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Standardize Post": {
+      "main": [
+        [
+          {
+            "node": "content creator team Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Standardize Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "delay reading next news",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "global": {
+      "lastCycleTimestamp": 1739798880000,
+      "https://bitcoinmagazine.com/business/amboss-ceo-talks-growth-of-the-bitcoin-lightning-network-tether-usdt-on-lightning": 1739900030000,
+      "https://dailyhodl.com/2025/02/18/bitcoin-and-altcoins-gearing-up-for-bounce-higher-according-to-crypto-trader-heres-his-market-outlook/": 1739926806000,
+      "https://coinpedia.org/news/did-president-donald-trump-post-about-ripple-on-his-truth-social/": 1739937108000,
+      "https://www.coindesk.com/business/2025/02/18/will-argentina-president-milei-s-crypto-fisco-be-a-deathblow-for-memecoin-craze": 1739941167000,
+      "https://coinpedia.org/crypto-live-news/crypto-live-news-today-feb-19th/": 1739947758000,
+      "https://blog.kraken.com/product/asset-listings/cyber-and-velodrome-are-available-for-trading": 1739892706000
+    }
+  },
+  "pinData": {},
+  "triggerCount": 1,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

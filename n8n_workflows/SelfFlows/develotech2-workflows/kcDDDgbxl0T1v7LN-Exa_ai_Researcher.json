@@ -1,0 +1,124 @@
+{
+  "name": "Exa_ai_Researcher",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "a1469f14-f85a-4788-b4ff-2d27bccec077",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.exa.ai/research/v0/tasks",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "6a601f3d-16c4-4636-8acb-7e7c688ff3ad"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"exa-research\",\n  \"instructions\": \"{{ $json.query }}\",\n  \"output\": {\n    \"inferSchema\": true\n  }\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "3930b36c-a45a-4c4d-8b9b-4baacd96c720",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.exa.ai/research/v0/tasks/{{ $json.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "6a601f3d-16c4-4636-8acb-7e7c688ff3ad"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "eec79beb-9dd5-4fec-9c6a-f5b621d83b4e",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "amount": 20
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "449dcd7a-8963-43f1-b9f6-ff5520295695",
+      "name": "Wait",
+      "webhookId": "c157da87-9673-4547-97e8-30dd8b86ff9f"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 0,
+  "meta": null
+}

@@ -1,0 +1,236 @@
+{
+  "name": "My workflow 5",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        -20
+      ],
+      "id": "e996d348-28d4-474a-aee2-76f4e6d53959",
+      "name": "Telegram Trigger",
+      "webhookId": "af691a12-26db-4681-a487-b87788928fd7",
+      "credentials": {
+        "telegramApi": {
+          "id": "kwcDsCZqvhDYB1vR",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2b7ce431-6d96-43ab-8515-df745c355d82",
+              "name": "url",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "9cd4bbf5-627e-4dcb-a905-5cb622f1cb0a",
+              "name": "userID",
+              "value": "={{ $json.message.chat.id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        460,
+        -20
+      ],
+      "id": "1bd7762b-f19d-42c4-bd71-cd8d398cccb6",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36\",\n  \"Accept\": \"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7\",\n  \"Accept-Encoding\": \"gzip, deflate, br\",\n  \"Accept-Language\": \"en-US,en;q=0.9\",\n  \"Referer\": \"https://www.google.com/\",\n  \"Upgrade-Insecure-Requests\": \"1\",\n  \"Sec-Fetch-Dest\": \"document\",\n  \"Sec-Fetch-Mode\": \"navigate\",\n  \"Sec-Fetch-Site\": \"cross-site\",\n  \"Sec-Fetch-User\": \"?1\",\n  \"Connection\": \"keep-alive\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        700,
+        -20
+      ],
+      "id": "33b3fb1a-7334-4051-aa75-81033fd3feb7",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "data",
+              "cssSelector": "meta[property=\"og:video\"]",
+              "returnValue": "attribute",
+              "attribute": "content"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        920,
+        -20
+      ],
+      "id": "e1677fe3-d89e-4a2a-b8d5-9c4080a932c0",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.data }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1140,
+        -20
+      ],
+      "id": "55cd342c-488e-4452-a52a-c1014096c16a",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "operation": "sendVideo",
+        "chatId": "={{ $('Edit Fields').item.json.userID }}",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1580,
+        -20
+      ],
+      "id": "aa47c255-957f-4d3b-8ddb-c951118d6194",
+      "name": "Send a video",
+      "webhookId": "508e903e-e6b1-4849-822b-f94202b8f771",
+      "credentials": {
+        "telegramApi": {
+          "id": "kwcDsCZqvhDYB1vR",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Send a video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {
+    "Telegram Trigger": [
+      {
+        "json": {
+          "update_id": 636454816,
+          "message": {
+            "message_id": 18,
+            "from": {
+              "id": 228598959,
+              "is_bot": false,
+              "first_name": "Alee",
+              "username": "Alee_stvr",
+              "language_code": "en"
+            },
+            "chat": {
+              "id": 228598959,
+              "first_name": "Alee",
+              "username": "Alee_stvr",
+              "type": "private"
+            },
+            "date": 1752745096,
+            "text": "https://www.redgifs.com/watch/primarygregariousfish",
+            "entities": [
+              {
+                "offset": 0,
+                "length": 51,
+                "type": "url"
+              }
+            ],
+            "link_preview_options": {
+              "url": "https://www.redgifs.com/watch/primarygregariousfish",
+              "prefer_large_media": true
+            }
+          }
+        }
+      }
+    ]
+  },
+  "triggerCount": 1,
+  "meta": null
+}

@@ -1,0 +1,542 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "aggregate",
+        "collection": "DialPad_Calls",
+        "query": "[\n  {\n    \"$group\": {\n      \"_id\": \"$contact.id\",\n      \"name\": { \"$first\": \"$contact.name\" },\n      \"phone\": { \"$first\": \"$contact.phone\" },\n      \"call_id\": { \"$addToSet\": \"$call_id\" },\n      \"entry_point_call_id\": { \"$addToSet\": \"$entry_point_call_id\" },\n      \"latest_event_timestamp\": { \"$max\": { \"$toLong\": \"$event_timestamp\" } }\n    }\n  },\n  {\n    \"$sort\": { \"latest_event_timestamp\": -1 }\n  },\n  {\n    \"$project\": {\n      \"_id\": 0,\n      \"contact_id\": \"$_id\",\n      \"name\": 1,\n      \"phone\": 1,\n      \"call_id\": 1,\n      \"entry_point_call_id\":1\n    }\n  }\n]\n"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        -500,
+        -40
+      ],
+      "id": "de2aa44c-137c-4e76-ad37-ad23b9c768e5",
+      "name": "MongoDB",
+      "credentials": {
+        "mongoDb": {
+          "id": "AGa5jUir8J6b9XJC",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -40,
+        -40
+      ],
+      "id": "c1c7611f-93df-4a0f-bcfa-67aa306b483f",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.filter(item => {\n  let callIds = item.json.call_id;\n  let entryPoints = item.json.entry_point_call_id;\n\n  // Ensure both are arrays\n  callIds = Array.isArray(callIds) ? callIds : [callIds];\n  entryPoints = Array.isArray(entryPoints) ? entryPoints : [entryPoints];\n\n  // Filter out null/undefined values\n  callIds = callIds.filter(id => id != null);\n  entryPoints = entryPoints.filter(id => id != null);\n\n  // Update the item with cleaned arrays\n  item.json.call_id = callIds;\n  item.json.entry_point_call_id = entryPoints;\n\n  // Keep only if there's at least one valid entry_point_call_id\n  return entryPoints.length > 0;\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -280,
+        -40
+      ],
+      "id": "599d49de-35d1-4fca-9c0c-bf73fca0a706",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "content": "\n## exclude each contact that has no transcript\n"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -340,
+        -160
+      ],
+      "id": "1fa1d72c-8c47-41c0-952e-71362adbf3a9",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "collection": "DialPad_Transcripts",
+        "options": {},
+        "query": "={{ $json.mongoQuery }}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        420,
+        160
+      ],
+      "id": "a1ee43f8-dfb5-437c-9268-c5f2841d82a5",
+      "name": "MongoDB2",
+      "credentials": {
+        "mongoDb": {
+          "id": "AGa5jUir8J6b9XJC",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        900,
+        160
+      ],
+      "id": "967c0506-7b18-41e5-98d6-eeac82944704",
+      "name": "Aggregate3"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1140,
+        200
+      ],
+      "id": "6d466a65-7083-4823-9d9c-ba7a889a8904",
+      "name": "Wait2",
+      "webhookId": "9f49718a-34e7-49b5-8b90-1c977b963f16"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json\nconst entryPointCallIds = input.entry_point_call_id;\n// Create the MongoDB query object\nconst mongoQuery = {\n  call_id: { \"$in\": entryPointCallIds }\n};\n\n// Convert to JSON string for n8n MongoDB node\nreturn {\n  json: {\n    mongoQuery: JSON.stringify(mongoQuery),\n    contact_name:input.name,\n    contact_id: input.contact_id\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        200,
+        160
+      ],
+      "id": "8d22c5fb-b1e4-43d9-b472-5dc28d37cdf6",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        440,
+        -180
+      ],
+      "id": "e8411b81-f943-4f36-81a7-ec437938207a",
+      "name": "Loop Over Items3",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map((item, index) => {\n  // Access previous input item (before MongoDB)\n  const prev = $items('Code1', 0)[index];  // Replace 'NodeBeforeMongoDB' with actual node name$('Code1').first().json.mongoQueryString\n  \n  if (!prev) return item; // just in case\n\n  // Inject contact info\n  item.json.contact_id = prev.json.contact_id;\n  item.json.name = prev.json.name;\n\n  return item;\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        160
+      ],
+      "id": "f877ad99-f0fc-4544-b0fd-a209d380c5fe",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "content": "## this node will group all datas of a contact (customer)",
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        80,
+        -260
+      ],
+      "id": "546839f0-e4b0-4672-827d-5866d2606720",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## preprocess all data and aggregate them all\n",
+        "height": 200,
+        "width": 860,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        200,
+        300
+      ],
+      "id": "032fb800-0d88-4db8-bbce-3bc58db182d8",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## loop over each contact",
+        "height": 120,
+        "width": 200,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        380,
+        -280
+      ],
+      "id": "60580ba6-a9ae-4933-b4f7-0be9cdb1f169",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the input item\nconst inputItem = $input.first().json;\n\n// Extract contact info with fallbacks\nconst contactId = inputItem.contact_id || inputItem.id;\nconst contactName = inputItem.contact_name || inputItem.name;\n\n// Handle data array (could be directly in inputItem or nested)\nlet dataArray = inputItem.data || [];\n\n// If data is not an array, try to make it one\nif (!Array.isArray(dataArray)) {\n  dataArray = [dataArray];\n}\n\n// Build the output object\nconst outputObject = {\n  contact_id: contactId,\n  contact_name: contactName\n};\n\n// Process each data entry dynamically\ndataArray.forEach((dataEntry, index) => {\n  if (!dataEntry) return; // Skip null/undefined entries\n  \n  const dataKey = `data_${index}`;\n  \n  outputObject[dataKey] = {\n    agent_name: dataEntry.agent_name || \n                dataEntry.agen_name || \n                dataEntry.agentName || \n                'Unknown',\n    [`transcript_${index}`]: dataEntry.transcript || \n                            dataEntry.transcript_text || \n                            dataEntry.transcriptText || \n                            dataEntry.content || \n                            ''\n  };\n});\n\nreturn [{\n    data: JSON.stringify(outputObject)\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        740,
+        -80
+      ],
+      "id": "c5ecb02c-42e9-4947-a939-7f734809f783",
+      "name": "Code5"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all items from the aggregation\nconst allItems = items;\nconst groupedByContact = {};\n\n// Process each aggregated item\nallItems.forEach(item => {\n  const dataArray = item.json.data || [];\n  \n  // Handle each data entry (could be single or multiple per item)\n  dataArray.forEach(dataEntry => {\n    const contactId = dataEntry.contact_id;\n    const contactName = dataEntry.contact_name;\n    \n    if (!contactId) return; // Skip if no contact_id\n    \n    // Initialize group if it doesn't exist\n    if (!groupedByContact[contactId]) {\n      groupedByContact[contactId] = {\n        contact_id: contactId,\n        contact_name: contactName,\n        name: dataEntry.name, // Assuming name is consistent for same contact\n        data: []\n      };\n    }\n    \n    // Add this data entry to the contact's group\n    groupedByContact[contactId].data.push(dataEntry);\n  });\n});\n\n// Convert grouped object back to array format for n8n\nreturn Object.values(groupedByContact).map(group => ({\n  json: group\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        200,
+        -100
+      ],
+      "id": "d30664c5-ee10-4201-ab37-8c691eabb28a",
+      "name": "Code4"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -800,
+        -40
+      ],
+      "id": "eb746cd6-3a01-4847-9335-8a71083431e5",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Summarize the user input. Minimum 7 lines and maximum 10 lines. The name of the company agent and the customer are given in the input, by examining the text you can figure out which one is the customer. Keep in mind that sometimes the customer name can be a number rather than a specific name, do not confuse it with the name of the company agent.",
+              "role": "system"
+            },
+            {
+              "content": "=data: {{ $json.data }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        1060,
+        -80
+      ],
+      "id": "f6071b5c-3cbe-478b-a2ea-58387e70ba38",
+      "name": "Message a model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "GGaHbQHCKVC9HTnx",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1700,
+        -80
+      ],
+      "id": "24d0923c-4407-4024-8b48-abc579e8bfe1",
+      "name": "Wait",
+      "webhookId": "48cac579-81c6-4793-8e83-39e50cddc2a1"
+    },
+    {
+      "parameters": {
+        "content": "## i did not want to mess up so pleas add a node to store new lead here or store it in db",
+        "height": 180,
+        "width": 300,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        -180
+      ],
+      "id": "e27ce76f-a4a2-4f90-be49-6aece0883527",
+      "name": "Sticky Note4"
+    }
+  ],
+  "connections": {
+    "MongoDB": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Code4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB2": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate3": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "MongoDB2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items3": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Code5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "Aggregate3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code5": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code4": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "MongoDB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {
+    "Code4": [
+      {
+        "json": {
+          "contact_id": "5774537225519104",
+          "contact_name": "Majidah Muhammad",
+          "data": [
+            {
+              "_id": "685cbf546ea00f38b52181cd",
+              "call_id": "6130475727962112",
+              "agent_id": "5319930968834048",
+              "agent_name": "Rose Dalagan",
+              "call_datetime": "1750895294628",
+              "transcript": "Time: 2025-06-25T23:48:15.954894\nSpeaker: Majidah Muhammad\nTranscript: Hello.\n\nTime: 2025-06-25T23:48:20.865127\nSpeaker: Rose Dalagan\nTranscript: Hello, this is from express homebuyers. May I speak may I speak with Mahita.\n\nTime: 2025-06-25T23:48:27.354894\nSpeaker: Majidah Muhammad\nTranscript: Maga this is she.\n\nTime: 2025-06-25T23:48:29.265127\nSpeaker: Rose Dalagan\nTranscript: Gina, thank you for correcting me ma'am. I'm calling about the information you have submitted for trucks and road is now a bad time.\n\nTime: 2025-06-25T23:48:38.154894\nSpeaker: Majidah Muhammad\nTranscript: No, that's fine.\n\nTime: 2025-06-25T23:48:40.065127\nSpeaker: Rose Dalagan\nTranscript: Okay, perfect. Let me just verify the information to make sure what we have is accurate, okay?\n\nTime: 2025-06-25T23:48:45.954894\nSpeaker: Majidah Muhammad\nTranscript: Okay.\n\nTime: 2025-06-25T23:48:47.265127\nSpeaker: Rose Dalagan\nTranscript: Alright, so, I have your name spell this, M. For Mary, A-J-I-D. For David and then Hammed.\n\nTime: 2025-06-25T23:48:54.954894\nSpeaker: Majidah Muhammad\nTranscript: Yes.\n\nTime: 2025-06-25T23:48:56.265127\nSpeaker: Rose Dalagan\nTranscript: Okay, and then the complete property address is 10402. Trustin road, Adelphia Maryland, 20783.\n\nTime: 2025-06-25T23:49:05.754894\nSpeaker: Majidah Muhammad\nTranscript: Yeah.\n\nTime: 2025-06-25T23:49:07.065127\nSpeaker: Rose Dalagan\nTranscript: Okay. And then is this the best number to reach you at?\n\nTime: 2025-06-25T23:49:11.754894\nSpeaker: Majidah Muhammad\nTranscript: Yes.\n\nTime: 2025-06-25T23:49:13.065127\nSpeaker: Rose Dalagan\nTranscript: Okay and then your email is your first name.your. Last name @gmail.com.\n\nTime: 2025-06-25T23:49:18.954894\nSpeaker: Majidah Muhammad\nTranscript: Yes.\n\nTime: 2025-06-25T23:49:20.265127\nSpeaker: Rose Dalagan\nTranscript: Okay, ma'am. Is Adelphi same as Hyattsville.\n\nTime: 2025-06-25T23:49:23.754894\nSpeaker: Majidah Muhammad\nTranscript: Yes.\n\nTime: 2025-06-25T23:49:25.065127\nSpeaker: Rose Dalagan\nTranscript: See, cause I was trying to check on it on Zillow. Now. I will connect you to one of our specialist to discuss the property in further detail. But before doing so, I'd like to know how did you hear about us?\n\nTime: 2025-06-25T23:49:41.754894\nSpeaker: Majidah Muhammad\nTranscript: A commercial.\n\nTime: 2025-06-25T23:49:43.665127\nSpeaker: Rose Dalagan\nTranscript: Commercial.\n\nTime: 2025-06-25T23:49:45.954894\nSpeaker: Majidah Muhammad\nTranscript: Yes.\n\nTime: 2025-06-25T23:49:49.065127\nSpeaker: Rose Dalagan\nTranscript: Alright, now let me check for an available specialist to assist us for you, okay? One moment please.\n\nTime: 2025-06-25T23:49:56.154894\nSpeaker: Majidah Muhammad\nTranscript: Oh.\n\nTime: 2025-06-25T23:50:07.665127\nSpeaker: Rose Dalagan\nTranscript: Alright. So it seems like everyone has left the office for the day. And this sounds like a property you might be interested in. So I'd like to ask some basic questions about the property before setting up a home tour with one of our Homee specialist.\n\nTime: 2025-06-25T23:50:25.554894\nSpeaker: Majidah Muhammad\nTranscript: Okay.\n\nTime: 2025-06-25T23:50:27.465127\nSpeaker: Rose Dalagan\nTranscript: Alright. So may, how come you want to sell now?\n\nTime: 2025-06-25T23:50:30.954894\nSpeaker: Majidah Muhammad\nTranscript: We're moving.\n\nTime: 2025-06-25T23:50:32.865127\nSpeaker: Rose Dalagan\nTranscript: Okay.\n\nTime: 2025-06-25T23:50:35.265127\nSpeaker: Rose Dalagan\nTranscript: Is there anyone currently living in the home?\n\nTime: 2025-06-25T23:50:38.154894\nSpeaker: Majidah Muhammad\nTranscript: Yes.\n\nTime: 2025-06-25T23:50:41.265127\nSpeaker: Rose Dalagan\nTranscript: Are you still living in the home?\n\nTime: 2025-06-25T23:50:44.154894\nSpeaker: Majidah Muhammad\nTranscript: Yes.\n\nTime: 2025-06-25T23:50:44.865127\nSpeaker: Rose Dalagan\nTranscript: Okay, how quickly do you want to sell?\n\nTime: 2025-06-25T23:50:49.554894\nSpeaker: Majidah Muhammad\nTranscript: Before July 15th.\n\nTime: 2025-06-25T23:50:55.665127\nSpeaker: Rose Dalagan\nTranscript: Before July 15th okay, can you tell me how much is approximately owed?\n\nTime: 2025-06-25T23:51:02.754894\nSpeaker: Majidah Muhammad\nTranscript: How much is old?\n\nTime: 2025-06-25T23:51:04.665127\nSpeaker: Rose Dalagan\nTranscript: Yes ma'am.\n\nTime: 2025-06-25T23:51:06.354894\nSpeaker: Majidah Muhammad\nTranscript: 174.\n\nTime: 2025-06-25T23:51:08.865127\nSpeaker: Rose Dalagan\nTranscript: 174, okay.\n\nTime: 2025-06-25T23:51:12.465127\nSpeaker: Rose Dalagan\nTranscript: Alright. Now since everyone has left the office for the day, I'm going to set you up with an appointment with one of our homebuying specialist for an in person tour at the property that's approximately thirty to 45 minutes. What's the best time for you tomorrow for the property tour with one of our home specialist?\n\nTime: 2025-06-25T23:51:29.154894\nSpeaker: Majidah Muhammad\nTranscript: Yes.\n\nTime: 2025-06-25T23:51:32.754894\nSpeaker: Majidah Muhammad\nTranscript: 10:30.\n\nTime: 2025-06-25T23:51:35.865127\nSpeaker: Rose Dalagan\nTranscript: 10:30 let me just check the calendar of our Homeline specialist.\n\nTime: 2025-06-25T23:51:42.465127\nSpeaker: Rose Dalagan\nTranscript: 1030 tomorrow.\n\nTime: 2025-06-25T23:51:48.465127\nSpeaker: Rose Dalagan\nTranscript: When Ming.\n\nTime: 2025-06-25T23:51:56.865127\nSpeaker: Rose Dalagan\nTranscript: Oh, I'm just checking the calendar of our home specialist. One second.\n\nTime: 2025-06-25T23:52:14.265127\nSpeaker: Rose Dalagan\nTranscript: Okay. So ma'am, here's what I'm gonna do. I'll go ahead and set it up for tomorrow at 10:30 so in case there will be some changes, I will let you know, I'll definitely give you a callback, okay?\n\nTime: 2025-06-25T23:52:28.554894\nSpeaker: Majidah Muhammad\nTranscript: Okay, thank you.\n\nTime: 2025-06-25T23:52:30.465127\nSpeaker: Rose Dalagan\nTranscript: Thank you, ma'am I would just need to confirm that with one of our specialist but thank you so much for reaching out Jean. I hope you have a good evening, ma'am.\n\nTime: 2025-06-25T23:52:39.354894\nSpeaker: Majidah Muhammad\nTranscript: Alright, you too. Alright, bye.\n\nTime: 2025-06-25T23:52:41.265127\nSpeaker: Rose Dalagan\nTranscript: Thank you, bye-bye.\n\n",
+              "contact_id": "5774537225519104",
+              "contact_name": "Majidah Muhammad"
+            }
+          ]
+        }
+      },
+      {
+        "json": {
+          "contact_id": "4897122749104128",
+          "contact_name": "(202) 339-7201",
+          "data": [
+            {
+              "_id": "685cbf096ea00f38b5218143",
+              "call_id": "5290047832178688",
+              "agent_id": "6464188853551104",
+              "agent_name": "Greta Manuel",
+              "call_datetime": "1750874342104",
+              "transcript": "Time: 2025-06-25T17:59:08.127045\nSpeaker: (202) 339-7201\nTranscript: Yeah, so.\n\nTime: 2025-06-25T17:59:13.527045\nSpeaker: (202) 339-7201\nTranscript: Is the room on?\n\nTime: 2025-06-25T17:59:16.157968\nSpeaker: Greta Manuel\nTranscript: Express homebuyers Greta, how can I help you?\n\nTime: 2025-06-25T17:59:20.127045\nSpeaker: (202) 339-7201\nTranscript: Yeah, I want you guys Larry, please stump do that. There is a room you're supposed to come out to this house and look at it. Every room is okay to look at but there's one room that's used, that's not very clean and I will not allow somebody to come in here until that room is cleaned up and I am not gonna clean up the person that messes it up is gonna clean it up. I'm not gonna allow somebody to come in here and look at a house with the room even though.\n\nTime: 2025-06-25T17:59:54.512045\nSpeaker: (202) 339-7201\nTranscript: Even though by as-is I will not let somebody see a room that dirty. Can you please cancel that appointment?\n\nTime: 2025-06-25T18:00:02.957968\nSpeaker: Greta Manuel\nTranscript: What's the address of the property?\n\nTime: 2025-06-25T18:00:06.327045\nSpeaker: (202) 339-7201\nTranscript: And then when he gets it cleaned up then if you can call you back I will not be embarrassed and think it's my fault. I have cleaned and clean myself. I, my, I'm exhausted.\n\nTime: 2025-06-25T18:00:22.757968\nSpeaker: Greta Manuel\nTranscript: What's the address of the property?\n\nTime: 2025-06-25T18:00:23.127045\nSpeaker: (202) 339-7201\nTranscript: The address is. Yeah, 2305 pers ill, P-L-Y-E-R-S pliers mill road, Silver Spring, Maryland zip code. 20902.\n\nTime: 2025-06-25T18:01:09.557968\nSpeaker: Greta Manuel\nTranscript: Alright, and, and may I know who I'm speaking with?\n\nTime: 2025-06-25T18:01:13.527045\nSpeaker: (202) 339-7201\nTranscript: With Mary Gilden I'm Ms. Wife.\n\nTime: 2025-06-25T18:01:18.327045\nSpeaker: (202) 339-7201\nTranscript: I will not be a person that look, I will not be just, just a person who just doesn't care. I have cleaned and careful this house until, oh, my goodness.\n\nTime: 2025-06-25T18:01:30.557968\nSpeaker: Greta Manuel\nTranscript: Alright. When are you, when did you schedule the appointment?\n\nTime: 2025-06-25T18:01:34.527045\nSpeaker: (202) 339-7201\nTranscript: I think it was for Friday. This coming Friday at noon, somewhere around there I think.\n\nTime: 2025-06-25T18:01:41.357968\nSpeaker: Greta Manuel\nTranscript: Okay, I need to get you over to the person who you spoke with? Do you remember the name of the person who you spoke with earlier?\n\nTime: 2025-06-25T18:01:50.127045\nSpeaker: (202) 339-7201\nTranscript: No, it's a very nice lady Larry. Okay, what, what's the person you spoke with?\n\nTime: 2025-06-25T18:02:01.527045\nSpeaker: (202) 339-7201\nTranscript: Heather.\n\nTime: 2025-06-25T18:02:03.557968\nSpeaker: Greta Manuel\nTranscript: Heather. Okay, I will need to get you to Heather so that he can, she can cancel the appointment. That is, she's the one who sent the app.\n\nTime: 2025-06-25T18:02:05.127045\nSpeaker: (202) 339-7201\nTranscript: Yeah.\n\nTime: 2025-06-25T18:02:12.927045\nSpeaker: (202) 339-7201\nTranscript: Thank you, thank you, yeah, we're kind of been a bury. We have to go out too. Thank you, thank you so much.\n\nTime: 2025-06-25T18:02:22.757968\nSpeaker: Greta Manuel\nTranscript: Alright! I'll have her send you a text message so that he can communicate via text messages if you're going out.\n\nTime: 2025-06-25T18:02:26.727045\nSpeaker: (202) 339-7201\nTranscript: We, I, our, it's not working, it's not working, I'll text messages. Oh, please god. Help me.\n\nTime: 2025-06-25T18:02:35.357968\nSpeaker: Greta Manuel\nTranscript: Okay, then what time can I have her call you back?\n\nTime: 2025-06-25T18:02:39.327045\nSpeaker: (202) 339-7201\nTranscript: Okay. She can call anytime she wants to.\n\nTime: 2025-06-25T18:02:44.357968\nSpeaker: Greta Manuel\nTranscript: Okay, alright then I'll have her call you.\n\nTime: 2025-06-25T18:02:50.127045\nSpeaker: (202) 339-7201\nTranscript: Alright, thank you.\n\nTime: 2025-06-25T18:02:52.157968\nSpeaker: Greta Manuel\nTranscript: Alright, thank you so much.\n\n",
+              "contact_id": "4897122749104128",
+              "contact_name": "(202) 339-7201"
+            },
+            {
+              "_id": "685cbf4c6ea00f38b52181ca",
+              "call_id": "6049182630658048",
+              "agent_id": "6109616138125312",
+              "agent_name": "Juvy Colejara",
+              "call_datetime": "1750872630150",
+              "transcript": "Time: 2025-06-25T17:30:43.322665\nSpeaker: (202) 339-7201\nTranscript: Yeah.\n\nTime: 2025-06-25T17:30:43.685360\nSpeaker: Juvy Colejara\nTranscript: Thank you for calling express homebuyers, this is Heather. How can I help you today?\n\nTime: 2025-06-25T17:30:49.922665\nSpeaker: (202) 339-7201\nTranscript: It's Larry golden, you sent me a message about my property at 2305 claris. Road. And if the amount that you could be offered is anywhere near what I would like to have, that sounds very good. So that's why I'm calling you.\n\nTime: 2025-06-25T17:31:10.685360\nSpeaker: Juvy Colejara\nTranscript: Okay, give me one second. Let me just check. What is the property address again?\n\nTime: 2025-06-25T17:31:16.322665\nSpeaker: (202) 339-7201\nTranscript: 2305 flyers ville road.\n\nTime: 2025-06-25T17:31:22.085360\nSpeaker: Juvy Colejara\nTranscript: Flyers ville road.\n\nTime: 2025-06-25T17:31:24.122665\nSpeaker: (202) 339-7201\nTranscript: Yup, three words, right?\n\nTime: 2025-06-25T17:31:31.085360\nSpeaker: Juvy Colejara\nTranscript: And the zip code?\n\nTime: 2025-06-25T17:31:33.722665\nSpeaker: (202) 339-7201\nTranscript: 20902.\n\nTime: 2025-06-25T17:31:37.685360\nSpeaker: Juvy Colejara\nTranscript: 20902.\n\nTime: 2025-06-25T17:31:40.322665\nSpeaker: (202) 339-7201\nTranscript: Right.\n\nTime: 2025-06-25T17:31:43.685360\nSpeaker: Juvy Colejara\nTranscript: Okay, let me just go ahead and check that real quick.\n\nTime: 2025-06-25T17:31:53.885360\nSpeaker: Juvy Colejara\nTranscript: Fires mill road.\n\nTime: 2025-06-25T17:31:57.122665\nSpeaker: (202) 339-7201\nTranscript: You.\n\nTime: 2025-06-25T17:32:00.485360\nSpeaker: Juvy Colejara\nTranscript: Again, it's 2305 flyers mill road that's in Silver Spring Maryland.\n\nTime: 2025-06-25T17:32:06.122665\nSpeaker: (202) 339-7201\nTranscript: Yes.\n\nTime: 2025-06-25T17:32:09.485360\nSpeaker: Juvy Colejara\nTranscript: Okay.\n\nTime: 2025-06-25T17:32:12.485360\nSpeaker: Juvy Colejara\nTranscript: And the zip code. 20902 so you receive a text message from us. What did you receive from us?\n\nTime: 2025-06-25T17:32:15.722665\nSpeaker: (202) 339-7201\nTranscript: 2098.\n\nTime: 2025-06-25T17:32:20.522665\nSpeaker: (202) 339-7201\nTranscript: No, I received a, a little the mail.\n\nTime: 2025-06-25T17:32:25.085360\nSpeaker: Juvy Colejara\nTranscript: Oh, you received the mail.\n\nTime: 2025-06-25T17:32:30.485360\nSpeaker: Juvy Colejara\nTranscript: Got it thank you so much for reaching out to us Larry. I'll be more than happy to assist you today. Could you please spell your last name?\n\nTime: 2025-06-25T17:32:42.722665\nSpeaker: (202) 339-7201\nTranscript: G. As in George, G-I-L-D-E-N.\n\nTime: 2025-06-25T17:32:47.885360\nSpeaker: Juvy Colejara\nTranscript: Okay, so it's Gilden G. as in golf, I. as in India, L-D-E-N Gilden.\n\nTime: 2025-06-25T17:32:51.122665\nSpeaker: (202) 339-7201\nTranscript: Dash.\n\nTime: 2025-06-25T17:32:57.122665\nSpeaker: (202) 339-7201\nTranscript: Right.\n\nTime: 2025-06-25T17:32:59.285360\nSpeaker: Juvy Colejara\nTranscript: Okay, and then, your first name is Larry.\n\nTime: 2025-06-25T17:33:04.322665\nSpeaker: (202) 339-7201\nTranscript: Yup.\n\nTime: 2025-06-25T17:33:05.885360\nSpeaker: Juvy Colejara\nTranscript: I also have the phone number that you're calling from, it's 202-339-7201 is this the best number to reach you in case you get disconnected?\n\nTime: 2025-06-25T17:33:16.922665\nSpeaker: (202) 339-7201\nTranscript: Yes.\n\nTime: 2025-06-25T17:33:24.485360\nSpeaker: Juvy Colejara\nTranscript: Okay, do you have an email, Larry?\n\nTime: 2025-06-25T17:33:31.322665\nSpeaker: (202) 339-7201\nTranscript: Yeah. No, we don't have one that's workable currently.\n\nTime: 2025-06-25T17:33:35.885360\nSpeaker: Juvy Colejara\nTranscript: Okay, no problem. So anyway what I'm gonna do is to connect you over to one of our homebuying specialist. You can discuss in further details about the property so, I'll have to check who's currently available so I can transfer you over to someone, okay?\n\nTime: 2025-06-25T17:33:54.722665\nSpeaker: (202) 339-7201\nTranscript: Okay, very good, thank you.\n\nTime: 2025-06-25T17:33:57.485360\nSpeaker: Juvy Colejara\nTranscript: Alright, no problem. Just stay on the line with me.\n\nTime: 2025-06-25T17:34:02.522665\nSpeaker: (202) 339-7201\nTranscript: Sure.\n\nTime: 2025-06-25T17:34:04.685360\nSpeaker: Juvy Colejara\nTranscript: Alright.\n\nTime: 2025-06-25T17:34:04.922665\nSpeaker: (202) 339-7201\nTranscript: Yeah, he's gonna call with that room back there to.\n\nTime: 2025-06-25T17:34:17.285360\nSpeaker: Juvy Colejara\nTranscript: And by the way Larry, you received the mail from us did you need the offer range that is listed there?\n\nTime: 2025-06-25T17:34:31.922665\nSpeaker: (202) 339-7201\nTranscript: Are almost understood offer range listed, what is the offer you got or what would you, what the offer was? It was between three eighty one thirty four and four sixty two fifty four.\n\nTime: 2025-06-25T17:34:50.885360\nSpeaker: Juvy Colejara\nTranscript: Okay, give me one sec second, it's a 38134.\n\nTime: 2025-06-25T17:34:57.722665\nSpeaker: (202) 339-7201\nTranscript: 81644.\n\nTime: 2025-06-25T17:35:05.885360\nSpeaker: Juvy Colejara\nTranscript: 0344.\n\nTime: 2025-06-25T17:35:08.522665\nSpeaker: (202) 339-7201\nTranscript: Right.\n\nTime: 2025-06-25T17:35:11.285360\nSpeaker: Juvy Colejara\nTranscript: And then, 46054.\n\nTime: 2025-06-25T17:35:13.922665\nSpeaker: (202) 339-7201\nTranscript: Yup, 446654.\n\nTime: 2025-06-25T17:35:22.685360\nSpeaker: Juvy Colejara\nTranscript: Okay.\n\nTime: 2025-06-25T17:35:26.285360\nSpeaker: Juvy Colejara\nTranscript: 460.\n\nTime: 2025-06-25T17:35:29.285360\nSpeaker: Juvy Colejara\nTranscript: Do you say 446654.\n\nTime: 2025-06-25T17:35:37.322665\nSpeaker: (202) 339-7201\nTranscript: 62854.\n\nTime: 2025-06-25T17:35:43.085360\nSpeaker: Juvy Colejara\nTranscript: Okay, got it. Thank you. Just go ahead and check. He's available right now. Give me one second here.\n\nTime: 2025-06-25T17:35:45.722665\nSpeaker: (202) 339-7201\nTranscript: Got it, okay.\n\nTime: 2025-06-25T17:35:52.922665\nSpeaker: (202) 339-7201\nTranscript: Okay.\n\nTime: 2025-06-25T17:36:46.085360\nSpeaker: Juvy Colejara\nTranscript: Larry, can you hear me?\n\nTime: 2025-06-25T17:36:48.122665\nSpeaker: (202) 339-7201\nTranscript: Yes.\n\nTime: 2025-06-25T17:36:49.685360\nSpeaker: Juvy Colejara\nTranscript: Okay, great. I can hear you now. So Larry it seems like everyone is currently on the phone and it sounds like a property we might be interested in. So what I'm gonna do is do, ask some basic questions about the property before setting you up for a home tour with the home buying specialist?\n\nTime: 2025-06-25T17:37:11.285360\nSpeaker: Juvy Colejara\nTranscript: So first, how come you want to sell now?\n\nTime: 2025-06-25T17:37:17.522665\nSpeaker: (202) 339-7201\nTranscript: We're old, we're old. Yeah. Okay, that's good.\n\nTime: 2025-06-25T17:37:23.285360\nSpeaker: Juvy Colejara\nTranscript: Okay, and are you currently living in the home?\n\nTime: 2025-06-25T17:37:29.522665\nSpeaker: (202) 339-7201\nTranscript: Yes.\n\nTime: 2025-06-25T17:37:31.685360\nSpeaker: Juvy Colejara\nTranscript: Okay, so you're still living there and when are you selling or how quickly do you want to sell?\n\nTime: 2025-06-25T17:37:40.322665\nSpeaker: (202) 339-7201\nTranscript: It's a good question but we have a very good real estate agent who can find us something to, to, to go live in afterwards very easily. So, with that in mind we're ready to go pretty quick.\n\nTime: 2025-06-25T17:37:57.485360\nSpeaker: Juvy Colejara\nTranscript: Okay.\n\nTime: 2025-06-25T17:37:59.885360\nSpeaker: Juvy Colejara\nTranscript: Got it. So do you have like, you know a timeframe in mind?\n\nTime: 2025-06-25T17:38:09.122665\nSpeaker: (202) 339-7201\nTranscript: Oh, a couple of weeks a month ago, doesn't matter.\n\nTime: 2025-06-25T17:38:11.885360\nSpeaker: Juvy Colejara\nTranscript: Okay, okay.\n\nTime: 2025-06-25T17:38:16.085360\nSpeaker: Juvy Colejara\nTranscript: Got it and then can you tell me how much is the approximately owed?\n\nTime: 2025-06-25T17:38:25.922665\nSpeaker: (202) 339-7201\nTranscript: That didn't complete.\n\nTime: 2025-06-25T17:38:30.122665\nSpeaker: (202) 339-7201\nTranscript: Just hang up. You can tell me how questions and I'm talking on the phone please just for that question again.\n\nTime: 2025-06-25T17:38:40.685360\nSpeaker: Juvy Colejara\nTranscript: Yeah, I was asking, can you tell me how much is the approximately owed for this property?\n\nTime: 2025-06-25T17:38:50.285360\nSpeaker: Juvy Colejara\nTranscript: Anyway, this is going to be the last question. So then I'm going to be setting you up for your home.\n\nTime: 2025-06-25T17:38:50.522665\nSpeaker: (202) 339-7201\nTranscript: Or about?\n\nTime: 2025-06-25T17:38:56.522665\nSpeaker: (202) 339-7201\nTranscript: What? 160.\n\nTime: 2025-06-25T17:39:00.122665\nSpeaker: (202) 339-7201\nTranscript: No, it's not 150 or, I said 150 or maybe it's 150.\n\nTime: 2025-06-25T17:39:01.085360\nSpeaker: Juvy Colejara\nTranscript: Oh.\n\nTime: 2025-06-25T17:39:05.885360\nSpeaker: Juvy Colejara\nTranscript: 150, approximately 150. Okay, got it. Thank you.\n\nTime: 2025-06-25T17:39:09.122665\nSpeaker: (202) 339-7201\nTranscript: Alright.\n\nTime: 2025-06-25T17:39:12.122665\nSpeaker: (202) 339-7201\nTranscript: Okay.\n\nTime: 2025-06-25T17:39:13.685360\nSpeaker: Juvy Colejara\nTranscript: Uh-huh so, yeah, I think I've got all the basic information I needed from you as of the moment and si since everyone is on the phone and that sounds like a property we might be interested in the next step is going to be.\n\nTime: 2025-06-25T17:39:32.885360\nSpeaker: Juvy Colejara\nTranscript: Setting you up for an appointment with one of our homebuying specialist for an in person tour at the property. That's for approximately thirty to 45 minutes. What is the best time for you today for the property tour with our homebuying specialist?\n\nTime: 2025-06-25T17:39:52.322665\nSpeaker: (202) 339-7201\nTranscript: Early afternoon. Any day is right.\n\nTime: 2025-06-25T17:39:58.322665\nSpeaker: (202) 339-7201\nTranscript: Except Saturday or a today on.\n\nTime: 2025-06-25T17:39:58.685360\nSpeaker: Juvy Colejara\nTranscript: Early.\n\nTime: 2025-06-25T17:40:05.885360\nSpeaker: Juvy Colejara\nTranscript: Okay, give me one second. Let me just check the calendar for you real quick.\n\nTime: 2025-06-25T17:40:19.085360\nSpeaker: Juvy Colejara\nTranscript: Alright, so early afternoon or any day?\n\nTime: 2025-06-25T17:40:26.285360\nSpeaker: Juvy Colejara\nTranscript: One second here.\n\nTime: 2025-06-25T17:40:38.285360\nSpeaker: Juvy Colejara\nTranscript: Alright. I can go ahead and set you up for an in person tour. Tomorrow is Thursday, let me check the calendar here.\n\nTime: 2025-06-25T17:41:07.085360\nSpeaker: Juvy Colejara\nTranscript: Okay.\n\nTime: 2025-06-25T17:41:10.085360\nSpeaker: Juvy Colejara\nTranscript: How about, on, on Friday at the?\n\nTime: 2025-06-25T17:41:16.322665\nSpeaker: (202) 339-7201\nTranscript: Friday is better. Okay.\n\nTime: 2025-06-25T17:41:19.085360\nSpeaker: Juvy Colejara\nTranscript: Friday is better. Okay, hold on. I'm looking at the calendar right now. I can set you up at 4:00 PM, if that works for you.\n\nTime: 2025-06-25T17:41:30.122665\nSpeaker: (202) 339-7201\nTranscript: Can you please, can you make it, can you please make it earlier?\n\nTime: 2025-06-25T17:41:37.685360\nSpeaker: Juvy Colejara\nTranscript: Yeah, let me double-check the calendar for you all.\n\nTime: 2025-06-25T17:41:55.085360\nSpeaker: Juvy Colejara\nTranscript: Alright, let's see if we have earlier than that.\n\nTime: 2025-06-25T17:42:17.285360\nSpeaker: Juvy Colejara\nTranscript: Okay, we can do.\n\nTime: 2025-06-25T17:42:23.285360\nSpeaker: Juvy Colejara\nTranscript: Looks like we no longer have earlier than that.\n\nTime: 2025-06-25T17:42:31.085360\nSpeaker: Juvy Colejara\nTranscript: So, I think that's the only availability that we have.\n\nTime: 2025-06-25T17:42:41.885360\nSpeaker: Juvy Colejara\nTranscript: Okay, would you like to do if that doesn't work? I can initially schedule you at twelve at 12:00 PM and then if anything changes, I will let you know.\n\nTime: 2025-06-25T17:42:59.522665\nSpeaker: (202) 339-7201\nTranscript: That'd be, alright, so this Friday at 12:00? Yes, okay.\n\nTime: 2025-06-25T17:43:05.285360\nSpeaker: Juvy Colejara\nTranscript: Mm-hmm yes, so I'll initially set you up for a home tour on Friday at 12:00 PM at noon. So just also keep your lines open Larry because our homebuying spa will give you a call to confirm the appointment, okay?\n\nTime: 2025-06-25T17:43:28.922665\nSpeaker: (202) 339-7201\nTranscript: It's okay, I mean, I was just wondering why.\n\nTime: 2025-06-25T17:43:33.722665\nSpeaker: (202) 339-7201\nTranscript: Why we know for sure right now but I can see you're very busy there.\n\nTime: 2025-06-25T17:43:40.922665\nSpeaker: (202) 339-7201\nTranscript: And we're gonna get busy and take this house too.\n\nTime: 2025-06-25T17:43:46.322665\nSpeaker: (202) 339-7201\nTranscript: Okay.\n\nTime: 2025-06-25T17:43:47.285360\nSpeaker: Juvy Colejara\nTranscript: Oh, mm-hmm so, I will have our homebuying specialist to give you a call to confirm the appointment as well. So keep your lines open, alright?\n\nTime: 2025-06-25T17:43:57.722665\nSpeaker: (202) 339-7201\nTranscript: Is that person in, is that person I have a name?\n\nTime: 2025-06-25T17:44:02.285360\nSpeaker: Juvy Colejara\nTranscript: I don't have the name yet but someone will be calling you within your code. 703 or 301. Okay.\n\nTime: 2025-06-25T17:44:06.122665\nSpeaker: (202) 339-7201\nTranscript: I got, okay, I got you.\n\nTime: 2025-06-25T17:44:11.522665\nSpeaker: (202) 339-7201\nTranscript: Oh, okay. We're only telling a is do you accept the such ways you yeah, yeah of course. Okay, or good. Alright, good. Thank you very much.\n\nTime: 2025-06-25T17:44:15.485360\nSpeaker: Juvy Colejara\nTranscript: No problem.\n\nTime: 2025-06-25T17:44:25.685360\nSpeaker: Juvy Colejara\nTranscript: No problem. I'll talk to you soon. Have a great one. Bye-bye.\n\nTime: 2025-06-25T17:44:28.922665\nSpeaker: (202) 339-7201\nTranscript: Later, thank you. Okay, bye.\n\n",
+              "contact_id": "4897122749104128",
+              "contact_name": "(202) 339-7201"
+            }
+          ]
+        }
+      },
+      {
+        "json": {
+          "contact_id": "5508713844686848",
+          "contact_name": "Fred Fultz",
+          "data": [
+            {
+              "_id": "685cbf426ea00f38b52181c7",
+              "call_id": "6484969742516224",
+              "agent_id": "6109616138125312",
+              "agent_name": "Juvy Colejara",
+              "call_datetime": "1750874275181",
+              "transcript": "Time: 2025-06-25T17:58:08.726763\nSpeaker: Juvy Colejara\nTranscript: Thank you for calling express homebuyers, this is Heather. How can I help you today?\n\nTime: 2025-06-25T17:58:13.270790\nSpeaker: Fred Fultz\nTranscript: Yes, I got a flyer in the mail about filling my house.\n\nTime: 2025-06-25T17:58:21.326763\nSpeaker: Juvy Colejara\nTranscript: Sure, I'll be more than happy to assist you today. Thank you for reaching out who do I have the pleasure speaking with?\n\nTime: 2025-06-25T17:58:21.670790\nSpeaker: Fred Fultz\nTranscript: No.\n\nTime: 2025-06-25T17:58:28.270790\nSpeaker: Fred Fultz\nTranscript: Red bolt. F-U-L-T-Z.\n\nTime: 2025-06-25T17:58:35.726763\nSpeaker: Juvy Colejara\nTranscript: I'm sorry. I didn't get your first and last name. Did you spell that for me?\n\nTime: 2025-06-25T17:58:40.870790\nSpeaker: Fred Fultz\nTranscript: Bred F-R-E-D book F-U-L-P-Z.\n\nTime: 2025-06-25T17:58:48.926763\nSpeaker: Juvy Colejara\nTranscript: Okay. So, your first name is Fred and then your last name F. As in Frank.\n\nTime: 2025-06-25T17:58:52.270790\nSpeaker: Fred Fultz\nTranscript: That's correct.\n\nTime: 2025-06-25T17:58:54.670790\nSpeaker: Fred Fultz\nTranscript: That's right. It's a F-U-L-T-D-E.\n\nTime: 2025-06-25T17:59:03.326763\nSpeaker: Juvy Colejara\nTranscript: Okay.\n\nTime: 2025-06-25T17:59:08.126763\nSpeaker: Juvy Colejara\nTranscript: It's F-U-L-T as in tango, Z. as in Zulu.\n\nTime: 2025-06-25T17:59:12.670790\nSpeaker: Fred Fultz\nTranscript: Yes.\n\nTime: 2025-06-25T17:59:14.726763\nSpeaker: Juvy Colejara\nTranscript: Fred, Folts okay.\n\nTime: 2025-06-25T17:59:16.270790\nSpeaker: Fred Fultz\nTranscript: Yes.\n\nTime: 2025-06-25T17:59:17.726763\nSpeaker: Juvy Colejara\nTranscript: Got it and then Fred, the phone number that you're calling from I got here 410-456-8413 is this the best number to reach in case to get disconnected?\n\nTime: 2025-06-25T17:59:24.670790\nSpeaker: Fred Fultz\nTranscript: Mm-hmm.\n\nTime: 2025-06-25T17:59:30.070790\nSpeaker: Fred Fultz\nTranscript: Yes.\n\nTime: 2025-06-25T17:59:33.326763\nSpeaker: Juvy Colejara\nTranscript: Okay, great. Can I begin by asking the property address of the home?\n\nTime: 2025-06-25T17:59:33.670790\nSpeaker: Fred Fultz\nTranscript: Can I talk to?\n\nTime: 2025-06-25T17:59:38.470790\nSpeaker: Fred Fultz\nTranscript: My goodness, 2512 Harwood road.\n\nTime: 2025-06-25T17:59:48.326763\nSpeaker: Juvy Colejara\nTranscript: Did they Insta.\n\nTime: 2025-06-25T17:59:50.470790\nSpeaker: Fred Fultz\nTranscript: Amore, Maryland.\n\nTime: 2025-06-25T17:59:57.326763\nSpeaker: Juvy Colejara\nTranscript: Okay, give me one second just to check that real quick.\n\nTime: 2025-06-25T18:00:03.926763\nSpeaker: Juvy Colejara\nTranscript: And Fred, do you have an email?\n\nTime: 2025-06-25T18:00:06.070790\nSpeaker: Fred Fultz\nTranscript: No, no, I don't.\n\nTime: 2025-06-25T18:00:10.526763\nSpeaker: Juvy Colejara\nTranscript: Okay.\n\nTime: 2025-06-25T18:00:14.126763\nSpeaker: Juvy Colejara\nTranscript: Problem. So, yeah, just wanted to confirm the property address. Is that 2512. Harwood road that's in Baltimore, Maryland zip code. 21234.\n\nTime: 2025-06-25T18:00:29.470790\nSpeaker: Fred Fultz\nTranscript: Yes.\n\nTime: 2025-06-25T18:00:30.326763\nSpeaker: Juvy Colejara\nTranscript: Correct.\n\nTime: 2025-06-25T18:00:31.870790\nSpeaker: Fred Fultz\nTranscript: Yes.\n\nTime: 2025-06-25T18:00:33.926763\nSpeaker: Juvy Colejara\nTranscript: Okay. Great. So, Fred, what I would like to do is to connect you over to one of our homebuying specialist to discuss about the property in further details. So, but let me just check first who's currently available so I can transfer you over to someone, alright.\n\nTime: 2025-06-25T18:00:51.670790\nSpeaker: Fred Fultz\nTranscript: Yeah, yes.\n\nTime: 2025-06-25T18:00:53.726763\nSpeaker: Juvy Colejara\nTranscript: Okay, give me one second here.\n\nTime: 2025-06-25T18:01:26.726763\nSpeaker: Juvy Colejara\nTranscript: Okay, and by the way, Freda, I believe you mentioned that you received the mail from us.\n\nTime: 2025-06-25T18:01:33.670790\nSpeaker: Fred Fultz\nTranscript: Yes.\n\nTime: 2025-06-25T18:01:35.726763\nSpeaker: Juvy Colejara\nTranscript: Do you have the, can you see the offer range listed there on the mail.\n\nTime: 2025-06-25T18:01:43.870790\nSpeaker: Fred Fultz\nTranscript: What would you, what do you want off of it?\n\nTime: 2025-06-25T18:01:48.326763\nSpeaker: Juvy Colejara\nTranscript: Oh, does the offer range listed on that mail you received from us?\n\nTime: 2025-06-25T18:01:55.870790\nSpeaker: Fred Fultz\nTranscript: Okay, 225 through 273.\n\nTime: 2025-06-25T18:02:03.326763\nSpeaker: Juvy Colejara\nTranscript: Okay, 225 to 273.\n\nTime: 2025-06-25T18:02:08.126763\nSpeaker: Juvy Colejara\nTranscript: Got it so second.\n\nTime: 2025-06-25T18:02:21.926763\nSpeaker: Juvy Colejara\nTranscript: Alright. That's 22522783 alright, hang on a second I'm just waiting for someone to pick up from our homebuying specialist.\n\nTime: 2025-06-25T18:02:29.470790\nSpeaker: Fred Fultz\nTranscript: Okay.\n\nTime: 2025-06-25T18:02:33.670790\nSpeaker: Fred Fultz\nTranscript: Yeah.\n\nTime: 2025-06-25T18:02:51.070790\nSpeaker: Fred Fultz\nTranscript: Alright, okay.\n\nTime: 2025-06-25T18:03:13.270790\nSpeaker: Fred Fultz\nTranscript: Oh.\n\nTime: 2025-06-25T18:03:52.526763\nSpeaker: Juvy Colejara\nTranscript: Okay, are you still with me Fred?\n\nTime: 2025-06-25T18:03:55.870790\nSpeaker: Fred Fultz\nTranscript: Yes, yes, yes.\n\nTime: 2025-06-25T18:04:00.326763\nSpeaker: Juvy Colejara\nTranscript: Okay.\n\nTime: 2025-06-25T18:04:00.670790\nSpeaker: Fred Fultz\nTranscript: Well, if nobody's there man yeah, they can call me back or something. I can't hold on forever.\n\nTime: 2025-06-25T18:04:08.126763\nSpeaker: Juvy Colejara\nTranscript: Okay. So it seems like everyone is currently on the phone and this sounds like a property that might be interested in. So, what I would like to do is to ask some few basic questions about the property before setting you up for a home.\n\nTime: 2025-06-25T18:04:21.070790\nSpeaker: Fred Fultz\nTranscript: No, just have somebody have somebody call me ma'am. I've had enough at this. Have somebody call me when they're ready.\n\nTime: 2025-06-25T18:04:29.726763\nSpeaker: Juvy Colejara\nTranscript: Okay, I can schedule a brief phone call but I need to, it's oh, I'm sorry about that, I just wanted to confirm how come you want to sell now?\n\nTime: 2025-06-25T18:04:30.070790\nSpeaker: Fred Fultz\nTranscript: Because I can't keep on it this, it just getting too Reger.\n\nTime: 2025-06-25T18:04:34.870790\nSpeaker: Fred Fultz\nTranscript: This is just getting ridiculous.\n\nTime: 2025-06-25T18:04:42.070790\nSpeaker: Fred Fultz\nTranscript: I wanna move, I wanna move out of town.\n\nTime: 2025-06-25T18:04:44.726763\nSpeaker: Juvy Colejara\nTranscript: Oh, oh, I see but you're still living there in the home.\n\nTime: 2025-06-25T18:04:49.270790\nSpeaker: Fred Fultz\nTranscript: Yes.\n\nTime: 2025-06-25T18:04:51.326763\nSpeaker: Juvy Colejara\nTranscript: Okay. But when are you selling?\n\nTime: 2025-06-25T18:04:54.670790\nSpeaker: Fred Fultz\nTranscript: Right now sooner to better it's got to be within the next few weeks sir, I'm gonna go to somebody, start to somebody else.\n\nTime: 2025-06-25T18:04:57.926763\nSpeaker: Juvy Colejara\nTranscript: Okay, got it.\n\nTime: 2025-06-25T18:05:03.926763\nSpeaker: Juvy Colejara\nTranscript: Oh, okay, but do you know how much is approximately owed?\n\nTime: 2025-06-25T18:05:09.070790\nSpeaker: Fred Fultz\nTranscript: Nothing Joed on it, and you complete off completes and my name.\n\nTime: 2025-06-25T18:05:15.926763\nSpeaker: Juvy Colejara\nTranscript: Okay, so it's all paid off, right?\n\nTime: 2025-06-25T18:05:19.870790\nSpeaker: Fred Fultz\nTranscript: Yes. Yeah, I just said that. Yes.\n\nTime: 2025-06-25T18:05:21.926763\nSpeaker: Juvy Colejara\nTranscript: Oh, okay, got it. So yeah, I think I've got all the basic information and you confirm you as of the moment. So what I would like to do is to set you up for a home tour with one of our homebuying specialist for approximately.\n\nTime: 2025-06-25T18:05:37.870790\nSpeaker: Fred Fultz\nTranscript: I don't know ma'am. This, this is, this, hold on have somebody call me that it does, it, this is just get going nowhere, have somebody call me when they're available and I would be glad to talk to them.\n\nTime: 2025-06-25T18:05:53.726763\nSpeaker: Juvy Colejara\nTranscript: Okay. I would need to schedule you on their calendar. I can go ahead and schedule you for a phone call. What time works best for you today?\n\nTime: 2025-06-25T18:06:03.070790\nSpeaker: Fred Fultz\nTranscript: Anytime, anytime. Just give me a call when they're ready.\n\nTime: 2025-06-25T18:06:08.126763\nSpeaker: Juvy Colejara\nTranscript: Okay, give me one second. I'm looking at the calendar, I can schedule you at.\n\nTime: 2025-06-25T18:06:10.270790\nSpeaker: Fred Fultz\nTranscript: No, no, no, no, no, no. Have somebody call me. I can't wait no more. It's driving me crazy. Ma'am. Have somebody call me when they're ready? Thank you.\n\nTime: 2025-06-25T18:06:16.526763\nSpeaker: Juvy Colejara\nTranscript: Okay.\n\nTime: 2025-06-25T18:06:19.526763\nSpeaker: Juvy Colejara\nTranscript: I'll have our home buying specials call you at 4:00 PM today. Okay? Just keep your lines open.\n\nTime: 2025-06-25T18:06:23.470790\nSpeaker: Fred Fultz\nTranscript: That's great, that's great, thank you.\n\nTime: 2025-06-25T18:06:27.926763\nSpeaker: Juvy Colejara\nTranscript: No problem.\n\n",
+              "contact_id": "5508713844686848",
+              "contact_name": "Fred Fultz"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

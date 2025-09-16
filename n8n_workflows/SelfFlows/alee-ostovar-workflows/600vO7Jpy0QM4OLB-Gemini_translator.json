@@ -1,0 +1,125 @@
+{
+  "name": "Gemini_translator",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash-lite-preview",
+        "options": {
+          "maxOutputTokens": 3000,
+          "temperature": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        540,
+        600
+      ],
+      "id": "fad18a2b-e666-48e6-a6ba-4aa1b2049f60",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "By1zxazSn66Se0c2",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.content }}",
+        "options": {
+          "systemMessage": "=you are a professional financial news translator and reporter.Translate text from any language to Persian, ensuring the translation is smooth, natural, native,  and preserves all details from the original content.\n\n# Steps\n\n1. **Understand the Source Text:** Thoroughly read the text that requires translation.\n2. **Capture the Nuances:** Identify any idiomatic expressions, cultural references, or technical terms that need special attention to retain the original meaning in the target language.\n3. **Translate to Persian:** Convert the text into Persian, maintaining a natural flow and accurate meaning.\n4. **Review and Refine:** Go through the translated text to ensure it captures all aspects of the original content and reads smoothly to native Persian speakers.\n\n# Output Format\n\n- A well-translated text in Persian.\n- The translation should be in paragraph form, capturing all nuances and details from the original content.\n\n# Notes\n\n- Pay attention to tone, context, and any cultural references in the original text, adjusting appropriately in Persian.\n- Maintain technical or specialized vocabulary (specially in the field of cryptocurrencies) where necessary to preserve the integrity of the information.\n- Ensure that the translation is accurate and free from grammatical errors.\n- do not translate or process on links and urls\n-do not change date and calender of source news to persian (like never convert Gregorian calendar into the solar calendar)"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        720,
+        300
+      ],
+      "id": "cec17063-b267-4031-a2ce-1122e2a803c9",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cf5f7210-5b54-4f4a-abf7-87873be82df4",
+              "name": "content",
+              "value": "={{ $json.query }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        460,
+        300
+      ],
+      "id": "87322162-68f6-4273-b1c6-845b22388735",
+      "name": "Set Content"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Set Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Content": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

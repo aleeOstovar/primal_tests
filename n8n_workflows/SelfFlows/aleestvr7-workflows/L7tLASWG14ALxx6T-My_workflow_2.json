@@ -1,0 +1,331 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -672,
+        -80
+      ],
+      "id": "41a0f5b5-a7e2-4ba2-9e15-2663cf5e2a77",
+      "name": "Telegram Trigger",
+      "webhookId": "828b59bf-cd0c-47fd-927e-711ff472c196",
+      "credentials": {
+        "telegramApi": {
+          "id": "PjIj2mWYeXABWsrx",
+          "name": "Jenny English Tutor"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "92cb92f8-045a-4630-bd3f-d14796fea164",
+              "name": "data.message_id",
+              "value": "={{ $json.message.message_id }}",
+              "type": "number"
+            },
+            {
+              "id": "61b48b97-3a68-4de3-9bfe-9a92e8d5d26f",
+              "name": "data.from.id",
+              "value": "={{ $json.message.from.id }}",
+              "type": "number"
+            },
+            {
+              "id": "c4b0b0d4-7d51-446f-870e-ad613fc929a6",
+              "name": "data.from.first_name",
+              "value": "={{ $json.message.from.first_name }}",
+              "type": "string"
+            },
+            {
+              "id": "79c3bc4e-858e-4e8a-9c60-9e4be6154daa",
+              "name": "data.from.username",
+              "value": "={{ $json.message.from.username }}",
+              "type": "string"
+            },
+            {
+              "id": "f52eb131-56ac-40a2-91d3-c8b72ea599d0",
+              "name": "data.message",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "8a8d49eb-20d6-4872-b2f7-e34a38020a9d",
+              "name": "employee_list",
+              "value": "[\"atefe\",\"amir\",\"jafar\",\"sanaz\"]",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        288,
+        0
+      ],
+      "id": "4dc5fd52-4f27-42c3-8a7d-d486fcabd697",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.data }}",
+        "options": {
+          "systemMessage": "=<system_prompt>\nYOU ARE THE WORLD'S LEADING EXPERT IN INFORMATION EXTRACTION, SPECIALLY TRAINED TO IDENTIFY COMMUNICATION STRUCTURE WITH UNMATCHED PRECISION. YOUR TASK IS TO ANALYZE ANY GIVEN TEXT INPUT AND RELIABLY DETECT:\n1. THE SENDER\n2. THE RECEIVER (here is the list of employees {{ $json.employee_list }})\n3. THE TASK OR ACTION BEING REQUESTED/INSTRUCTED\n\n###INSTRUCTIONS###\n\n- YOU MUST READ THE INPUT CAREFULLY AND UNDERSTAND THE CONTEXT\n- YOU MUST ALWAYS OUTPUT A STRUCTURED RESPONSE IN JSON FORMAT:\n  {\n    \"sender\": \"...\",\n    \"receiver\": \"...\",\n    \"task\": \"...\"\n  }\n- IF INFORMATION IS MISSING, USE \"unknown\"\n- YOU MUST FOLLOW THE \"CHAIN OF THOUGHTS\" BEFORE PRODUCING THE OUTPUT\n\n###CHAIN OF THOUGHTS###\n\nFOLLOW THESE STEPS IN STRICT ORDER:\n\n1. UNDERSTAND: READ the text carefully and COMPREHEND who is speaking, who is being addressed, and what is requested.\n2. BASICS: IDENTIFY key entities (names, pronouns, roles) and verbs that signal tasks or instructions.\n3. BREAK DOWN: DIVIDE the message into parts — sender introduction (if any), receiver indication, and main action/task.\n4. ANALYZE: DETERMINE the most likely sender and receiver using textual cues such as \"From\", \"To\", greetings, or signatures.\n5. BUILD: FORMULATE the extracted sender, receiver, and task in clean, structured data.\n6. EDGE CASES: HANDLE ambiguous, incomplete, or indirect instructions by marking them as \"unknown\" instead of guessing wildly.\n7. FINAL ANSWER: PRESENT the final JSON object clearly and without extra commentary.\n\n###WHAT NOT TO DO###\n\nOBEY and NEVER do the following:\n- NEVER RETURN OUTPUT OUTSIDE OF JSON FORMAT\n- NEVER INVENT senders, receivers, or tasks without textual support\n- NEVER OMIT one of the three required fields (sender, receiver, task)\n- NEVER PRODUCE FREEFORM PARAGRAPHS OR EXCESSIVE COMMENTARY\n- NEVER CONFUSE THE CHAIN OF THOUGHT WITH THE FINAL OUTPUT (ONLY RETURN THE JSON AS ANSWER)\n- NEVER MISINTERPRET GENERIC TEXT AS A TASK UNLESS CLEARLY IMPLIED\n\n###FEW-SHOT EXAMPLES###\n\n**Example 1**\nInput: \"Hi John, can you prepare the sales report by Monday? - Sarah\"\nOutput:\n{\n  \"sender\": \"Sarah\",\n  \"receiver\": \"John\",\n  \"task\": \"Prepare the sales report by Monday\"\n}\n\n**Example 2**\nInput: \"From: Manager; To: IT Team; Please reset all staff passwords today.\"\nOutput:\n{\n  \"sender\": \"Manager\",\n  \"receiver\": \"IT Team\",\n  \"task\": \"Reset all staff passwords today\"\n}\n\n**Example 3**\nInput: \"Meeting at 3pm.\"\nOutput:\n{\n  \"sender\": \"unknown\",\n  \"receiver\": \"unknown\",\n  \"task\": \"Meeting at 3pm\"\n}\n\n**Example 4**\nInput: \"Hey Alex, could you remind the client about tomorrow’s call? Thanks, Maria\"\nOutput:\n{\n  \"sender\": \"Maria\",\n  \"receiver\": \"Alex\",\n  \"task\": \"Remind the client about tomorrow’s call\"\n}\n\n</system_prompt>\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        544,
+        0
+      ],
+      "id": "c499bb93-fc52-4331-9029-09c5bf0b87e9",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        352,
+        272
+      ],
+      "id": "6776da4a-8c35-48dd-b0f1-bab3784d0d80",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "LANZ0pAgjPavivDa",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.data.from.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        592,
+        272
+      ],
+      "id": "0365e779-cda7-4a78-90d5-410bdaae2e88",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-pro-preview-03-25",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-pro-preview-03-25"
+        },
+        "inputType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        32
+      ],
+      "id": "63901316-a63c-4837-a4de-adfe4cbdf6b9",
+      "name": "Analyze image",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "LANZ0pAgjPavivDa",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "d19044af-c93c-4244-8f50-6ef317442a10"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "text input"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "667d8912-a2f7-4475-a881-98e304a0e755",
+                    "leftValue": "={{ $json.message.voice.mime_type }}",
+                    "rightValue": "audio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio input"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -352,
+        -432
+      ],
+      "id": "bcbd9938-bec0-46a8-98b4-3d02185741d5",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -288,
+        32
+      ],
+      "id": "4c9b5171-e900-4277-865c-b9494c5d0a4a",
+      "name": "Get a file",
+      "webhookId": "dd148c4e-1734-4979-a7ab-0f2d7c941340",
+      "credentials": {
+        "telegramApi": {
+          "id": "PjIj2mWYeXABWsrx",
+          "name": "Jenny English Tutor"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Analyze image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

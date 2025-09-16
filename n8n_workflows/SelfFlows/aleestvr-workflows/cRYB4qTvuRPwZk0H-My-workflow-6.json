@@ -1,0 +1,1006 @@
+{
+  "name": "My workflow 6",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -80,
+        0
+      ],
+      "id": "d0aa961b-aebb-4965-bcff-52373695180e",
+      "name": "Telegram Trigger",
+      "webhookId": "6341ffed-eeff-4337-b590-8824118de2ea",
+      "credentials": {
+        "telegramApi": {
+          "id": "RK1phAJL4vDWMbaJ",
+          "name": "Telegram account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ],
+      "id": "c5b11a55-d1ee-4a14-929b-76a5df3e8f4c",
+      "name": "extract data "
+    },
+    {
+      "parameters": {
+        "model": "google/gemma-3-27b-it:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        240,
+        280
+      ],
+      "id": "6379202b-7a16-4fd2-8180-68f72e08271e",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "VXrVH3CxR9uCUJ4X",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        240
+      ],
+      "id": "4be3e145-0cc1-485f-be02-230c56b7d0a9",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ee989fd5-7a17-4b66-a171-1b3d338c1e34",
+              "leftValue": "={{ $json.hasError }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        820,
+        20
+      ],
+      "id": "87b12781-4b37-449d-b4ad-fb6746036f75",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "89d82088-fd5e-4406-b3ec-762870129625",
+              "name": "input",
+              "value": "={{ $('extract data ').item.json.query }}",
+              "type": "string"
+            },
+            {
+              "id": "e5fdf389-eab3-4b87-ba78-91c369d4b79c",
+              "name": "errors",
+              "value": "={{ $('Code1').item.json}}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1060,
+        220
+      ],
+      "id": "b5b6c449-4bce-4d13-bda3-eda31e964a6d",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.output\n\n  // Guard: must be a string\nif (typeof raw !== 'string') {\n  return {\n    json: {\n      ...item.json,\n      parsed: null,\n      error: '`output` field is missing or not a string',\n    },\n  };\n}\n\n// 1. Extract the JSON between ```json ... ```\nconst match = raw.match(/```json\\s*([\\s\\S]*?)```/);\nconst jsonString = (match ? match[1] : raw).trim();\n\nlet parsed;\ntry {\n  // 2. Parse the JSON text\n  parsed = JSON.parse(jsonString);\n} catch (err) {\n  return {\n    json: {\n      ...item.json,\n      parsed: null,\n      error: `JSON parse error: ${err.message}`,\n    },\n  };\n}\n\n// 3. Return the parsed array under `parsed`\nreturn parsed\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        820,
+        -220
+      ],
+      "id": "65500e9f-398e-4791-a22f-7a6901bc9452",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get input data (first item only assumed)\nconst input = $input.first().json\n\n// Remove 'hasError' field\ndelete input.hasError;\n\n// Convert err0, err1, ... into an array of error objects\nconst errorArray = Object.keys(input)\n  .filter(key => key.startsWith('err'))\n  .map(key => input[key]);\n\n// Return each error object as its own item\nreturn errorArray.map(err => ({ json: err }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        220
+      ],
+      "id": "fc67f017-7297-444a-8dc0-0c8e65feb3ad",
+      "name": "Code",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.outputString }}",
+        "options": {
+          "systemMessage": "=You areYou are a specialized grammar‐correction agent.  \nYour sole focus is on fixing **only** the grammar errors supplied; do **not** address spelling, lexical, punctuation, style, or any other issues.  \n\nYour Task:  \n- Receive one  object with:  \n  • \"text\": the original English sentence (string)  \n  • \"grammarErrors\": an object of objects, each containing:  \n    – \"before\": the token immediately before the error span  \n    – \"after\": the token immediately after the error span  \n\n- For each entry in \"grammarErrors\":  \n  1. Extract the exact erroneous substring from \"text\" using the start/end indices.  \n  2. Provide a brief reasoning (1–2 sentences) explaining why the original grammar is incorrect and why the suggested correction is appropriate.  \n  3. Replace the erroneous substring with its \"correction\" in the running sentence.  \n\n- After processing all grammar errors in the given order, output a single JSON object with:  \n  • \"errors\": an array of objects, each with:  \n      – \"original\": the erroneous substring  \n      – \"correction\": the replacement text applied  \n      – \"reasoning\": your concise explanation  \n  • \"correctedText\": the final sentence after applying **all** grammar corrections  \n\n**Example input**:\n```json\n{\n  \"text\": \"She go to school every day.\",\n  \"grammarErrors\": {\n   \"err0\" {\n      \"before\": \"She \",\n      \"after\": \" to\",\n    }\n  ]\n}}\n**Example output**:\n\n```json {\n  \"errors\": [\n    {\n      \"original\": \"go\",\n      \"correction\": \"goes\",\n      \"reasoning\": \"With third-person singular subject “She,” English requires the verb to take an –s ending, so “go” becomes “goes.”\"\n    }\n  ],\n  \"correctedText\": \"She goes to school every day.\"\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        2260,
+        -420
+      ],
+      "id": "1d9e8d17-e897-4158-bf10-9689fdb58547",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": "nvidia/llama-3.3-nemotron-super-49b-v1:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        2120,
+        -220
+      ],
+      "id": "51e420e0-bc33-4c59-99a8-7d5f6ef88ad6",
+      "name": "OpenRouter Chat Model1",
+      "credentials": {
+        "openRouterApi": {
+          "id": "VXrVH3CxR9uCUJ4X",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1997cc4-0725-4018-a051-89236d791487",
+              "leftValue": "={{ $json.errors.grammar }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1560,
+        -400
+      ],
+      "id": "4a30fb43-7c8f-44f7-b196-5271fae49508",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "options": {
+          "systemMessage": "="
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        1840,
+        -120
+      ],
+      "id": "54cf39e1-6e0e-4317-b6a0-13aa7ff145ce",
+      "name": "AI Agent2",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": "mistralai/mistral-7b-instruct:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        1840,
+        40
+      ],
+      "id": "3bd94964-d29a-498d-9b94-855cf43ae5a3",
+      "name": "OpenRouter Chat Model2",
+      "credentials": {
+        "openRouterApi": {
+          "id": "VXrVH3CxR9uCUJ4X",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1997cc4-0725-4018-a051-89236d791487",
+              "leftValue": "={{ $json.errors.lexical }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1580,
+        -100
+      ],
+      "id": "3a2e6cf1-c4ea-4ab8-af74-4e6963280535",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        1840,
+        180
+      ],
+      "id": "8872d068-5207-48fe-833c-98fa329297e2",
+      "name": "AI Agent3",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": "mistralai/mistral-7b-instruct:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        1840,
+        340
+      ],
+      "id": "54fec123-837e-4cae-9eb3-291f27008c91",
+      "name": "OpenRouter Chat Model3",
+      "credentials": {
+        "openRouterApi": {
+          "id": "VXrVH3CxR9uCUJ4X",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1997cc4-0725-4018-a051-89236d791487",
+              "leftValue": "={{ $json.errors.punctuation }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1580,
+        200
+      ],
+      "id": "34748c8f-b950-4567-8d29-9bf1755fd717",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        1820,
+        480
+      ],
+      "id": "57e7a983-fcb8-490a-90ae-05cf86db76b5",
+      "name": "AI Agent4",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": "mistralai/mistral-7b-instruct:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        1820,
+        640
+      ],
+      "id": "25435cc9-c2fb-4de2-99ea-8f6482d790ae",
+      "name": "OpenRouter Chat Model4",
+      "credentials": {
+        "openRouterApi": {
+          "id": "VXrVH3CxR9uCUJ4X",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1997cc4-0725-4018-a051-89236d791487",
+              "leftValue": "={{ $json.errors.style_N_register }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1560,
+        500
+      ],
+      "id": "400dbcd5-d808-4612-a184-df83925eec88",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        2300,
+        780
+      ],
+      "id": "07adb8a7-cf26-4847-b2fb-4427c67745d9",
+      "name": "AI Agent5",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": "mistralai/mistral-7b-instruct:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        2360,
+        940
+      ],
+      "id": "b62b1d6c-96ad-4011-89db-f055082eb5e9",
+      "name": "OpenRouter Chat Model5",
+      "credentials": {
+        "openRouterApi": {
+          "id": "VXrVH3CxR9uCUJ4X",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1997cc4-0725-4018-a051-89236d791487",
+              "leftValue": "={{ $json.errors.cohesion_N_coherence}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1560,
+        800
+      ],
+      "id": "d2819e11-9425-4407-a40e-f72a53e25e85",
+      "name": "If5"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.outputString }}",
+        "options": {
+          "systemMessage": "=You are a specialized spelling-correction agent.\nYour sole focus is on fixing only the spelling errors provided; do not address grammar, punctuation, word choice, or any other language issues.\n________________________________________\n🔧 Your Task:\nReceive a single object with:\n•\t\"text\": the original English sentence (string)\n•\t\"spellingErrors\": an object of objects, each containing:\no\t\"before\": the token immediately before the misspelled word\no\t\"after\": the token immediately after the misspelled word\n________________________________________\n🧠 For each spelling error:\n1.\tIdentify the misspelled word between the before and after tokens within \"text\".\n2.\tDetermine the correct spelling.\n3.\tProvide a brief explanation (1–2 sentences) explaining the error and its correction.\n4.\tReplace the misspelled word with the correct one in the sentence.\n________________________________________\n📤 Output a single JSON object:\n•\t\"errors\": an array of objects, each with:\no\t\"original\": the misspelled word\no\t\"correction\": the corrected version\no\t\"reasoning\": your concise explanation\n•\t\"correctedText\": the final sentence with all spelling errors fixed\n________________________________________\n🔍 Example Input:\n{\n  \"text\": \"He walk to the libary in the moring.\",\n  \"spellingErrors\": {\n    \"err0\": {\n      \"before\": \"the \",\n      \"after\": \" in\"\n    },\n    \"err1\": {\n      \"before\": \"the \",\n      \"after\": \".\"\n    }\n  }\n}\n________________________________________\n✅ Example Output:\n\n{\n  \"errors\": [\n    {\n      \"original\": \"libary\",\n      \"correction\": \"library\",\n      \"reasoning\": \"‘Libary’ is a common misspelling of ‘library’ where the letter 'r' is omitted.\"\n    },\n    {\n      \"original\": \"moring\",\n      \"correction\": \"morning\",\n      \"reasoning\": \"‘Moring’ is a misspelling of ‘morning’; the vowel 'n' is missing in the middle.\"\n    }\n  ],\n  \"correctedText\": \"He walk to the library in the morning.\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        2000,
+        1120
+      ],
+      "id": "120e1a33-6102-48ac-ae09-53f5946fc862",
+      "name": "AI Agent6"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1997cc4-0725-4018-a051-89236d791487",
+              "leftValue": "={{ $json.errors.spelling }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1520,
+        1140
+      ],
+      "id": "70ba4b86-0a01-4fbd-a8f0-211876d5b35e",
+      "name": "If6"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = items[0].json;\n\nconst output = {\n  text: input.input,\n  grammarErrors: {}\n};\n\nconst grammarArray = input.errors?.grammar;\n\nif (Array.isArray(grammarArray)) {\n  grammarArray.forEach((err, index) => {\n    output.grammarErrors[`err${index}`] = err;\n  });\n}\nconst outputString = JSON.stringify(output, null, 2);\nreturn [{  outputString }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1880,
+        -420
+      ],
+      "id": "07accb27-643e-4949-9d1b-40c4860a2d52",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query }}",
+        "options": {
+          "systemMessage": "=You are a high-precision grammar and style analysis agent.\nYour Task: Identify all error types in the provided English sentence, pinpoint their spans, suggest corrections, and output them in a flat JSON object.\nContext: Input will be a single English sentence. Possible errors **include**:\n  - spelling\n  - grammar\n  - lexical (wrong word choice)\n  - punctuation\n  - style_N_register (tone inconsistency)\n  - cohesion_N_coherence\n\n**Format**: Return one JSON object with these properties:\n  • One property per detected error type, whose value is an array of error-objects.  \n    Each error-object must include:\n      – \"type\": the error identifier   \n      – \"before\": the word or character immediately before the error span.  \n      – \"after\": the word or character immediately afte the error span.   \n  • hasError — boolean, `true` if any errors were detected, otherwise `false`\n\n**Example **\ninput:\n- I going to the libary tomorrow for study.\n\nExample output:\n```json\n{\n  \"grammar\": [\n    {\n      \"before\": \"\",        ← error is at the very start\n      \"after\": \"going\",\n    },\n    {\n      \"before\": \"for\",\n      \"after\": \".\",\n    }\n  ],\n  \"spelling\": [\n    {\n      \"before\": \"the\",\n      \"after\": \"tomorrow\",\n    }\n  ],\n  \"hasError\": true\n}\n\nIf no errors are found, return:\n{\n  \"hasError\": false\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        460,
+        0
+      ],
+      "id": "d8c9db66-a371-4e1c-aaa1-5ec43f3379ac",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-preview-04-17-thinking",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2260,
+        -180
+      ],
+      "id": "4cbe97eb-5a3b-4f81-a1f4-9ba801bf3b40",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "s03mjiGtP7PKN2qw",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-preview-04-17-thinking",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1940,
+        1380
+      ],
+      "id": "dc447089-4ce2-4542-9e8e-5665c4d4261e",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "s03mjiGtP7PKN2qw",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = items[0].json;\n\nconst output = {\n  text: input.input,\n  spellingErrors: {}\n};\n\nconst spellingArray = input.errors?.spelling;\n\nif (Array.isArray(spellingArray)) {\n  spellingArray.forEach((err, index) => {\n    output.spellingErrors[`err${index}`] = err;\n  });\n}\nconst outputString = JSON.stringify(output, null, 2);\nreturn [{  outputString }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1780,
+        1120
+      ],
+      "id": "bfb3b0fb-f819-4f0e-8b00-4c4a3657c36a",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-preview-04-17-thinking",
+        "options": {
+          "temperature": 0.6,
+          "topP": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        460,
+        240
+      ],
+      "id": "9c28dab2-6861-4040-bf4a-b6780a04bdab",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "s03mjiGtP7PKN2qw",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "extract data ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extract data ": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "extract data ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If5",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent3",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "AI Agent3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent4",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "AI Agent4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent5",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If5": {
+      "main": [
+        [
+          {
+            "node": "AI Agent5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If6": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent6",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "AI Agent6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {
+    "extract data ": [
+      {
+        "json": {
+          "query": "She have alot of informations about this topic; its really confusing"
+        }
+      }
+    ],
+    "Code1": [
+      {
+        "json": {
+          "grammar": [
+            {
+              "before": "She",
+              "after": "have"
+            }
+          ],
+          "spelling": [
+            {
+              "before": "a",
+              "after": "lot"
+            }
+          ],
+          "lexical": [
+            {
+              "before": "of",
+              "after": "informations"
+            }
+          ],
+          "punctuation": [
+            {
+              "before": "topic",
+              "after": ";"
+            }
+          ],
+          "hasError": true
+        }
+      }
+    ]
+  },
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

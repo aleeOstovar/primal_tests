@@ -1,0 +1,482 @@
+{
+  "name": "DealMate Leads",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "getAll",
+        "returnAll": true,
+        "options": {
+          "conditionsUi": {
+            "conditionValues": [
+              {
+                "field": "Email",
+                "value": "={{ $json.body.Email }}"
+              },
+              {
+                "field": "MobilePhone",
+                "value": "={{ $json.body.Phone }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        16
+      ],
+      "id": "d6a14c9b-6e52-45d4-b744-a195c5d5c012",
+      "name": "Get many leads",
+      "alwaysOutputData": true,
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "CBdxVaEpIAhpORgk",
+          "name": "Salesforce account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "80c8837a-c37e-4f4f-85bf-1fd7ce92e4f5",
+              "leftValue": "={{ $json.Id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        16,
+        16
+      ],
+      "id": "ed0d4934-1b20-404a-b146-0bd302156274",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "DealMateLeads",
+        "responseMode": "responseNode",
+        "options": {
+          "binaryPropertyName": "data1"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -432,
+        16
+      ],
+      "id": "98393b73-c290-4b2b-9f66-ee96a93cc8ed",
+      "name": "Webhook",
+      "webhookId": "6fdb5a66-5511-4373-858f-e22d229af986"
+    },
+    {
+      "parameters": {
+        "resource": "worksheet",
+        "operation": "append",
+        "workbook": {
+          "__rl": true,
+          "value": "01WL6XH3SIYJAVZYJAHVGZ24DAEEU5RL42",
+          "mode": "list",
+          "cachedResultName": "DealMate EHB Existing Leads",
+          "cachedResultUrl": "https://mooregroup-my.sharepoint.com/personal/sadegh_expresshomebuyers_com/_layouts/15/Doc.aspx?sourcedoc=%7B5C41C248-20E1-4D3D-9D70-602129D8AF9A%7D&file=DealMate%20EHB%20Existing%20Leads.xlsx&action=default&mobileredirect=true&DefaultItemOpen=1"
+        },
+        "worksheet": {
+          "__rl": true,
+          "value": "{00000000-0001-0000-0000-000000000000}",
+          "mode": "list",
+          "cachedResultName": "ExistingLeads",
+          "cachedResultUrl": "https://mooregroup-my.sharepoint.com/personal/sadegh_expresshomebuyers_com/_layouts/15/Doc.aspx?sourcedoc=%7B5C41C248-20E1-4D3D-9D70-602129D8AF9A%7D&file=DealMate%20EHB%20Existing%20Leads.xlsx&action=default&mobileredirect=true&DefaultItemOpen=1&activeCell=ExistingLeads!A1"
+        },
+        "fieldsUi": {
+          "values": [
+            {
+              "column": "SF Lead ID",
+              "fieldValue": "={{ $json.Id }}"
+            },
+            {
+              "column": "Datetime Request",
+              "fieldValue": "={{ $now.toFormat(\"MM-dd-yyyy'T'HH:mm:ss\") }}"
+            },
+            {
+              "column": "Email",
+              "fieldValue": "={{ $('Webhook').item.json.body.Email }}"
+            },
+            {
+              "column": "Phone",
+              "fieldValue": "={{ $('Webhook').item.json.body.Phone }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftExcel",
+      "typeVersion": 2.1,
+      "position": [
+        304,
+        -80
+      ],
+      "id": "05bba897-6a87-416f-a5b7-99e5b728071f",
+      "name": "Append data to sheet",
+      "credentials": {
+        "microsoftExcelOAuth2Api": {
+          "id": "motDY0R3ZIESHXTG",
+          "name": "Microsoft Excel account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"Response\": \"Error - Lead Already Exists with EHB\"\n}",
+        "options": {
+          "responseCode": 422
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        592,
+        -80
+      ],
+      "id": "b6e36868-c27f-45b0-b011-90370b235de9",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"Response\": \"Lead Received and Stored\"\n}",
+        "options": {
+          "responseCode": 201
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1040,
+        112
+      ],
+      "id": "c2aa63e3-bcfd-4547-8526-c46d3169e6d5",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "resource": "worksheet",
+        "operation": "append",
+        "workbook": {
+          "__rl": true,
+          "value": "01WL6XH3S5DRUIOQ4DCVHYINYMABUOL47X",
+          "mode": "list",
+          "cachedResultName": "DealMate EHB New Leads",
+          "cachedResultUrl": "https://mooregroup-my.sharepoint.com/personal/sadegh_expresshomebuyers_com/_layouts/15/Doc.aspx?sourcedoc=%7B87681C5D-8343-4F15-8437-0C0068E5F3F7%7D&file=DealMate%20EHB%20New%20Leads.xlsx&action=default&mobileredirect=true&DefaultItemOpen=1"
+        },
+        "worksheet": {
+          "__rl": true,
+          "value": "{00000000-0001-0000-0000-000000000000}",
+          "mode": "list",
+          "cachedResultName": "SF Backup",
+          "cachedResultUrl": "https://mooregroup-my.sharepoint.com/personal/sadegh_expresshomebuyers_com/_layouts/15/Doc.aspx?sourcedoc=%7B87681C5D-8343-4F15-8437-0C0068E5F3F7%7D&file=DealMate%20EHB%20New%20Leads.xlsx&action=default&mobileredirect=true&DefaultItemOpen=1&activeCell=SF%20Backup!A1"
+        },
+        "fieldsUi": {
+          "values": [
+            {
+              "column": "Deal_Name",
+              "fieldValue": "={{ $('Webhook').item.json.body.Deal_Name }}"
+            },
+            {
+              "column": "Contact_Name",
+              "fieldValue": "={{ $('Webhook').item.json.body.Contact_Name }}"
+            },
+            {
+              "column": "Contact_First_Name",
+              "fieldValue": "={{ $('Webhook').item.json.body.Contact_First_Name }}"
+            },
+            {
+              "column": "Email",
+              "fieldValue": "={{ $('Webhook').item.json.body.Email }}"
+            },
+            {
+              "column": "Phone",
+              "fieldValue": "={{ $('Webhook').item.json.body.Phone }}"
+            },
+            {
+              "column": "Address",
+              "fieldValue": "={{ $('Webhook').item.json.body.Address }}"
+            },
+            {
+              "column": "Home_Type",
+              "fieldValue": "={{ $('Webhook').item.json.body.Home_Type }}"
+            },
+            {
+              "column": "Home_Condition",
+              "fieldValue": "={{ $('Webhook').item.json.body.Home_Condition }}"
+            },
+            {
+              "column": "Desired_Asking_Price",
+              "fieldValue": "={{ $('Webhook').item.json.body.Desired_Asking_Price }}"
+            },
+            {
+              "column": "True_Home_Value",
+              "fieldValue": "={{ $('Webhook').item.json.body.True_Home_Value }}"
+            },
+            {
+              "column": "Stage",
+              "fieldValue": "={{ $('Webhook').item.json.body.Stage }}"
+            },
+            {
+              "column": "Sale_urgency",
+              "fieldValue": "={{ $('Webhook').item.json.body.Sale_urgency }}"
+            },
+            {
+              "column": "Time_Frame",
+              "fieldValue": "={{ $('Webhook').item.json.body.Time_Frame }}"
+            },
+            {
+              "column": "Assigned_Caller",
+              "fieldValue": "={{ $('Webhook').item.json.body.Assigned_Caller }}"
+            },
+            {
+              "column": "Call_Notes",
+              "fieldValue": "={{ $('Webhook').item.json.body.Call_Notes }}"
+            },
+            {
+              "column": "Created_Time",
+              "fieldValue": "={{ $('Webhook').item.json.body.Created_Time }}"
+            },
+            {
+              "column": "Modified_Time",
+              "fieldValue": "={{ $('Webhook').item.json.body.Modified_Time }}"
+            },
+            {
+              "column": "SF ID",
+              "fieldValue": "={{ $json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftExcel",
+      "typeVersion": 2.1,
+      "position": [
+        816,
+        112
+      ],
+      "id": "a768751e-8e61-4792-8c13-ef0bfbb68f6a",
+      "name": "Append data to sheet1",
+      "credentials": {
+        "microsoftExcelOAuth2Api": {
+          "id": "motDY0R3ZIESHXTG",
+          "name": "Microsoft Excel account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "company": "null",
+        "lastname": "={{ $('Webhook').item.json.body.Contact_Name }}",
+        "additionalFields": {
+          "city": "={{ $json.message.content.City }}",
+          "customFieldsUi": {
+            "customFieldsValues": [
+              {
+                "fieldId": "Listed_Property__c",
+                "value": "=false"
+              },
+              {
+                "fieldId": "Current_Condition__c",
+                "value": "={{ $('Webhook').item.json.body.Home_Condition }}"
+              },
+              {
+                "fieldId": "Closing_Timeline__c",
+                "value": "={{ $('Webhook').item.json.body.Time_Frame }}"
+              },
+              {
+                "fieldId": "Lead_Notes__c",
+                "value": "=Lead Notes:\n{{ $('Webhook').item.json.body.Call_Notes }}\n\nProperty Type:\n{{ $('Webhook').item.json.body.Home_Type }}\n\nLead Stage:\n{{ $('Webhook').item.json.body.Stage }}\n\nTrue Home Value:\n{{ $('Webhook').item.json.body.True_Home_Value }}\n\nLead Original Creation Time:\n{{ $('Webhook').item.json.body.Created_Time }}"
+              },
+              {
+                "fieldId": "Motivation__c",
+                "value": "={{ $('Webhook').item.json.body.Sale_urgency }}"
+              },
+              {
+                "fieldId": "Their_Asking_Price__c",
+                "value": "={{ $('Webhook').item.json.body.Desired_Asking_Price }}"
+              }
+            ]
+          },
+          "email": "={{ $('Webhook').item.json.body.Email }}",
+          "firstname": "={{ $('Webhook').item.json.body.Contact_First_Name }}",
+          "leadSource": "DealMate",
+          "phone": "={{ $('Webhook').item.json.body.Phone }}",
+          "postalCode": "={{ $json.message.content.Zip_code }}",
+          "state": "={{ $json.message.content.State }}",
+          "street": "={{ $json.message.content.Property_number }} {{ $json.message.content.Street }}"
+        }
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1,
+      "position": [
+        592,
+        112
+      ],
+      "id": "22cb4c2e-eadb-4877-80d3-d5bfaaa5a047",
+      "name": "Create a lead",
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "CBdxVaEpIAhpORgk",
+          "name": "Salesforce account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "GPT-3.5-TURBO"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Parse the following address and return it in JSON format with these exact keys: \"Property_number\", \"Street\", \"City\", \"State\", \"Zip_code\". If you can extract correct information from Address then just return null.\n\nAddress: {{ $('Webhook').item.json.body.Address }}\n\nExpected JSON format, DO NOT include these values in your output. \n{\n  \"Property_number\": \"3124\",\n  \"Street\": \"Peach Street\", \n  \"City\": \"Alexandria\",\n  \"State\": \"LA\",\n  \"Zip_code\": \"71301\"\n}\n\nReturn only the JSON object, no additional text."
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        240,
+        112
+      ],
+      "id": "96bb5024-85e7-4a29-a4b3-7774bc05fe32",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "obrCoVwP9hvbq5OW",
+          "name": "EHB_App"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get many leads": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Append data to sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get many leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append data to sheet": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append data to sheet1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a lead": {
+      "main": [
+        [
+          {
+            "node": "Append data to sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Create a lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2e5236be-6b89-4d09-9d63-37e0279ba465",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1492f4d88835c9aa4ef9f92114084d45e62f070cbfca1060935e9b804d7507de"
+  },
+  "id": "eh0XG6GLK3pVyefG",
+  "tags": []
+}

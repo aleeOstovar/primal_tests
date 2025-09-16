@@ -1,0 +1,1179 @@
+{
+  "name": "academic_writer",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -4000,
+        144
+      ],
+      "id": "796917ca-f98a-4c00-ba1f-d0d4ee4d722e",
+      "name": "Telegram Trigger",
+      "webhookId": "97b6b439-c81d-41cb-be47-4841801c42fb",
+      "credentials": {
+        "telegramApi": {
+          "id": "7hnQv4dQqIynqpv9",
+          "name": "Jenny_English Teacher"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "d19044af-c93c-4244-8f50-6ef317442a10"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "text input"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "667d8912-a2f7-4475-a881-98e304a0e755",
+                    "leftValue": "={{ $json.message.voice.mime_type }}",
+                    "rightValue": "audio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio input"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -3648,
+        144
+      ],
+      "id": "773b5eb4-897b-4127-9f36-547fd80b19ea",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -3440,
+        256
+      ],
+      "id": "7576d880-1e2d-40e7-9a04-a490d74fb499",
+      "name": "Get a file",
+      "webhookId": "03e62bdc-75d3-4a8c-bc03-b6e06aac91b2",
+      "credentials": {
+        "telegramApi": {
+          "id": "3VWnh3QZMBkmlXc0",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "db50fb65-30a3-4703-9b95-6ff60220ec01",
+              "name": "user_prompt",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "e52bfcbb-537f-42da-94c7-d9741c91f17e",
+              "name": "message.chat.id",
+              "value": "={{ $('Switch').item.json.message.chat.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3040,
+        16
+      ],
+      "id": "cde8ce1b-1ece-48d2-bf62-c5ff2b3f99df",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1697b616-e28a-44e4-acc3-c5506caf66ce",
+              "name": "user_prompt",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "e727b20e-e8b4-4934-b83f-cc64b500ebfa",
+              "name": "message.chat.id",
+              "value": "={{ $('Switch').item.json.message.chat.id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3008,
+        256
+      ],
+      "id": "76d2019c-65bc-4427-8d77-86d1c4d71ed9",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "translate",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -3216,
+        256
+      ],
+      "id": "acc1f79b-5a22-4293-b05f-2aff7ed51550",
+      "name": "Translate a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "N6A8LE2NbR2qTBzY",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5",
+          "mode": "list",
+          "cachedResultName": "gpt-5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1808,
+        528
+      ],
+      "id": "29978584-d560-49ac-845a-85db39ec5e1e",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YUA487zJjgANPYyH",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "416f6f10-26f3-4cee-ba11-e326fc6fc6bf",
+              "name": "user_prompt",
+              "value": "={{ $('Edit Fields1').item.json.user_prompt }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1920,
+        256
+      ],
+      "id": "14f4254a-79a7-41f2-b709-5a85814a3606",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputText = $json[\"output\"] || \"\";\nif (typeof inputText !== \"string\") {\n  throw new Error(\"Input must be a string\");\n}\nconst mid = Math.ceil(inputText.length / 2);\nconst firstHalf = inputText.substring(0, mid);\nconst secondHalf = inputText.substring(mid);\nreturn [\n  { json: { blockNumber: 1, content: firstHalf } },\n  { json: { blockNumber: 2, content: secondHalf } },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1136,
+        256
+      ],
+      "id": "c5e54acc-fbab-44c5-a847-384add61d1d0",
+      "name": "Split Telegram Message"
+    },
+    {
+      "parameters": {
+        "chatId": "=228598959",
+        "text": "={{ $json.content }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -864,
+        256
+      ],
+      "id": "8e708959-b1f6-41f5-bc21-48af07527727",
+      "name": "Send a text message",
+      "webhookId": "a0c04661-06d0-4838-839f-c82009cb4def",
+      "credentials": {
+        "telegramApi": {
+          "id": "7hnQv4dQqIynqpv9",
+          "name": "Jenny_English Teacher"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.user_prompt }}",
+        "options": {
+          "systemMessage": "=### **Your Role**\n\nYou are an expert academic advisor and a seasoned member of a PhD admissions committee for top-tier computer science programs, with a specialization in Machine Learning and Software Engineering. Your user is a Master of Science in Artificial Intelligence graduate, preparing their application materials for PhD programs. They require a meticulous, professional, and in-depth analysis of their texts, including personal statements, statements of purpose, research statements, and email communications with potential supervisors. Your feedback must be constructive, detailed, and aligned with the highest academic standards.\n\n### **User Profile**\n\n> *   **Field:** Machine Learning and Software Engineering.\n> *   **Academic Background:** Master of Science in Artificial Intelligence.\n> *   **Goal:** Gain admission to a competitive PhD program.\n> *   **Expectation:** Expert-level analysis with a keen eye for minor details that differentiate a good application from an excellent one.\n\n---\n\n### **Core Analysis Principles**\n\nWhen analyzing any submitted text, you must adhere to the following principles, providing specific examples and actionable suggestions for improvement.\n\n#### **1. Clarity and Precision**\n*   **Language:** Is the language clear, concise, and unambiguous? Identify and flag any convoluted sentences, jargon that is not well-defined, or vague terminology. Sentences should generally be no longer than 25 words to maintain clarity.\n*   **Technical Accuracy:** Scrutinize all technical descriptions. Are ML/SE concepts and terminology used correctly? Is the explanation of projects and research accessible yet technically sound?\n*   **Actionable Feedback:** Suggest alternative phrasing for clarity. For example, instead of \"significant results,\" prompt the user to specify what makes the results significant (e.g., \"achieved a 15% reduction in error rate over the baseline\") and how they were measured.\n\n#### **2. Structure and Organization**\n*   **Logical Flow:** Does the text have a clear and logical structure? Each paragraph should focus on a single main idea, introduced by a topic sentence. The argument should build progressively.\n*   **Narrative Cohesion:** For personal statements, is there a compelling and coherent narrative? Does it effectively connect past experiences (the \"origin story\") to future research aspirations?\n*   **Signposting:** Is the reader guided through the text with effective transitions and signposting language (e.g., \"Building on this work, I aim to...\", \"A key challenge, however, is...\", \"Therefore, my proposed research will focus on...\")?\n*   **Introduction and Conclusion:** Does the introduction grab the reader's attention and clearly state the document's purpose and the applicant's core research interest? Does the conclusion effectively summarize the key points and leave a lasting impression of the applicant's potential and suitability for the program?\n\n#### **3. Tone and Formality**\n*   **Academic Tone:** The tone must be formal, objective, and professional. Flag any use of colloquialisms, contractions (e.g., `don't`, `isn't`, `it's`), or overly casual language.\n*   **Objectivity:** The writing should be free from bias and avoid subjective or emotive adjectives (e.g., `wonderful`, `amazing`, `terrible`). Claims must be supported by evidence, not personal feelings.\n*   **Confidence without Arrogance:** The tone should convey quiet confidence in one's abilities and research potential without sounding arrogant, entitled, or overly self-aggrandizing.\n\n#### **4. Content and Substance**\n*   **Depth over Breadth:** The text should focus on one or two key research experiences in detail rather than providing a superficial summary of the entire resume. Quality and depth of experience are more important than quantity.\n*   **Demonstrating Research Potential:** This is the most critical aspect of a PhD application. The text must showcase the applicant's ability to think critically, identify research gaps, formulate interesting questions, and persevere through challenges.\n*   **\"Show, Don't Tell\":** Instead of stating qualities like \"I am a hard-working and passionate researcher,\" the text should provide concrete examples and anecdotes that *demonstrate* these traits through actions and outcomes.\n*   **Originality of Thought:** The application should present original ideas and clearly articulate how the proposed research will contribute something new, novel, and significant to the field.\n\n---\n\n### **Document-Specific Analysis**\n\nYou will tailor your analysis based on the type of document submitted.\n\n#### **A. Personal Statement / Statement of Purpose**\n*   **Motivation and Goals:** Does the statement clearly articulate the applicant's motivation for pursuing a PhD? Are the long-term career goals well-defined and do they align with a research-focused path?\n*   **Fit with the Program:** The statement **must** be tailored to each specific university. It should demonstrate a deep understanding of the program's research strengths, specific faculty members' work, and how the applicant's interests align. Mentioning 2-3 professors by name and citing their relevant work is crucial.\n*   **Highlighting Research Experience:** This is paramount. The statement should detail the applicant's research projects, their specific contributions (what *you* did), the technical challenges faced, the solutions implemented, and what they learned from the experience. Mentioning publications, pre-prints, or conference presentations is highly beneficial.\n*   **Addressing Weaknesses:** If there are any potential weaknesses in the application (e.g., a lower GPA in a specific semester, a non-traditional background), does the statement address them constructively, briefly, and without making excuses?\n*   **Common Pitfalls to Avoid:**\n    *   Regurgitating the resume in narrative form.\n    *   Using clichés (e.g., \"Ever since I was a child, I have been passionate about computers...\").\n    *   Being too vague about research interests (e.g., \"I am interested in AI\"). Be specific (e.g., \"I am interested in developing robust federated learning algorithms for privacy-sensitive medical data\").\n    *   Failing to get to the point quickly. The first paragraph is critical.\n\n#### **B. Research Proposal / Research Statement**\n*   **Problem Statement:** Is the research problem clearly defined, well-motivated, significant, and worthy of a PhD-level investigation?\n*   **Literature Review:** Does it demonstrate a solid understanding of the existing work in the field and identify a clear gap that the proposed research will address? This shows you've done your homework.\n*   **Methodology:** Is the proposed methodology sound, detailed, and appropriate for the research questions? The applicant should justify their choice of methods and outline a potential plan of action or initial experiments.\n*   **Feasibility:** Is the scope of the project realistic for a PhD timeline (typically 3-5 years)? Does it show an understanding of the potential challenges?\n*   **Original Contribution:** Does the proposal clearly state the expected novel contribution to the field of Machine Learning or Software Engineering?\n\n#### **C. Email to a Potential Supervisor**\n*   **Conciseness and Professionalism:** The email should be brief (under 200 words), professional, and to the point. Use a clear and informative subject line (e.g., \"Prospective PhD Student Inquiry - [Your Name]\").\n*   **Demonstrated Knowledge:** It must show that the applicant has read the professor's recent papers (mention one or two specific papers by title) and has a genuine, informed interest in their specific research.\n*   **Clear \"Ask\":** The email should have a clear purpose, such as inquiring if the professor is accepting new students for the upcoming academic year. It can also include a brief, insightful question about their work to demonstrate engagement.\n*   **Attachment of CV/Resume:** The email should mention that a CV or resume is attached for their convenience. Do not attach a full statement of purpose unless requested.\n\n### **Final Output**\n\nYour analysis should be structured in a clear, hierarchical manner. Use headings and bullet points to organize your feedback. For each point of criticism, provide a clear explanation of *why* it is a problem and offer concrete suggestions for improvement, including alternative phrasing where appropriate. Your ultimate goal is to empower the user to refine their documents to the highest possible standard, significantly increasing their chances of admission to a top-tier PhD program."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -1616,
+        256
+      ],
+      "id": "2e688ebc-57e2-43b7-9b99-6e95460ac4fc",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDbTool",
+      "typeVersion": 1.2,
+      "position": [
+        -1472,
+        464
+      ],
+      "id": "41cead33-047d-45b7-b8f9-ae8641f8be34",
+      "name": "Find documents in MongoDB",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1264,
+        656
+      ],
+      "id": "77c649a6-68fc-4f70-bc27-699c904339d5",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1968,
+        1440
+      ],
+      "id": "50e6a72e-6266-4dde-87ea-8f1a80a95beb",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -3824,
+        656
+      ],
+      "id": "6d301abb-b6b5-458c-b14b-10dd766078e3",
+      "name": "Telegram Trigger1",
+      "webhookId": "97b6b439-c81d-41cb-be47-4841801c42fb",
+      "credentials": {
+        "telegramApi": {
+          "id": "DOuo9hDHDqeMaErV",
+          "name": "AleeIsAwesome"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.message.text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3392,
+        656
+      ],
+      "id": "20cf821c-798d-4055-ba90-3ec87d0228bf",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "={{ $json.message.chat.id }}",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -2736,
+        656
+      ],
+      "id": "39f9e178-62bb-4fc1-bf6a-a542f29dd284",
+      "name": "Send a document",
+      "webhookId": "3fe63768-dc7a-4ce9-9140-bcfac458163e",
+      "credentials": {
+        "telegramApi": {
+          "id": "yRmQ6CUiGTiXbpOx",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.message.text }}",
+        "options": {}
+      },
+      "id": "8b6af370-e0e9-4504-804e-4451af8bb491",
+      "name": "Download File",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3600,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "e3274859-33ec-44e9-9e38-3c054043f6af",
+      "name": "Telegram Trigger2",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -3840,
+        928
+      ],
+      "webhookId": "1cc7f8e6-cb6f-4ad6-ba1c-2eda48336938",
+      "credentials": {
+        "telegramApi": {
+          "id": "DOuo9hDHDqeMaErV",
+          "name": "AleeIsAwesome"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://tmpfiles.org/api/v1/upload",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "de0e7e2a-9085-4ac9-9d9f-d4c81618c3a6",
+      "name": "Upload to tmpfiles.org",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3360,
+        928
+      ],
+      "inputs": {
+        "main": [
+          {
+            "id": "a933ac8a-1a06-4b52-b166-5e0435b62e49",
+            "pin": 0
+          }
+        ]
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger2').item.json.message.from.id }}",
+        "text": "=here is the link:  {{ $json.data.url }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -3008,
+        928
+      ],
+      "id": "47371abf-79cd-454c-9e6e-5327b62a3b31",
+      "name": "Send a text message1",
+      "webhookId": "3fe63768-dc7a-4ce9-9140-bcfac458163e",
+      "credentials": {
+        "telegramApi": {
+          "id": "DOuo9hDHDqeMaErV",
+          "name": "AleeIsAwesome"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -2128,
+        1312
+      ],
+      "id": "cd7e37c6-9345-4333-93c3-9713331e3b74",
+      "name": "Telegram Trigger3",
+      "webhookId": "97b6b439-c81d-41cb-be47-4841801c42fb",
+      "credentials": {
+        "telegramApi": {
+          "id": "7hnQv4dQqIynqpv9",
+          "name": "Jenny_English Teacher"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot7678165124:AAEma-TmL-mKOrOmtMuJdWu92Aq6G2NMaBo/getFile",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "file_id",
+              "value": "={{ $json.message.video.file_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1936,
+        1296
+      ],
+      "id": "2bd93c7d-3c4b-4174-b0ca-e1143aedadea",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/file/bot7678165124:AAEma-TmL-mKOrOmtMuJdWu92Aq6G2NMaBo/{{ $json.result.file_path }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1760,
+        1296
+      ],
+      "id": "c3a07a26-ec5e-4755-8600-ca555fde7afd",
+      "name": "HTTP Request3"
+    },
+    {
+      "parameters": {
+        "authentication": "headerAuth",
+        "url": "https://api.pexels.com/videos/popular?per_page=80",
+        "options": {
+          "followRedirect": true,
+          "timeout": 10000
+        }
+      },
+      "name": "Fetch Pexels Video",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        -2160,
+        1584
+      ],
+      "id": "7bed0538-e328-470d-8c83-a3fb9acbe640",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const videos = $node[\"Fetch Pexels Video\"].json.videos;\nconst randomIndex = Math.floor(Math.random() * videos.length);\nconst videoUrl = videos[randomIndex].video_files[0].link;\nreturn [{ json: { videoUrl } }];"
+      },
+      "name": "Randomize Video",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        -1968,
+        1584
+      ],
+      "id": "63443eef-2abe-4764-a55d-efec022034fb"
+    },
+    {
+      "parameters": {
+        "url": "={{ $node[\"Randomize Video\"].json[\"videoUrl\"] }}",
+        "responseFormat": "file",
+        "options": {
+          "followRedirect": true,
+          "timeout": 30000
+        }
+      },
+      "name": "Download Video",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        -1760,
+        1584
+      ],
+      "id": "e015356d-34b7-4c05-a4a3-812ab7a1a4c1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst secret = 'YOUR_TRANSLOADIT_SECRET';\nconst params = {\n  auth: { key: 'YOUR_TRANSLOADIT_API_KEY' },\n  template_id: 'aad3cdcd6d804111be68cb7d4414385d'\n};\nconst paramsString = JSON.stringify(params);\nconst signature = crypto.createHmac('sha1', secret).update(paramsString).digest('hex');\nreturn [{ json: { params: paramsString, signature } }];"
+      },
+      "name": "Generate Signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        -1568,
+        1584
+      ],
+      "id": "61d3dd6d-4f64-46f0-b6ad-3a487b19c63d"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "audio_url",
+              "value": "={{ $node[\"HTTP Request4\"].json[\"results\"][\"extracted-audio\"][0][\"url\"] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -1168,
+        1584
+      ],
+      "id": "9831802f-6b3d-434d-8dbe-48734272ba4f"
+    },
+    {
+      "parameters": {
+        "url": "https://api2.transloadit.com/assemblies",
+        "options": {
+          "followRedirect": true,
+          "timeout": 60000
+        }
+      },
+      "name": "HTTP Request4",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        -1360,
+        1584
+      ],
+      "id": "4865fc39-3b23-4499-82e4-657a98189fd6"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -32,
+        1296
+      ],
+      "id": "e2aa0f19-d28c-4840-8e5a-b48cacc628f6",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "YUA487zJjgANPYyH",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1328,
+        1296
+      ],
+      "id": "7a087592-3a97-443c-a6e7-37ff67d59610",
+      "name": "Wait",
+      "webhookId": "b6abbfc4-1885-4d96-8f21-58bc5c66a73b"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.results.audio_from_video_extracted[0].url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -832,
+        1296
+      ],
+      "id": "b5822185-91ba-4244-98d8-3b8fcea32162",
+      "name": "HTTP Request6"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.assembly_ssl_url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1136,
+        1296
+      ],
+      "id": "cb3841b2-4ec6-48b8-93c1-16e8c069e8f8",
+      "name": "HTTP Request5"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api2.transloadit.com/assemblies",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "authKey",
+              "value": "9qnEhfye3kZTi9fMyXDCC5cLMjKD0ELZ"
+            },
+            {
+              "name": "authSecret",
+              "value": "YUhwSKoRBUtA7P4oyknMILiB7RiTKfRjrjMByZ8j"
+            },
+            {
+              "name": "params",
+              "value": "={\"auth\": {\"key\": \"9qnEhfye3kZTi9fMyXDCC5cLMjKD0ELZ\"}, \"template_id\": \"9a6c72015c374017afb95b1b31985a1b\"}"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1536,
+        1296
+      ],
+      "id": "cbde2530-c9d2-4b12-b21f-f757b5513394",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-pro",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-pro"
+        },
+        "inputType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        1296
+      ],
+      "id": "6ed41b7a-6e18-45f8-87d2-e5bb7ac42014",
+      "name": "Transcribe a recording1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "i6A63CqaTqQMBPrP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7f926b4b-8f56-48d1-9f0d-f3241d03f30e",
+              "name": "content.parts[0].text",
+              "value": "={{ $json.content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -416,
+        1296
+      ],
+      "id": "9fb407db-ccf2-4bbc-9d1a-3062fa5b2156",
+      "name": "Edit Fields4"
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Translate a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Translate a recording": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Telegram Message": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Split Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find documents in MongoDB": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        []
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Send a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download File": {
+      "main": [
+        [
+          {
+            "node": "Upload to tmpfiles.org",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger2": {
+      "main": [
+        [
+          {
+            "node": "Download File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to tmpfiles.org": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger3": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Pexels Video": {
+      "main": [
+        [
+          {
+            "node": "Randomize Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Randomize Video": {
+      "main": [
+        [
+          {
+            "node": "Download Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Video": {
+      "main": [
+        [
+          {
+            "node": "Generate Signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Signature": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request4": {
+      "main": [
+        [
+          {
+            "node": "Set",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request6": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request5": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {
+    "Edit Fields": [
+      {
+        "json": {
+          "output": "Below is a structured critique of your email, followed by a concise, polished rewrite you can use.\n\nTop issues and how to fix them\n- Clarity and precision\n  - “resonates” should be “resonate” (plural subject: “work … and your study”).\n  - “ai automations” should be “AI automation.”\n  - “Data Analyst Agent” is unclear; prefer “data-analysis agents” or “analyst agents.”\n  - Avoid “two companies simultaneously” (may raise commitment concerns and is unnecessary detail).\n  - Correct “Tampre University” to “Tampere University.”\n- Structure and content\n  - Keep under 200 words; your current version is on the long side.\n  - Replace generic praise with 1–2 specific paper titles and a one-line insight that links to your experience. If you are unsure of exact titles, insert placeholders and update before sending.\n  - Add a clear, time-bound ask (e.g., “Are you recruiting PhD students for Fall 2025?”).\n  - Avoid attaching certificates or recommendation letters; attach only your CV. Letters should come directly from referees when requested.\n- Tone and formality\n  - Omit “We are connected on LinkedIn” (not value-adding).\n  - Use formal phrasing and avoid contractions.\n  - Convey interest without overstatement.\n\nStronger subject line options\n- Prospective PhD Student – AI Engineering/RAG – Ali Ostovar\n- PhD Inquiry (2025) – RAG and SLMs for Code – Ali Ostovar\n\nTargeted, concise rewrite (≤180 words)\nSubject: Prospective PhD Student – AI Engineering/RAG – Ali Ostovar\n\nDear Professor Abrahamsson,\n\nI am Ali Ostovar, an MSc graduate in Artificial Intelligence. I follow your group’s work on engineering LLM-based systems, especially [Paper Title, Venue Year] on engineering RAG systems and [Paper Title, Venue Year] on small language models for code generation. Your focus on software-engineering rigor for AI systems closely aligns with my experience.\n\nI work as a machine learning and software engineer, designing and deploying enterprise AI solutions (e.g., Salesforce integrations). Recent projects include multimodal RAG pipelines with hybrid retrieval, evaluation frameworks for task-specific QA, and production-grade deployment/monitoring of analyst agents.\n\nAre you recruiting PhD students for Fall 2025 at Tampere University? If so, I would greatly appreciate the opportunity to apply to your group. Briefly, I am eager to investigate robust, cost-aware RAG and SLM-based development workflows that balance quality, latency, and maintainability at scale.\n\nMy CV is attached; GitHub and Google Scholar are below. If helpful, I would be glad to share a short research summary or arrange a brief call at your convenience.\n\nThank you for your time and consideration.\n\nBest regards,\nAli (Alee) Ostovar\nEmail | GitHub | Google Scholar | Website\n\nOptional one-line, insightful question (use after citing a specific paper)\n- In [Paper Title], you highlight engineering challenges for RAG systems. In your recent deployments, which evaluation approach has been most actionable beyond retrieval metrics: human-in-the-loop review, rubric-based LLM judges, or task-specific regression tests?\n\nEdits you can apply to your original text if you prefer to keep it\n- Replace “We are connected on LinkedIn…” with “I follow your group’s recent work, including [Paper Title, Venue Year] and [Paper Title, Venue Year].”\n- Replace “two companies simultaneously” with “I work as a machine learning and software engineer…”\n- Replace “ai automations” with “AI automation.”\n- Replace “Data Analyst Agent” with “analyst agents” or “data-analysis agents.”\n- Correct “Tampre University” to “Tampere University.”\n- Remove “certificates” and “a recommendation letter” from attachments; attach only your CV.\n\nFinal checklist before sending\n- Insert exact paper titles and venues, and ensure the alignment sentence references a specific idea from each.\n- Keep total length under 180–200 words.\n- Attach only your CV (PDF, named Ali_Ostovar_CV.pdf).\n- Include links to GitHub/Scholar/website in the signature."
+        }
+      }
+    ]
+  },
+  "triggerCount": 2,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

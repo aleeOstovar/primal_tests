@@ -1,0 +1,175 @@
+{
+  "name": "PostScheduler",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "f07dc7c1-0d28-48d5-b59f-afbdc767fdfa",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -512,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "destinationKey": "base64",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        576,
+        192
+      ],
+      "id": "7baf361c-a551-4e03-9a10-6898ee663859",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "operation": "iCal",
+        "title": "={{ $json.title }}",
+        "start": "={{ $json.startDate }}",
+        "end": "={{ $json.endDate }}",
+        "allDay": true,
+        "additionalFields": {
+          "description": "={{ $json.description }}",
+          "location": "={{ $json.location }}"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        368,
+        192
+      ],
+      "id": "fdec1440-1f7f-406a-a9a7-4211d28f3eaa",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bec1eb09-15a2-46f3-b796-fd71136cebda",
+              "name": "startDate",
+              "value": "={{ $json.startDate }}",
+              "type": "string"
+            },
+            {
+              "id": "2c7c72f3-c8e4-41ba-9381-9c3a1d997733",
+              "name": "endDate",
+              "value": "={{ $json.endDate }}",
+              "type": "string"
+            },
+            {
+              "id": "c9b915a3-f675-43b6-8430-865b52b2dc14",
+              "name": "title",
+              "value": "={{ $json.summary }}",
+              "type": "string"
+            },
+            {
+              "id": "065e859f-0de1-42e9-b4d8-2a38ed1a4fb4",
+              "name": "description",
+              "value": "={{ $json.description }}",
+              "type": "string"
+            },
+            {
+              "id": "4dccf2e2-21fd-4661-9aec-eb4845f461b7",
+              "name": "location",
+              "value": "={{ $json.location }}",
+              "type": "string"
+            },
+            {
+              "id": "b538443d-3c29-4a20-8dda-2b339964510f",
+              "name": "timezone",
+              "value": "={{ $json.timezone }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        128,
+        192
+      ],
+      "id": "cd4873ba-dcce-49f8-bb52-11a5221271e9",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "// The input data is available in the 'items' variable.\n// This code will iterate through each item provided to the node.\n\nconst result = [];\n\nfor (const item of items) {\n  // The 'query' field is a string, so we need to parse it into a JSON object.\n  const parsedQuery = JSON.parse(item.json.query);\n\n  // We add the parsed object to our result array.\n  result.push({ json: parsedQuery });\n}\n\n// The node will output the data in the 'result' array.\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        192
+      ],
+      "id": "745c7789-4676-4141-b969-dd050f8f870a",
+      "name": "Code"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

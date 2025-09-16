@@ -1,0 +1,200 @@
+{
+  "name": "GetPrice_Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n  \"market\": \"marketName\",\n  \"symbol\": \"symbolName\"\n}"
+      },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        260,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bf4873c3-a6a1-4e03-a7fa-eeab3e8c551f",
+              "name": "market",
+              "value": "={{ $json.market }}",
+              "type": "string"
+            },
+            {
+              "id": "823178c0-f2fd-400b-b677-5eb678efc4a4",
+              "name": "symbol",
+              "value": "={{ $json.symbol }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        340
+      ],
+      "id": "bd6e31a0-3bfe-405a-9273-dfaeae27b2f9",
+      "name": "Set Symbol"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json }}",
+        "options": {
+          "systemMessage": "you can get price of desired symbol based on user input, to get prices of stocks you have Get_Stock_price tool, you should pass market and symbol in a json format to this tool.\nexample:\ninput : {\"market\": \"NASDAQ\", \"symbol\": \"AAPL\"}\ncalling Get_Stock_price tool and pass : {\"market\": \"NASDAQ\", \"symbol\": \"AAPL\"}\noutput: {\"res\": price}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        700,
+        340
+      ],
+      "id": "bc80f82d-3fd5-48bf-b711-4f04e577f71d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        440,
+        620
+      ],
+      "id": "60accdb9-ef08-4ac7-abf7-de24eae33661",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "By1zxazSn66Se0c2",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "562b8956-fb28-4f84-90da-1c79d768b5a1",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "position": [
+        660,
+        640
+      ],
+      "typeVersion": 1.3,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "name": "Get_stock_price",
+        "description": "call this tool to get stock prices",
+        "workflowId": {
+          "__rl": true,
+          "value": "y44kvRpRlm7lZtId",
+          "mode": "list",
+          "cachedResultName": "My Sub-Workflow 1"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.1,
+      "position": [
+        840,
+        640
+      ],
+      "id": "ce423b97-ef3c-4643-a038-11a3f5b0bf91",
+      "name": "Get_stock_price"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Set Symbol",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Symbol": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get_stock_price": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "market": "NASDAQ",
+          "symbol": "AAPL"
+        }
+      }
+    ]
+  },
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

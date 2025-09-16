@@ -1,0 +1,289 @@
+{
+  "name": "My workflow 6",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "teamsChat",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -368,
+        48
+      ],
+      "id": "ddb527b4-976b-4ad5-9e26-e7195c1933c7",
+      "name": "Webhook",
+      "webhookId": "5fb58028-277c-4e0e-8d23-4e236ad0563a"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5a09579b-06e9-4d13-b938-597010307a66",
+              "name": "=user_aad_id",
+              "value": "={{ $json.body.from.aadobjectId }}",
+              "type": "string"
+            },
+            {
+              "id": "ddd7bc35-48aa-4c70-8387-e461a9c1e4a2",
+              "name": "=conversation_id",
+              "value": "=({ $json.body.conversation.id }}",
+              "type": "string"
+            },
+            {
+              "id": "2faf7597-0b1c-4c15-b571-9fb80c4e43d6",
+              "name": "=user_message",
+              "value": "={{ $json.body.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -112,
+        -112
+      ],
+      "id": "d85de382-2dd5-4604-a1b1-59f2fc7f732e",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "resource": "assistant",
+        "assistantId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "prompt": "define",
+        "text": "={{ $json.body.attachments[0].content }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -112,
+        192
+      ],
+      "id": "f7630921-94cc-4195-af09-68a32a4cc9c5",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "GZN025b0p0AstCbO",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.microsoft.com/v1.0/users/{{ $json.user_aad_id }}/chats",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "=$filter",
+              "value": "=chatType eq 'oneOnOne'"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        64,
+        -32
+      ],
+      "id": "acc9da5e-3747-43b0-bc81-56e940170470",
+      "name": "HTTP Request",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "t2SXEIw0Z771mLGG",
+          "name": "MicrosoftGraphAuth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "29548e55-22ce-46c3-8d15-0f250f177d55",
+              "name": "=chat_id",
+              "value": "={{ $json.value[0].id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        272,
+        32
+      ],
+      "id": "722485d3-4cfc-423b-981c-522e0aea9104",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        608,
+        176
+      ],
+      "id": "c829fd87-6c56-4653-98da-4d492fc3756a",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "resource": "chatMessage",
+        "chatId": {
+          "__rl": true,
+          "value": "={{ $json.chat_id }}",
+          "mode": "id"
+        },
+        "message": "={{ $json.message.content }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [
+        864,
+        176
+      ],
+      "id": "b3d5a6aa-25a9-4b89-8080-b6e720a5de91",
+      "name": "Create chat message",
+      "webhookId": "c2abceb4-0e5c-4142-8271-ae248f978335",
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "JzxvlyW9LINMWcXM",
+          "name": "Microsoft Teams account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryMongoDbChat",
+      "typeVersion": 1,
+      "position": [
+        224,
+        464
+      ],
+      "id": "a186643a-575f-492e-bbb4-04a7fa27aad3",
+      "name": "MongoDB Chat Memory",
+      "credentials": {
+        "mongoDb": {
+          "id": "HeXkWnTYKJZn3c5H",
+          "name": "MongoDB account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Create chat message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Message a model",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

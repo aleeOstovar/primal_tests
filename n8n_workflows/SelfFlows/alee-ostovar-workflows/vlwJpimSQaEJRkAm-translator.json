@@ -1,0 +1,178 @@
+{
+  "name": "translator",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "032b34ea-db01-46f9-981e-68315163b092",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5679d7ac-d418-4792-9101-43322905748b",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "390c9e71-7043-4734-8b78-af64c5c18fbf",
+              "name": "creator",
+              "value": "={{ $json.creator }}",
+              "type": "string"
+            },
+            {
+              "id": "d413b792-b538-4c34-a1b7-dfddce4b53c1",
+              "name": "content",
+              "value": "={{ $json.content }}",
+              "type": "string"
+            },
+            {
+              "id": "d7ddeec5-4aeb-494a-8b6d-748208eeb14b",
+              "name": "contentSnippet",
+              "value": "={{ $json.contentSnippet }}",
+              "type": "string"
+            },
+            {
+              "id": "67267a94-5a74-4553-96e2-aa675f8ec6a4",
+              "name": "categories",
+              "value": "={{ $json.categories }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        440,
+        0
+      ],
+      "id": "a4833e0d-b8ea-47d9-b3d6-bcaabd87020e",
+      "name": "set content"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json }}",
+        "options": {
+          "systemMessage": "=You are a professional financial news journalist. Your task is to transform financial news written in any language into a concise, human-readable Persian article, ensuring that the translation is smooth, accurate, and preserves all critical details from the original source. You must not insert your own opinion, rewrite the facts, or add any extra information. just consider that this article is written by you\nTask:\nYou will be provided with a news article in any language via a json as input. Your job is to:\n* Comprehend the source text in detail.\n* Capture and preserve nuances—including idioms, cultural references, and technical terms, specially in the field of finance and cryptocurrencies(like coins or token's name etc).\n* Create an article that is no more than 80% of the original article’s length while preserving all vital details.\n* Translate last step article into fluent, natural, and conversational Persian.\n\n# Steps\n\n1. **Understand the Source Text:** Thoroughly read the text that requires translation.\n2. **Capture the Nuances:** Identify any idiomatic expressions, cultural references, or technical terms that need special attention to retain the original meaning in the target language.\n4. **Make an article:** make an article that will retains all important details.Ensure this article length does not exceed 80% of the original content.\n3. **Translate to Persian:** Translate the article into Persian.Ensure the translation is smooth, natural, and accurately conveys the original meaning. this translation must not be sentence by sentecy, read whole paragraph and restructured it into a smooth and native sentences. while preserving important information, the length of article will reduce.\n4. **Review and Refine:** Proofread the Persian article to ensure it reads naturally for native speakers and contains no grammatical errors.\n# Input Format\ninput is only a news json:\n```json\n{\n  \"title\": \"title of the news post\",\n  \"creator\": \"creator name\",\n  \"content\": \" original content of the news \",\n  \"contentSnippet\": \"short summary or snippet of the content\",\n  \"categories\":[\"list of secondary categories if any\"]\n}\n```\n# Output Format\nYour final output must be a conversational article in Persian, presented in well-structured json as same as input and form that captures all nuances and details from the original news text. return ONLY JSON\n```json\n{\n  \"title\": \"title of the news post in persian\",\n  \"creator\": \"creator name\",\n  \"content\": \"full translated content of the news in Persian\",\n  \"contentSnippet\": \"translate of content snippet in Persian\",\n  \"categories\":[\"list of secondary categories if any in persian\"]\n}\n```\n\n# Example\ninput: ```json\n{\n  \"title\": \"Bitcoin Surges: What Indicators Are Saying\",\n  \"creator\": \"John Doe\",\n  \"content\": \"Bitcoin has seen a significant surge in the past week, reaching new highs. Analysts are closely watching several key indicators to determine if this rally is sustainable. The 50-day moving average has crossed above the 200-day moving average, forming a 'golden cross,' which is often seen as a bullish signal. Additionally, the RSI is currently at 70, indicating that Bitcoin is in overbought territory, but it has room to run before hitting extreme levels. The MACD also shows strong upward momentum, suggesting that the current trend may continue in the short term. However, some analysts caution that the rapid price increase could lead to a correction. They point to the high funding rates in the futures market and the increasing leverage as potential signs of overheating. Nevertheless, with institutional interest continuing to grow, many believe that Bitcoin's long-term prospects remain strong.\",\n  \"contentSnippet\": \"Bitcoin surges to new highs; indicators suggest potential for further gains, but analysts warn of possible correction.\",\n  \"categories\": [\"Cryptocurrency\", \"Investing\", \"Market Analysis\"]\n}\n```\noutput: ```json\n{\n  \"title\": \"جهش بیت‌کوین: شاخص‌ها چه می‌گویند\",\n  \"creator\": \"جان دو\",\n  \"content\": \"بیت‌کوین در هفته گذشته با یک جهش قابل توجه، قیمت‌های جدیدی را ثبت کرد. تحلیلگران به دقت چندین indicators کلیدی را زیر نظر دارند تا مشخص کنند آیا این رالی پایدار است یا خیر. Moving average ۵۰ روزه از moving average ۲۰۰ روزه عبور کرده و یک 'golden cross' تشکیل داده است، که اغلب به عنوان یک سیگنال صعودی تلقی می‌شود. علاوه بر این، RSI در حال حاضر در سطح ۷۰ قرار دارد، که نشان می‌دهد بیت‌کوین در منطقه اشباع خرید است، اما هنوز جا برای افزایش دارد قبل از اینکه به سطوح افراطی برسد. همچنین، MACD شتاب صعودی قوی را نشان می‌دهد، که حاکی از آن است که روند فعلی ممکن است در کوتاه‌مدت ادامه یابد. با این حال، برخی تحلیلگران هشدار می‌دهند که افزایش سریع قیمت ممکن است به یک اصلاح منجر شود. آنها به نرخ‌های تامین مالی بالا در بازار آتی و افزایش اهرم به عنوان نشانه‌های احتمالی از داغ شدن بیش از حد اشاره می‌کنند. با این وجود، با ادامه رشد علاقه موسسات، بسیاری معتقدند که چشم‌انداز بلندمدت بیت‌کوین همچنان قوی است.\",\n  \"contentSnippet\": \"جهش بیت‌کوین به قیمت‌های جدید؛ شاخص‌ها پتانسیل رشد بیشتر را نشان می‌دهند، اما تحلیلگران در مورد اصلاح احتمالی هشدار می‌دهند.\",\n  \"categories\": [\"ارز دیجیتال\", \"سرمایه‌گذاری\", \"تحلیل بازار\"]\n}```\n# Notes\n- Do not incorporate any personal opinions, commentary, or additional information outside the given instructions.\n- Adjust tone, context, and cultural references as needed to ensure the article resonates with native Persian speakers.\n- Each paragraph should maintain a sense of narrative and coherence.\n- Maintain technical or specialized vocabulary where necessary to preserve the integrity of the information.\n- Ensure that the article is accurate and free from grammatical errors.\n- Retain technical or specialized vocabulary related to financial markets and cryptocurrencies in English.\n- if the given content was less than two line, DO NOT SHORTEN IT!!!\n- do not translate or process on links and urls.\n- do not refrence to the original content in the article, you must write article as it's created by you\n- after translating names of persons add the original names in a () like \"دونالد ترامپ (donald trump)\"\n- article length must not exceed 4000 character at all.\n- like an editor, make the content pretify (like bolding important words etc)\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        660,
+        0
+      ],
+      "id": "0f52d5c4-0211-4a1c-8645-cb94cf131679",
+      "name": "AI Agent",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "o3-mini",
+          "mode": "list",
+          "cachedResultName": "o3-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        440,
+        320
+      ],
+      "id": "389ff568-2aab-4fd4-a0d0-018bf80b1d9b",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "QNiPsjoeALMuqDb0",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function processData(items) {\n  // Check if we have any items to process\n  if (!items || !items.length) {\n    return [{ error: 'No input items found' }];\n  }\n\n  // Log the input for debugging\n  console.log('Input data type:', typeof items);\n  console.log('Input data:', JSON.stringify(items).substring(0, 100) + '...');\n\n  try {\n    // The file content is likely coming in as a string that needs manual parsing\n    // Try to get the content either from the first item directly or its 'json' property \n    let fileContent;\n    \n    if (typeof items[0] === 'string') {\n      fileContent = items[0];\n    } else if (items[0].json && typeof items[0].json === 'string') {\n      fileContent = items[0].json;\n    } else if (items[0].data && typeof items[0].data === 'string') {\n      fileContent = items[0].data;\n    } else if (items[0].content && typeof items[0].content === 'string') {\n      fileContent = items[0].content;\n    } else if (items[0].document_content && typeof items[0].document_content === 'string') {\n      fileContent = items[0].document_content;\n    } else {\n      // Try to find the file content by examining the structure\n      const firstItem = items[0];\n      console.log('First item keys:', Object.keys(firstItem));\n      \n      // If no clear content field is found, just stringify the whole first item\n      fileContent = JSON.stringify(firstItem);\n    }\n    \n    // Log what we found\n    console.log('File content type:', typeof fileContent);\n    console.log('File content preview:', fileContent.substring(0, 100) + '...');\n    \n    // Manually extract the JSON data\n    // Look for the pattern: \"query\": \"{ ... }\"\n    const matches = fileContent.match(/\"query\"\\s*:\\s*\"({.*})\"/s);\n    \n    if (matches && matches[1]) {\n      // We found the JSON object inside the query\n      let queryJson = matches[1];\n      \n      // Replace escaped quotes with actual quotes\n      queryJson = queryJson.replace(/\\\\\"/g, '\"');\n      \n      // Handle any other escaping issues\n      queryJson = queryJson.replace(/\\\\\\\\/g, '\\\\');\n      \n      // Now try to parse this JSON\n      try {\n        // First attempt - direct parse\n        const parsedQuery = JSON.parse(queryJson);\n        \n        // Return the expected structure\n        return [{\n          title: parsedQuery.title || '',\n          creator: parsedQuery.creator || '',\n          content: parsedQuery.content || '',\n          contentSnippet: parsedQuery.contentSnippet || '',\n          categories: parsedQuery.categories || []\n        }];\n      } catch (parseError) {\n        console.error('Error parsing extracted query JSON:', parseError.message);\n        console.log('Extracted query JSON:', queryJson.substring(0, 100) + '...');\n        \n        // Second attempt - manual extraction\n        // Extract the fields directly using regex\n        const titleMatch = queryJson.match(/\"title\"\\s*:\\s*\"([^\"]*)\"/);\n        const creatorMatch = queryJson.match(/\"creator\"\\s*:\\s*\"([^\"]*)\"/);\n        const contentMatch = queryJson.match(/\"content\"\\s*:\\s*\"([^\"]*)\"/);\n        const snippetMatch = queryJson.match(/\"contentSnippet\"\\s*:\\s*\"([^\"]*)\"/);\n        const categoriesMatch = queryJson.match(/\"categories\"\\s*:\\s*(\\[[^\\]]*\\])/);\n        \n        return [{\n          title: titleMatch ? titleMatch[1] : '',\n          creator: creatorMatch ? creatorMatch[1] : '',\n          content: contentMatch ? contentMatch[1] : '',\n          contentSnippet: snippetMatch ? snippetMatch[1] : '',\n          categories: categoriesMatch ? JSON.parse(categoriesMatch[1]) : []\n        }];\n      }\n    } else {\n      // No matches found, try an alternative approach\n      console.log('No query pattern found, trying to parse the full content');\n      \n      try {\n        // Try to parse the content as JSON directly\n        const parsedContent = JSON.parse(fileContent);\n        \n        // Check if it's an array of objects with a query property\n        if (Array.isArray(parsedContent) && parsedContent[0] && parsedContent[0].query) {\n          // Try to parse the query\n          let queryContent = parsedContent[0].query;\n          \n          // If query is a string, try to parse it\n          if (typeof queryContent === 'string') {\n            try {\n              queryContent = JSON.parse(queryContent);\n            } catch (e) {\n              console.error('Error parsing query string:', e.message);\n              // Try to extract parts using regex as a fallback\n            }\n          }\n          \n          // If queryContent is now an object, extract the required fields\n          if (typeof queryContent === 'object') {\n            return [{\n              title: queryContent.title || '',\n              creator: queryContent.creator || '',\n              content: queryContent.content || '',\n              contentSnippet: queryContent.contentSnippet || '',\n              categories: queryContent.categories || []\n            }];\n          }\n        }\n      } catch (contentParseError) {\n        console.error('Error parsing entire content:', contentParseError.message);\n      }\n    }\n    \n    // If all else fails, return an error\n    return [{ \n      error: 'Could not extract data in the expected format',\n      inputPreview: fileContent.substring(0, 200) + '...'\n    }];\n    \n  } catch (error) {\n    console.error('General error:', error.message);\n    return [{ error: error.message }];\n  }\n}\n\n// Main execution starts here\n// In n8n, we typically use $input.all() to get all input items\nreturn processData($input.all());"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "e2943ad8-5f3e-4bc5-9ad5-8666a43f7cdf",
+      "name": "Code"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set content": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "set content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

@@ -1,0 +1,684 @@
+{
+  "name": "EHB Agent Call Scoring - AI",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "AI_Agent_Call_Scoring",
+        "updateKey": "call_id",
+        "fields": "=call_id, agent_id, call_datetime, AI_Results, is_sales",
+        "upsert": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        1600,
+        368
+      ],
+      "id": "80daf874-7345-4908-bb58-e9f7653257b5",
+      "name": "MongoDB2",
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        144,
+        384
+      ],
+      "id": "7174fe42-8b36-4782-af59-ea210cf1a56b",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1968,
+        608
+      ],
+      "id": "7f1a136e-836c-417b-93d5-68499f4dbd1d",
+      "name": "Wait3",
+      "webhookId": "100f23a3-2cd7-43c1-af7d-eb35064846db"
+    },
+    {
+      "parameters": {
+        "content": "The workflow now runs every 24 hours. The only issue I can think of is to handle the calls which are not sales related better. \n",
+        "height": 180,
+        "width": 360,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1600,
+        320
+      ],
+      "typeVersion": 1,
+      "id": "f67b89c9-4384-4e62-9d97-1ddd478611c0",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "advanced": true,
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "call_id",
+              "field2": "call_id"
+            }
+          ]
+        },
+        "joinMode": "keepNonMatches",
+        "outputDataFrom": "input1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -480,
+        384
+      ],
+      "id": "6b336585-6440-44bf-abe2-e2be8f265769",
+      "name": "Merge1",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1376,
+        384
+      ],
+      "id": "e7b0e80b-b0d3-4a6b-afec-c78992581b6a",
+      "name": "Schedule Trigger2"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  let result = item.json.output;\n\n  // Remove ```json and ``` if present\n  if (typeof result === \"string\" && result.startsWith(\"```json\")) {\n    result = result.replace(/^```json\\s*/, \"\").replace(/```$/, \"\").trim();\n  }\n\n  // Parse the JSON safely\n  try {\n    item.json.AI_Results = JSON.parse(result);\n    delete item.json.output; // remove the original string output\n  } catch (e) {\n    throw new Error(\"Invalid JSON in output: \" + e.message);\n  }\n\n  return item;\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        400
+      ],
+      "id": "a4f107a5-fe08-4ebb-8751-264fe74ba91c",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.AI_Results.overall_score }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "number",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "d067c93c-ff11-44f0-a863-8675cfd16a76"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "AI_Object_Json"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2197021c-5c0a-4f8d-a084-dc7f578278e2",
+                    "leftValue": "={{ $json.AI_Results.message }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CallNotSalesDirect"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1024,
+        384
+      ],
+      "id": "0b569c60-9309-4382-af10-859d3ee1a9d1",
+      "name": "Switch2"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1712,
+        608
+      ],
+      "id": "f9207624-d449-4cbc-b4ef-33a062c45b2c",
+      "name": "Wait4",
+      "webhookId": "7de847f1-6914-4abe-97b2-e63d29083274"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "AI_Agent_Call_Scoring",
+        "updateKey": "call_id",
+        "fields": "=call_id, agent_id, call_datetime, AI_Results, is_sales",
+        "upsert": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        1472,
+        608
+      ],
+      "id": "a298d8c8-cd73-4fe8-91e3-b78bd11fff8a",
+      "name": "MongoDB3",
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "52922fdf-860b-41c2-b738-204b64e717c2",
+              "leftValue": "={{ $json.call_duration }}",
+              "rightValue": 180000,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -208,
+        384
+      ],
+      "id": "4adf444d-36ca-4a5d-9c4c-003a5176c0fb",
+      "name": "HighDurationCalls1",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "content": "# Ai Scoring for calls more than 180 seconds\n",
+        "height": 200,
+        "width": 420,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1600,
+        112
+      ],
+      "id": "0f8c2f0e-c35f-45d5-b6c7-5dd9697395f9",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "collection": "DialPad_Transcripts",
+        "options": {
+          "sort": "{\n    \"call_datetime\": -1\n}"
+        },
+        "query": "={\n  \"agent_id\": \"{{ $json.id }}\"\n} "
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        -736,
+        288
+      ],
+      "id": "d261c167-afc6-4f31-b274-2b57b3483d73",
+      "name": "GetTranscriptsOrdered1",
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5e09f359-6154-426f-9c7c-873dae443605",
+              "name": "AI_Results",
+              "value": "={{ $json.AI_Results }}",
+              "type": "object"
+            },
+            {
+              "id": "c4b824bf-63c9-4b28-9362-344bd14a7a42",
+              "name": "call_id",
+              "value": "={{ $('Loop Over Items1').item.json.call_id }}",
+              "type": "string"
+            },
+            {
+              "id": "7df54218-c923-4e13-9382-1026844f7377",
+              "name": "agent_id",
+              "value": "={{ $('Loop Over Items1').item.json.agent_id }}",
+              "type": "string"
+            },
+            {
+              "id": "2e99cfb1-e6d6-4006-b976-fc8b64ce26a2",
+              "name": "call_datetime",
+              "value": "={{ $('Loop Over Items1').item.json.call_datetime }}",
+              "type": "string"
+            },
+            {
+              "id": "70271513-733d-4cb1-ad70-e4fb5a2df472",
+              "name": "is_sales",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1360,
+        368
+      ],
+      "id": "a4e019fd-06ca-4208-ba54-e947f2cc321b",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "resource": "assistant",
+        "assistantId": {
+          "__rl": true,
+          "value": "asst_WjDUziRCLRbDiJlwdFqic6OP",
+          "mode": "list",
+          "cachedResultName": "EHB_Call_Agent_Scoring"
+        },
+        "prompt": "define",
+        "text": "={\n  \"call_id\": {{ $json.call_id }},\n  \"transcript\": {{ $json.transcript }},\n  \"agent_id\": {{ $json.agent_id }},\n  \"call_datetime\": {{ $json.call_datetime }},\n  \"agent_name\": {{ $json.agent_name }}\n}",
+        "options": {
+          "preserveOriginalTools": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        432,
+        400
+      ],
+      "id": "930592e0-98ec-455a-a88a-272e21bf493e",
+      "name": "Message an assistant1",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "openAiApi": {
+          "id": "obrCoVwP9hvbq5OW",
+          "name": "EHB_App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "collection": "AI_Agent_Call_Scoring",
+        "options": {
+          "projection": "{\n  \"call_id\":1,\n  \"agent_id\":1,\n  \"call_datetime\":1,\n  \"is_sales\":1\n}"
+        },
+        "query": "={\n  \"agent_id\": \"{{ $json.id }}\",\n  \"is_sales\": {\n    \"$exists\": true\n  }\n}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        -736,
+        480
+      ],
+      "id": "b07bfe4a-ebe1-4cee-9f95-390733c08354",
+      "name": "GetPreviousScores1",
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5e09f359-6154-426f-9c7c-873dae443605",
+              "name": "AI_Results",
+              "value": "={{ $json.AI_Results }}",
+              "type": "object"
+            },
+            {
+              "id": "c4b824bf-63c9-4b28-9362-344bd14a7a42",
+              "name": "call_id",
+              "value": "={{ $('Loop Over Items1').item.json.call_id }}",
+              "type": "string"
+            },
+            {
+              "id": "7df54218-c923-4e13-9382-1026844f7377",
+              "name": "agent_id",
+              "value": "={{ $('Loop Over Items1').item.json.agent_id }}",
+              "type": "string"
+            },
+            {
+              "id": "2e99cfb1-e6d6-4006-b976-fc8b64ce26a2",
+              "name": "call_datetime",
+              "value": "={{ $('Loop Over Items1').item.json.call_datetime }}",
+              "type": "string"
+            },
+            {
+              "id": "70271513-733d-4cb1-ad70-e4fb5a2df472",
+              "name": "is_sales",
+              "value": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1248,
+        608
+      ],
+      "id": "e0ed613b-13f6-4bb0-ac45-405166c58d52",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "collection": "DialPad_Users",
+        "options": {
+          "projection": "{\n  \"id\":1,\n  \"status\":1,\n  \"display_name\":1\n}"
+        },
+        "query": "={\n\"qualified_in_AI\":true\n}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        -1056,
+        384
+      ],
+      "id": "8b7801e1-052e-4f69-b162-1eb63a6abe29",
+      "name": "getAgents",
+      "retryOnFail": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "MongoDB2": {
+      "main": [
+        [
+          {
+            "node": "Wait3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Message an assistant1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "HighDurationCalls1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger2": {
+      "main": [
+        [
+          {
+            "node": "getAgents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Switch2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait4": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB3": {
+      "main": [
+        [
+          {
+            "node": "Wait4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HighDurationCalls1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GetTranscriptsOrdered1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "MongoDB2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message an assistant1": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GetPreviousScores1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "MongoDB3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "getAgents": {
+      "main": [
+        [
+          {
+            "node": "GetTranscriptsOrdered1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GetPreviousScores1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "saveManualExecutions": false
+  },
+  "versionId": "788fab84-7528-4d96-aa9b-8ddad561278a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1492f4d88835c9aa4ef9f92114084d45e62f070cbfca1060935e9b804d7507de"
+  },
+  "id": "XGFfuNFZ0MpAqPrV",
+  "tags": []
+}

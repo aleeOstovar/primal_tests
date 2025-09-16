@@ -1,0 +1,479 @@
+{
+  "name": "My workflow 4",
+  "nodes": [
+    {
+      "parameters": {
+        "collection": "DialPad_Calls",
+        "options": {
+          "projection": "{\"entry_point_call_id\":1,\n\"_id\":0\n}"
+        },
+        "query": "{\n  \"SF_Task_ID\": { \"$exists\": false }\n}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        -1240,
+        80
+      ],
+      "id": "86642b7d-d78b-492c-b9d2-24238e9cf433",
+      "name": "GetCallIDsDialPad1",
+      "alwaysOutputData": true,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -660,
+        80
+      ],
+      "id": "d733f362-38ee-435b-830c-cdb6d44f4c00",
+      "name": "Loop Over Items2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "50ec125c-a474-4ec4-9f01-d8df2bcdfaae",
+              "name": "entry_point_call_id",
+              "value": "={{ $('GetCallIDsDialPad1').item.json.entry_point_call_id }}",
+              "type": "string"
+            },
+            {
+              "id": "4c974658-1eda-4309-8cac-77d705194d97",
+              "name": "SF_Task_ID",
+              "value": "={{ $json.Id }}",
+              "type": "string"
+            },
+            {
+              "id": "8d0f5843-8d55-40d5-b794-37d382b736e0",
+              "name": "call_id",
+              "value": "={{ $('GetCallIDsDialPad1').item.json.entry_point_call_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        440,
+        80
+      ],
+      "id": "4f5fa167-05bb-4a3a-9e85-4a1f7ddbcabc",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "amount": 20
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1360,
+        200
+      ],
+      "id": "008e1183-17bf-4ef6-96ad-8cb9dc8b2e2e",
+      "name": "Wait2",
+      "webhookId": "ac6e0e67-b072-478f-8958-ae679f92dd42"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "81a7453a-5309-4e0d-a496-fb7108f39b82",
+              "leftValue": "={{ $items().length}}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -220,
+        80
+      ],
+      "id": "d4c21220-f782-4067-9621-54a800f41e67",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst getLatestDate = item => {\n  const created = new Date(item.json.CreatedDate);\n  const modified = new Date(item.json.LastModifiedDate);\n  return created > modified ? created : modified;\n};\n\n// Sort by the later of CreatedDate or LastModifiedDate\nitems.sort((a, b) => getLatestDate(b) - getLatestDate(a));\n\n// Return the most recent item\nreturn [items[0]];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f581bcdc-1dcc-4663-9bbe-51921d7577d1",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "afff14c4-26a1-4563-ad93-9b6aa4380040",
+              "leftValue": "={{ $('Loop Over Items2').item.json.entry_point_call_id }}",
+              "rightValue": "={{ $json.Dialpad__CallId__c }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "6411a541-9082-4629-b39a-7802c156100c",
+      "name": "Filter3"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "AI_Agent_Call_Scoring",
+        "updateKey": "=call_id",
+        "fields": "SF_Task_ID",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        620,
+        80
+      ],
+      "id": "b95fdcf7-0b8b-4230-a3a8-5e4ae05bac06",
+      "name": "update Ai Score collection",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "AGa5jUir8J6b9XJC",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "DialPad_Calls",
+        "updateKey": "=entry_point_call_id",
+        "fields": "SF_Task_ID",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        1060,
+        80
+      ],
+      "id": "9866fe18-b340-46ca-82e6-0081aed0d2ab",
+      "name": "update Dialpad Calls",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "AGa5jUir8J6b9XJC",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "### as in Ai_Agent_scoring, call_id is the same as entery_point_call_id in dialpad_calls, i change the value of call_id into the same as  entery_point_call_id ",
+        "height": 200,
+        "width": 200
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        400,
+        240
+      ],
+      "id": "e0f5f241-edf1-46be-acda-ea4b998dc66c",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1300,
+        440
+      ],
+      "id": "6043b5bf-6ca1-46eb-b209-c1b06d2b99c9",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "50ec125c-a474-4ec4-9f01-d8df2bcdfaae",
+              "name": "entry_point_call_id",
+              "value": "={{ $('Edit Fields2').item.json.entry_point_call_id }}",
+              "type": "string"
+            },
+            {
+              "id": "4c974658-1eda-4309-8cac-77d705194d97",
+              "name": "SF_Task_ID",
+              "value": "={{ $('Edit Fields2').item.json.SF_Task_ID }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        840,
+        80
+      ],
+      "id": "8eec6a7a-cf00-42d3-b60b-6fcdb6d87c44",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -400,
+        80
+      ],
+      "id": "94150096-5b8f-4b4a-8800-b49e6cf01ceb",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1080,
+        440
+      ],
+      "id": "52a5a502-abd5-4dc5-ab52-a79dc0ca90c9",
+      "name": "Edit Fields1"
+    }
+  ],
+  "connections": {
+    "GetCallIDsDialPad1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items2": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "update Ai Score collection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Filter3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter3": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update Ai Score collection": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update Dialpad Calls": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "update Dialpad Calls",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {
+    "Edit Fields": [
+      {
+        "json": {
+          "attributes": {
+            "type": "Task",
+            "url": "/services/data/v59.0/sobjects/Task/00TUp00000QTjUKMA1"
+          },
+          "Id": "00TUp00000QTjUKMA1",
+          "Subject": "Dialpad Call - Outbound / 7 min",
+          "Status": "Completed",
+          "Priority": "Normal",
+          "CreatedDate": "2025-06-20T20:55:04.000+0000",
+          "LastModifiedDate": "2025-06-23T19:24:04.000+0000",
+          "Dialpad__CallId__c": "6136349465886720"
+        }
+      }
+    ],
+    "Edit Fields1": [
+      {
+        "json": {
+          "entry_point_call_id": "6136349465886720"
+        }
+      }
+    ]
+  },
+  "triggerCount": 0,
+  "meta": null
+}

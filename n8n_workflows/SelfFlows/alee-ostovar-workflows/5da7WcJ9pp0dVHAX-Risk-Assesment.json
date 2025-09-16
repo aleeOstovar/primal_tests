@@ -1,0 +1,299 @@
+{
+  "name": "Risk Assesment",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://capitalino.io/api/risk-test/tests",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "apiKey",
+              "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        200
+      ],
+      "id": "804bf705-725b-4034-8cee-5eec5fafcf13",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Step 1: Retrieve Q&A data from HTTP Request and reassign _id values\nlet tests = $input.first().json.tests;\n\nif (!Array.isArray(tests)) {\n  throw new Error(\"Invalid tests data. Expected an array.\");\n}\n\n// Reassign _id values (starting from 1)\ntests = tests.map((test, index) => ({\n  ...test,\n  _id: index + 1\n}));\n\n// Step 2: Retrieve and parse user test data from 'Edit Fields'\nlet userTestData = $('Edit Fields').first().json.test.mappedAnswers;\n\nlet userPhoneNumber = $('Edit Fields').first().json.test.phoneNumber;\n\n// let userTestDataObj;\n// try {\n//   userTestDataObj = JSON.parse(userTestDataStr);\n// } catch (err) {\n//   throw new Error(\"Error parsing user test data: \" + err);\n// }\n\n// Step 3: Map user test object into an array of objects: { _id, answer }\nlet userTestMapping = [];\nfor (const key in userTestData) {\n  if (userTestData.hasOwnProperty(key)) {\n    userTestMapping.push({\n      _id: parseInt(key),\n      answer: userTestData[key]\n    });\n  }\n}\n\n// Step 4: Integrate user tests with Q&A data and calculate total score\nlet totalScore = 0;\nlet mappedResponses = [];\n\ntests.forEach(test => {\n  // Find the user test entry matching the test _id\n  const userEntry = userTestMapping.find(item => item._id === test._id);\n  if (userEntry) {\n    // Ensure test.options exists and is an array\n    if (Array.isArray(test.answers)) {\n      const selectedOption = test.answers.find(option => option.name === userEntry.answer);\n      if (selectedOption) {\n        totalScore += selectedOption.point;\n        mappedResponses.push({\n          question: test.question,\n          userAnswer: selectedOption.answer,\n          points: selectedOption.point\n        });\n      } else {\n        // No matching option found\n        mappedResponses.push({\n          question: test.question,\n          userAnswer: userEntry.answer,\n          points: 0\n        });\n      }\n    } else {\n      mappedResponses.push({\n        question: test.question,\n        userAnswer: userEntry.answer,\n        points: 0\n      });\n    }\n  }\n});\n\n// Step 5: Return the result\nreturn [{\n  totalScore,\n  mappedResponses,\n  userPhoneNumber\n}];\n\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        200
+      ],
+      "id": "b93acb21-2e08-4235-bed9-b79ba02370e4",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json }}",
+        "options": {
+          "systemMessage": "=You are an expert financial assistant and finance psychologist. Your task is to analyze user risk tolerance and provide financial predictions based on specific inputs.\n\nInput Details:\n\n- **mappedResponses:** A collection of user’s answers to a risk assessment test, where each entry includes the question, the user's selected answer, and the points assigned to that answer.\n- **totalScore:** The cumulative points from all questions, representing the user's overall score.\n\nTasks:\n\n1. **Classify Risk Tolerance Level:**\n   - Use the totalScore to classify the user's risk tolerance level:\n     - 18 or below: Low risk tolerance (conservative investor).\n     - 19 to 22: Below-average risk tolerance.\n     - 23 to 28: Average/moderate risk tolerance.\n     - 29 to 32: Above-average risk tolerance.\n     - 33 and above: High risk tolerance (aggressive investor).\n\n2. **Extract User Details:**\n   - Identify and extract the user's age group, income level, and savings level from mappedResponses:\n     - Look for age-related questions with keywords like \"سن شما چیست؟\" (What is your age?).\n     - Identify income-related questions with keywords like \"سطح درآمد سالانه شما چقدر است؟\" (What is your annual income level?).\n     - Find savings-related questions with keywords like \"میزان پس‌انداز فعلی شما چقدر است؟\" (What is your current savings amount?).\n   - Determine and state the user's specific details for these categories.\n\n3. **Analyze and Predict Financial Status:**\n   - Make a brief prediction about the user’s financial status in the upcoming decade using the classified risk tolerance and identified user details.\n   - Explain how the risk tolerance level, age, income, and savings might influence investment decisions and financial growth.\n   - Ensure the prediction connects these factors to the expected outcome in the next ten years.\n\n# Output Format\n\n- **Language:** Present your response in native and smooth Persian, ensuring a professional and fluent narrative.\n- **Length:** The prediction should be concise and contained within one to two paragraphs.\n- Ensure the response is expertly tailored to reflect the user's specific inputs and does not employ overly technical jargon.\n\n# Notes\n\n- Do not assume exact question phrasing in mappedResponses; rely on keywords to identify relevant questions.\n- Tailor the prediction by considering the interplay of risk tolerance, age, income,gender and savings. make sure to mention user's gender.\n- you can recommend better investment strategies to make user financial status better.\n- it's better to also consider sentiment analysis of user answers to the question \n- Maintain an expert tone that is accessible to a general audience."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        880,
+        200
+      ],
+      "id": "2ba1ef50-687d-430a-be87-dc2d363246f9",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "o3-mini",
+          "mode": "list",
+          "cachedResultName": "o3-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        580,
+        600
+      ],
+      "id": "7a7c2bab-927f-4232-a1cd-4ec1fe272a81",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "CWJYp93mxQT3xD4V",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "db8e8b5f-640f-437a-914b-f087957a6dba",
+              "name": "test",
+              "value": "={{ $json.body }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        -20
+      ],
+      "id": "022824bf-9f55-43cc-a6b5-b7b96216c610",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "c0a2be29-9ed9-465b-ab2a-7290e2435fd1",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -220,
+        -20
+      ],
+      "id": "ccbfc751-b6d0-42d7-83dd-dfe57be46d51",
+      "name": "Webhook",
+      "webhookId": "c0a2be29-9ed9-465b-ab2a-7290e2435fd1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://capitalino.io/api/risk-test/ai-webhook",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "analysis",
+              "value": "={{ $json.analysis }}"
+            },
+            {
+              "name": "phoneNumber",
+              "value": "={{ $json.phoneNumber }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1540,
+        200
+      ],
+      "id": "bb87c6af-0a37-4d96-9ac7-a4bf638029e7",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a91e49e4-bb4a-41f2-bc0e-8539f70c522f",
+              "name": "analysis",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            },
+            {
+              "id": "51287201-7f5f-46db-ad02-a31444b04552",
+              "name": "phoneNumber",
+              "value": "={{ $('Code').item.json.userPhoneNumber }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1280,
+        200
+      ],
+      "id": "875c6b6d-f6ae-46e4-8856-ca7b18a2c94c",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        20,
+        -20
+      ],
+      "id": "999b99fd-e379-4c04-a01a-4b2bbfda9eb4",
+      "name": "Respond to Webhook1"
+    }
+  ],
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 1,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

@@ -1,0 +1,371 @@
+{
+  "name": "api-temp",
+  "nodes": [
+    {
+      "parameters": {
+        "multipleMethods": true,
+        "path": "=api/employees",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -576,
+        144
+      ],
+      "id": "6d8b9cbe-6b27-4f16-9d6a-809c18d0e8a9",
+      "name": "Webhook",
+      "webhookId": "885e0da1-8c2f-440f-ac0a-20b7a8bf977c"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appB6h3olTXFIJxcm",
+          "mode": "list",
+          "cachedResultName": "AI Data Analyst",
+          "cachedResultUrl": "https://airtable.com/appB6h3olTXFIJxcm"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblRrofF9cqzmGwYb",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://airtable.com/appB6h3olTXFIJxcm/tblRrofF9cqzmGwYb"
+        },
+        "options": {
+          "view": {
+            "__rl": true,
+            "value": "viwhYTX9ph6qKnmXX",
+            "mode": "list",
+            "cachedResultName": "Grid view",
+            "cachedResultUrl": "https://airtable.com/appB6h3olTXFIJxcm/tblRrofF9cqzmGwYb/viwhYTX9ph6qKnmXX"
+          }
+        }
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3b076944-a08f-457e-8f37-dfd6c97c0e29",
+      "name": "Search records",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "pAKK7bijgGwdw5ok",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        624,
+        144
+      ],
+      "id": "fefe5e90-eb3d-4d5c-8d9b-462b542f9b96",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appB6h3olTXFIJxcm",
+          "mode": "list",
+          "cachedResultName": "AI Data Analyst",
+          "cachedResultUrl": "https://airtable.com/appB6h3olTXFIJxcm"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblRrofF9cqzmGwYb",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://airtable.com/appB6h3olTXFIJxcm/tblRrofF9cqzmGwYb"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Probation Completed": false,
+            "Salary": "={{ $json.body.Salary }}",
+            "Remaining Vacation Days": "={{ $json.body['Remaining Vacation Days'] }}",
+            "Date of Birth": "={{ $json.body['Date of Birth'] }}",
+            "Employee ID": "={{ $json.body['Employee ID'] }}",
+            "First Name": "={{ $json.body['First Name'] }}",
+            "Last Name": "={{ $json.body['Last Name'] }}",
+            "Position": "={{ $json.body.Position }}",
+            "Department": "={{ $json.body.Department }}",
+            "Email": "={{ $json.body.Email }}",
+            "Phone Number": "={{ $json.body['Phone Number'] }}",
+            "Hire Date": "={{ $json.body['Hire Date'] }}",
+            "Manager Name": "Bob Johnson"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Employee ID",
+              "displayName": "Employee ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "First Name",
+              "displayName": "First Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Last Name",
+              "displayName": "Last Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Date of Birth",
+              "displayName": "Date of Birth",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Position",
+              "displayName": "Position",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Department",
+              "displayName": "Department",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Human Resources",
+                  "value": "Human Resources"
+                },
+                {
+                  "name": "IT",
+                  "value": "IT"
+                },
+                {
+                  "name": "Marketing",
+                  "value": "Marketing"
+                },
+                {
+                  "name": "Sales",
+                  "value": "Sales"
+                },
+                {
+                  "name": "Finance",
+                  "value": "Finance"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Phone Number",
+              "displayName": "Phone Number",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Hire Date",
+              "displayName": "Hire Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Salary",
+              "displayName": "Salary",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Manager Name",
+              "displayName": "Manager Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Bob Johnson",
+                  "value": "Bob Johnson"
+                },
+                {
+                  "name": "Charlie Lee",
+                  "value": "Charlie Lee"
+                },
+                {
+                  "name": "Diana Adams",
+                  "value": "Diana Adams"
+                },
+                {
+                  "name": "Ethan Clark",
+                  "value": "Ethan Clark"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Remaining Vacation Days",
+              "displayName": "Remaining Vacation Days",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Probation Completed",
+              "displayName": "Probation Completed",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        256
+      ],
+      "id": "0eae1129-98a2-4ea8-84b3-2673dcc4c17f",
+      "name": "Create a record1",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "pAKK7bijgGwdw5ok",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Search records",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a record1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search records": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a record1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 1,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

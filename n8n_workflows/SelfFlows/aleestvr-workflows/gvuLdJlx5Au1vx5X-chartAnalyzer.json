@@ -1,0 +1,194 @@
+{
+  "name": "chartAnalyzer",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ]
+      },
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "position": [
+        200,
+        100
+      ],
+      "id": "generated-08ce8700-f3bf-4b75-80be-8aa9eb4c36b8"
+    },
+    {
+      "parameters": {
+        "content": "## Workflow Structure Overview\n\n1. **Telegram Trigger** - Starts on incoming message.\n2. **AI Agent** - Uses Tools Agent to orchestrate calls.\n3-6. **Call n8n Workflow Tool** - Four sub-workflows as tools.\n7. **Telegram** - Sends final result back to user.",
+        "height": 180,
+        "width": 360,
+        "color": 4
+      },
+      "name": "Workflow Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        500,
+        -100
+      ],
+      "id": "generated-07890430-00f1-4a7c-9f41-f4738ab8ab2a"
+    },
+    {
+      "parameters": {
+        "agent": "toolsAgent"
+      },
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        520,
+        100
+      ],
+      "id": "generated-c00661b8-3ab3-49b1-bd73-189f68333415"
+    },
+    {
+      "parameters": {
+        "name": "getCryptoPrice",
+        "description": "Call sub-workflow to fetch crypto prices"
+      },
+      "name": "getCryptoPrice Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "position": [
+        940,
+        580
+      ],
+      "id": "generated-0f5e3870-f476-4374-a15e-5c12c686a84a"
+    },
+    {
+      "parameters": {
+        "name": "getForexPrice",
+        "description": "Call sub-workflow to fetch forex prices"
+      },
+      "name": "getForexPrice Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "position": [
+        740,
+        580
+      ],
+      "id": "generated-f88e793a-369b-45d9-af61-03ff55b28df8"
+    },
+    {
+      "parameters": {
+        "name": "getStockPrice",
+        "description": "Call sub-workflow to fetch stock prices"
+      },
+      "name": "getStockPrice Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "position": [
+        560,
+        580
+      ],
+      "id": "generated-f7a51efd-ee8b-4b2b-8f67-d8a42e3975d9"
+    },
+    {
+      "parameters": {
+        "name": "analyzeChart",
+        "description": "Call sub-workflow to analyze chart"
+      },
+      "name": "analyzeChart Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "position": [
+        400,
+        580
+      ],
+      "id": "generated-e30b187b-4d30-4e61-bc63-d56c1aea4ddd"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json[\"chat\"][\"id\"] }}",
+        "text": "={{ $json[\"text\"] }}"
+      },
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        1100,
+        100
+      ],
+      "id": "generated-62e8d3bf-954f-4b16-a6f6-95522f93c84d"
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "ai_tool": [
+        [],
+        [],
+        [],
+        []
+      ],
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "getCryptoPrice Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "getForexPrice Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "getStockPrice Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "analyzeChart Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

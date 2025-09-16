@@ -1,0 +1,249 @@
+{
+  "name": "make_analysis",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "5bf9c2ad-ef03-4c14-888e-8c7f56cd2d59",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://capitalino.io/api/risk-test/tests",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "apiKey",
+              "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        0
+      ],
+      "id": "4915b5d5-9ad5-49f9-bb2d-be4a4a7ed885",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Step 1: Retrieve Q&A data from HTTP Request and reassign _id values\nlet tests = $input.first().json.tests;\n\nif (!Array.isArray(tests)) {\n  throw new Error(\"Invalid tests data. Expected an array.\");\n}\n\n// Reassign _id values (starting from 1)\ntests = tests.map((test, index) => ({\n  ...test,\n  _id: index + 1\n}));\n\n// Step 2: Retrieve and parse user test data from 'Edit Fields'\nlet userTestData = $('Edit Fields').first().json.tests.mappedAnswers;\n\nlet userPhoneNumber = $('Edit Fields').first().json.tests.phoneNumber;\n\n// let userTestDataObj;\n// try {\n//   userTestDataObj = JSON.parse(userTestDataStr);\n// } catch (err) {\n//   throw new Error(\"Error parsing user test data: \" + err);\n// }\n\n// Step 3: Map user test object into an array of objects: { _id, answer }\nlet userTestMapping = [];\nfor (const key in userTestData) {\n  if (userTestData.hasOwnProperty(key)) {\n    userTestMapping.push({\n      _id: parseInt(key),\n      answer: userTestData[key]\n    });\n  }\n}\n\n// Step 4: Integrate user tests with Q&A data and calculate total score\nlet totalScore = 0;\nlet mappedResponses = [];\n\ntests.forEach(test => {\n  // Find the user test entry matching the test _id\n  const userEntry = userTestMapping.find(item => item._id === test._id);\n  if (userEntry) {\n    // Ensure test.options exists and is an array\n    if (Array.isArray(test.answers)) {\n      const selectedOption = test.answers.find(option => option.name === userEntry.answer);\n      if (selectedOption) {\n        totalScore += selectedOption.point;\n        mappedResponses.push({\n          question: test.question,\n          userAnswer: selectedOption.answer,\n          points: selectedOption.point\n        });\n      } else {\n        // No matching option found\n        mappedResponses.push({\n          question: test.question,\n          userAnswer: userEntry.answer,\n          points: 0\n        });\n      }\n    } else {\n      mappedResponses.push({\n        question: test.question,\n        userAnswer: userEntry.answer,\n        points: 0\n      });\n    }\n  }\n});\n\n// Step 5: Return the result\nreturn [{\n  totalScore,\n  mappedResponses,\n  userPhoneNumber\n}];\n\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1080,
+        0
+      ],
+      "id": "10e097b9-e1fc-438d-9e39-2571cd548625",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json }}",
+        "options": {
+          "systemMessage": "=You are an expert financial assistant and finance psychologist. Your task is to analyze user risk tolerance and provide financial predictions based on specific inputs.it's better based on the analysis, suggest user to increase they knowledge about financial markets specially cryptocurrencies and encourage them to took crypto as an investment option.\n\nInput Details:\n\n- **mappedResponses:** A collection of user’s answers to a risk assessment test, where each entry includes the question, the user's selected answer, and the points assigned to that answer.\n- **totalScore:** The cumulative points from all questions, representing the user's overall score.\n\nTasks:\n\n1. **Classify Risk Tolerance Level:**\n   - Use the totalScore to classify the user's risk tolerance level:\n     - 18 or below: Low risk tolerance (conservative investor).\n     - 19 to 22: Below-average risk tolerance.\n     - 23 to 28: Average/moderate risk tolerance.\n     - 29 to 32: Above-average risk tolerance.\n     - 33 and above: High risk tolerance (aggressive investor).\n\n2. **Extract User Details:**\n   - Identify and extract the user's age group,gender, income level, and savings level from mappedResponses:\n     - Look for age-related questions with keywords like \"سن شما چیست؟\" (What is your age?).\n- Look for gender-related questions with keywords like \"جنسیت شما چیست؟\" (What is your gender?).\n     - Identify income-related questions with keywords like \"سطح درآمد سالانه شما چقدر است؟\" (What is your annual income level?).\n     - Find savings-related questions with keywords like \"میزان پس‌انداز فعلی شما چقدر است؟\" (What is your current savings amount?).\n   - Determine and state the user's specific details for these categories.\n\n3. **Analyze and Predict Financial Status:**\n   - Make a brief prediction about the user’s financial status in the upcoming decade using the classified risk tolerance and identified user details.\n   - Explain how the risk tolerance level, age, income, and savings might influence investment decisions and financial growth.\n   - suggest to user options to investments (specially invite them to participate in cryptocurrencies makrkets) by some facts like how much their saving can boost.\n   - Ensure the prediction connects these factors to the expected outcome in the next ten years.\n\n# Output Format\n\n- **Language:** Present your response in native and smooth Persian, ensuring a professional and fluent narrative.\n- **Length:** The prediction should be concise and contained within one to two paragraphs.\n- Ensure the response is expertly tailored to reflect the user's specific inputs and does not employ overly technical jargon.\n- Ensure mentioning user's age group, gender and income level, restrictly.\n-the output must be in json format, and has two field, analysis, which is the analysis you made, and tags which is user age, gender and income level based on the mapped Answers from input. \n\n# Notes\n\n- Do not assume exact question phrasing in mappedResponses; rely on keywords to identify relevant questions.\n- Tailor the prediction by considering the interplay of risk tolerance, age, income,gender and savings. make sure to mention user's gender.\n- you can recommend better investment strategies to make user financial status better.\n- it's better to also consider sentiment analysis of user answers to the question \n- Maintain an expert tone that is accessible to a general audience."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        1300,
+        0
+      ],
+      "id": "d7229671-a8f7-4d6e-b2f7-68e12a1a2a03",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "o3-mini",
+          "mode": "list",
+          "cachedResultName": "o3-mini"
+        },
+        "options": {
+          "reasoningEffort": "medium"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1000,
+        400
+      ],
+      "id": "6bba4dad-76b0-4a51-b17e-000af4beafdb",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "CWJYp93mxQT3xD4V",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "db8e8b5f-640f-437a-914b-f087957a6dba",
+              "name": "tests",
+              "value": "={{ $json}}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        540,
+        0
+      ],
+      "id": "241ef2eb-66e6-4094-a567-85efec1b61b4",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a91e49e4-bb4a-41f2-bc0e-8539f70c522f",
+              "name": "analysis",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            },
+            {
+              "id": "51287201-7f5f-46db-ad02-a31444b04552",
+              "name": "phoneNumber",
+              "value": "={{ $('Code').item.json.userPhoneNumber }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1700,
+        0
+      ],
+      "id": "2aa5112d-853e-4f1b-9d79-36128e8ab121",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  return {\n    json: JSON.parse(item.json.query) // Parse the JSON string inside `query`\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        0
+      ],
+      "id": "5f16e501-5788-42a0-9e18-6f0589a2af7b",
+      "name": "Code2"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 0,
+  "meta": null
+}

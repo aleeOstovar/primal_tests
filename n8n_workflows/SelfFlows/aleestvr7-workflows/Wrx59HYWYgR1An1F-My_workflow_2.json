@@ -1,0 +1,89 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "image",
+        "modelId": {
+          "__rl": true,
+          "value": "models/imagen-3.0-generate-002",
+          "mode": "list",
+          "cachedResultName": "models/imagen-3.0-generate-002"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "5ae2c510-fa1d-4c67-990e-6bd25e61236e",
+      "name": "Generate an image",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6ATURFd9w4y7rmc3",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        144,
+        144
+      ],
+      "id": "b88cfa57-abd1-483f-b378-cb1d26ad1657",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "prompt": "jennifer is an english teacher, she is a 3d cartoonish character. the art style  is like The Incredibles Animation . i want the full design  of this character in every angle for designing",
+        "options": {
+          "dalleQuality": "hd",
+          "size": "1792x1024",
+          "style": "vivid"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        352,
+        144
+      ],
+      "id": "154b73e1-3065-446a-8702-b9aff99bbde7",
+      "name": "Generate an image1",
+      "credentials": {
+        "openAiApi": {
+          "id": "Rj2xLGqmzzMXhFQv",
+          "name": "Capi"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Generate an image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

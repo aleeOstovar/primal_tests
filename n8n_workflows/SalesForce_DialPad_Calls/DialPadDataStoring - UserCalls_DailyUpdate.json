@@ -1,0 +1,933 @@
+{
+  "name": "DialPadDataStoring - UserCalls_DailyUpdate",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# get calls more than 30 second\n",
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1184,
+        -848
+      ],
+      "id": "582b069c-f587-49eb-adb4-5923e5b3e20b",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "url": "https://dialpad.com/api/v2/call",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "cursor",
+              "value": "={{ $json.cursor }}"
+            },
+            {
+              "name": "target_id",
+              "value": "={{ $('getAgents').item.json.id }}"
+            },
+            {
+              "name": "target_type",
+              "value": "user"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $('DialPadAPISettings1').item.json.DialPadAPIKey }}"
+            },
+            {
+              "name": "started_after",
+              "value": "={{ $('DateTimeToCallsAfter1').item.json.DialPadStartedAfter }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        -816
+      ],
+      "id": "2709e712-066d-48bd-9e0f-e0c45c333d60",
+      "name": "HTTP Request1",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 5
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "DialPad_Calls",
+        "updateKey": "call_id",
+        "fields": "=call_id,contact,date_connected,date_ended,duration,entry_point_call_id, event_timestamp,recording_details,screen_recording_urls,direction,target,total_duration",
+        "upsert": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        1152,
+        -816
+      ],
+      "id": "73c5463d-151e-451e-8694-5fc112a2541b",
+      "name": "MongoDB1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "=items",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        704,
+        -816
+      ],
+      "id": "e6844128-87c1-416e-8826-7dbb653456d0",
+      "name": "Split Out1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0e0c784d-d808-43a1-803c-7270de376f9b",
+              "leftValue": "={{ $('HTTP Request1').item.json.cursor }}",
+              "rightValue": "null",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1584,
+        -816
+      ],
+      "id": "b54d9017-cad9-4def-814a-b24b481b7e37",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6f4a569b-0c27-441d-acc1-2069baae886c",
+              "name": "cursor",
+              "value": "={{ $('HTTP Request1').item.json.cursor }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1808,
+        -928
+      ],
+      "id": "806ae554-3721-4283-9cd5-f49a62237b0e",
+      "name": "DialPadCursor1"
+    },
+    {
+      "parameters": {
+        "amount": 20
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2240,
+        -816
+      ],
+      "id": "a322a4f8-91eb-4640-9df6-f82f4b4f7b41",
+      "name": "Wait2",
+      "webhookId": "790dd5a7-1684-48b0-9b47-efa240c02ea8"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "52922fdf-860b-41c2-b738-204b64e717c2",
+              "leftValue": "={{ $json.duration }}",
+              "rightValue": 30000,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        928,
+        -816
+      ],
+      "id": "5165e99a-443c-4dd5-a289-1d65cd91664d",
+      "name": "HighDurationCalls1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d1cb74af-ae31-41f3-bc79-6340e5c8bcd0",
+              "name": "DialPadUserID",
+              "value": "={{ $('getAgents').item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "a05095c2-da8c-4c39-a1d4-f91fa60d0017",
+              "name": "DialPadNextCursorID",
+              "value": "={{ $json.cursor }}",
+              "type": "string"
+            },
+            {
+              "id": "13ef35eb-9135-4eb5-a500-49d2e513a383",
+              "name": "FetchDatetime",
+              "value": "={{ $now }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        928,
+        -1024
+      ],
+      "id": "d880eff3-c501-4a57-85e6-14f2b90bdcf8",
+      "name": "SetPaginationValues1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "DialPadPagination",
+        "updateKey": "DialPadNextCursorID",
+        "fields": "=DialPadUserID,DialPadNextCursorID,FetchDatetime",
+        "upsert": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        1152,
+        -1024
+      ],
+      "id": "c0a98e64-df4f-41fe-89a8-4c3df840e087",
+      "name": "PaginationRecords1",
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "collection": "DialPadPagination",
+        "options": {
+          "limit": 1,
+          "sort": " {\n    \"FetchDatetime\": -1\n  }"
+        },
+        "query": "={\n  \"DialPadUserID\": \"{{ $('RouteUsers1').item.json.DialPadUserID }}\"\n}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        -160,
+        -768
+      ],
+      "id": "5c4410b9-92eb-4f6d-a069-0cec98623705",
+      "name": "FindCursors1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f5c4188c-58c7-4559-95ad-f9e07dbabc94",
+              "name": "DialPadAPIKey",
+              "value": "s5FEM88vvenF5zp9FQErufBGkrrpWwf834QwetbB5B6y8zvVdCuaaWFcgmwapczENfNnZrdHFkvpAAtxyMZzqv5Pca9tYPbUxJSG",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1312,
+        -560
+      ],
+      "id": "dd330d77-27df-437d-8856-0fb9c2196cb1",
+      "name": "DialPadAPISettings1"
+    },
+    {
+      "parameters": {
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1360,
+        -816
+      ],
+      "id": "7772dabf-9564-4e2b-91a4-dc43951a4176",
+      "name": "MergeBack1",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "content": "Find Latest data in MonogDB DialPad_Calls\n\nChange the datetime in DialPadAPISetting and fetch data from that datetime coming forward.\n\nRun the workflow every 24 hours on 12AM EST",
+        "height": 280,
+        "width": 460,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1808,
+        -688
+      ],
+      "typeVersion": 1,
+      "id": "44be33bf-a156-456d-aaa3-3b7622503772",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "096c7730-29c7-4a42-b22a-b12226971f51",
+              "name": "DialPadStartedAfter",
+              "value": "={{ $json.date_connected || \"1753747200000\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -400,
+        -816
+      ],
+      "id": "e43892fd-b95f-4eb8-aa9e-c18786d079ae",
+      "name": "DateTimeToCallsAfter1"
+    },
+    {
+      "parameters": {
+        "amount": 20
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1872,
+        -576
+      ],
+      "id": "3026ed3b-1b2b-431c-bdfc-0931c9017081",
+      "name": "Wait3",
+      "webhookId": "228e2e40-d013-4870-a2f1-78d8bd985245"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -848,
+        -560
+      ],
+      "id": "104a0ce7-3f15-40a0-845e-9fc6438b995c",
+      "name": "Loop Over Users1"
+    },
+    {
+      "parameters": {
+        "collection": "DialPad_Calls",
+        "options": {
+          "limit": 1,
+          "sort": "{ \"date_connected\": -1 }",
+          "projection": "{ \"date_connected\": 1 }"
+        },
+        "query": "={\n  \"target.id\": \"{{ $json.id }}\"\n}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        -624,
+        -816
+      ],
+      "id": "c6705a74-0db3-450e-b71d-e83fe01e3310",
+      "name": "LatestStoredDateTime1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 23
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1552,
+        -560
+      ],
+      "id": "15e562ae-5737-4935-bf04-f186343b389f",
+      "name": "Schedule Trigger1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('FindCursors1').item.json._id }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notExists",
+                      "singleValue": true
+                    },
+                    "id": "512f46c5-90b4-49b5-a78d-56f1bd6dedea"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CursorDBEmpty"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "de0a38e6-b238-4aa3-87bd-77ac091b4dc1",
+                    "leftValue": "={{ $('FindCursors1').item.json.DialPadNextCursorID }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CursorDBNotEmpty"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        48,
+        -768
+      ],
+      "id": "6e5adc1d-26ef-4f88-9b76-4959d2da2f0c",
+      "name": "Switch1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6f4a569b-0c27-441d-acc1-2069baae886c",
+              "name": "cursor",
+              "value": "=",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        272,
+        -1024
+      ],
+      "id": "8e872582-a777-4498-aa08-8c768b734367",
+      "name": "DialPadNoCursor1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6f4a569b-0c27-441d-acc1-2069baae886c",
+              "name": "cursor",
+              "value": "={{ $('FindCursors1').item.json.DialPadNextCursorID }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        272,
+        -736
+      ],
+      "id": "cfe19d8a-a8e7-469e-a27a-e54b93adfac5",
+      "name": "DialPadCursorLastRun1",
+      "alwaysOutputData": true,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    cursor: $json.cursor\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2032,
+        -928
+      ],
+      "id": "911efa4c-db0b-44af-8d75-70f8744e3350",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d87aa949-391d-4393-86fe-e4a3b7725487",
+              "leftValue": "={{ $json.cursor }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        704,
+        -1024
+      ],
+      "id": "7565715f-28ec-49a1-a9bb-e29e47c70cf9",
+      "name": "Filter1"
+    },
+    {
+      "parameters": {
+        "content": "This part is only for when we are importing old data manually and not for daily use!",
+        "height": 300,
+        "width": 580
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -208,
+        -864
+      ],
+      "typeVersion": 1,
+      "id": "b9d766f5-c90d-499d-8320-6ab4eca2f19c",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "collection": "DialPad_Users",
+        "options": {
+          "projection": "{\n  \"id\":1,\n  \"status\":1,\n  \"display_name\":1\n}"
+        },
+        "query": "={\n\"qualified_in_AI\":true\n}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        -1120,
+        -560
+      ],
+      "id": "9da90b25-d8ab-4121-a01f-9fed84b65de6",
+      "name": "getAgents",
+      "retryOnFail": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Filter1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB1": {
+      "main": [
+        [
+          {
+            "node": "MergeBack1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "HighDurationCalls1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "DialPadCursor1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DialPadCursor1": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HighDurationCalls1": {
+      "main": [
+        [
+          {
+            "node": "MongoDB1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SetPaginationValues1": {
+      "main": [
+        [
+          {
+            "node": "PaginationRecords1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FindCursors1": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DialPadAPISettings1": {
+      "main": [
+        [
+          {
+            "node": "getAgents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MergeBack1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DateTimeToCallsAfter1": {
+      "main": [
+        [
+          {
+            "node": "FindCursors1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Users1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Users1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "LatestStoredDateTime1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LatestStoredDateTime1": {
+      "main": [
+        [
+          {
+            "node": "DateTimeToCallsAfter1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "DialPadAPISettings1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "DialPadNoCursor1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DialPadCursorLastRun1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DialPadNoCursor1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DialPadCursorLastRun1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter1": {
+      "main": [
+        [
+          {
+            "node": "SetPaginationValues1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "getAgents": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Users1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "a930215e-1ad5-4f57-b43e-cd46fdb6e080",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1492f4d88835c9aa4ef9f92114084d45e62f070cbfca1060935e9b804d7507de"
+  },
+  "id": "ozbW5q2XC9KyVpxA",
+  "tags": []
+}

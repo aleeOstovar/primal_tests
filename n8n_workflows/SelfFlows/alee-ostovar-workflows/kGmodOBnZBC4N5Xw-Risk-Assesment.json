@@ -1,0 +1,356 @@
+{
+  "name": "Risk Assesment",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a3e4fdbf-1ee8-4048-9099-dbbcb9570cb6",
+              "name": "data",
+              "value": "={{ $json.body }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        500,
+        0
+      ],
+      "id": "f70b04bd-7d27-4900-a1af-6d032aa7eb06",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        680,
+        340
+      ],
+      "id": "f708d29e-f36b-4804-8b8f-f08a285f9296",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "CWJYp93mxQT3xD4V",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "generate_Image",
+        "description": "this workflow will generate image portrait based on the prompt from generate_image_prompt",
+        "workflowId": {
+          "__rl": true,
+          "value": "UhVzBKjzAFBGUwLg",
+          "mode": "list",
+          "cachedResultName": "generate_image"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2,
+      "position": [
+        1540,
+        340
+      ],
+      "id": "1492e6c9-4ead-4a20-b0af-6fb71572cd51",
+      "name": "Generate_Image"
+    },
+    {
+      "parameters": {
+        "name": "make_analysis",
+        "description": "this tool is for making analysis based on input",
+        "workflowId": {
+          "__rl": true,
+          "value": "Go9bzBQZ2LKw0OOm",
+          "mode": "list",
+          "cachedResultName": "make_analysis"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2,
+      "position": [
+        1020,
+        340
+      ],
+      "id": "2c1110c7-2f55-49ce-9a3d-33e0d4f50b4f",
+      "name": "make_analysis"
+    },
+    {
+      "parameters": {
+        "name": "generate_image_prompt",
+        "description": "this workflow will generate prompt based on analysis we got from make_analysis. this prompt will use for generating image ",
+        "workflowId": {
+          "__rl": true,
+          "value": "AzdVWwhy3APSORHO",
+          "mode": "list",
+          "cachedResultName": "generate_image_prompt"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        340
+      ],
+      "id": "b05eb191-567f-4df3-8961-28cea4b37eb5",
+      "name": "generate_image_prompt"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json}}",
+        "options": {
+          "systemMessage": "=Your task is to orchestrate a workflow using a series of tools to process input data and produce both an analysis and an image.\n\n- Receive a Json input.\n- Utilize the `make_analysis` tool to analyze the JSON data.\n- pass the original input and Extract the output from the `make_analysis` tool and provide it without anychanges and completly to the `generate_image_prompt` tool to create an image prompt.\n- Use the `generate_image` tool to generate an image based on the image prompt from.\n- Present the analysis and the generated image as the final json in a structure like below: \n{\n\"analysis\": \"the given analysis\",\n\"phoneNumber\":\"09212201366\",\n\"image\": \"generated image from generate_image workflow\"\n} \n\n# Steps\n\n1. **Receive Input**: Obtain the input data  structured  in JSON format.\n2. **Analyze Data**: Use the `make_analysis` tool to process the JSON input.\n3. **Generate Prompt**: Take the output from `make_analysis` without any changes and use the `generate_image_prompt` tool.\n4. **Create Image**: Use the `generate_image` tool with the prompt you got from generate_image tool to create an image.\n5. **Compile Results**: Combine the analysis and the generated image for the final output.\n\n# Output Format\n\nThe final output should be presented in the following JSON structure:\n```json\n{\n \"analysis\": \"the given analysis\",\n \"phoneNumber\":\"09212201366\",\n \"image\": \"generated image from generate_image workflow\"\n}\n```\n\n# Notes\n\n- Ensure each step completes successfully before moving to the next.\n- Ensure that you wont make any changes to the output of each step\n- Validate that the JSON structure is correctly formatted at each step.\n- Handle any errors or exceptions gracefully, logging them as necessary.\n- The output should include both the detailed analysis, user's phoneNumber  and a valid reference to the generated image."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        960,
+        0
+      ],
+      "id": "ac7a892e-99d7-4370-9b66-f3067fb2b069",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the data from the input\nconst inputData = $input.first().json.data;\n\n// Parse the stringified JSON inside the 'data' field\nconst parsedData = JSON.parse(inputData);\n\n// Return the desired output structure\nreturn [\n  {\n    mappedAnswers: parsedData.mappedAnswers,\n    phoneNumber: parsedData.phoneNumber\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        0
+      ],
+      "id": "c8a9313f-3509-4de2-82ba-bce680d39634",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// This function extracts only analysis, phoneNumber, and image fields from the input\nfunction processItems(items) {\n  try {\n    // Map through each item in the input array\n    return items.map(item => {\n      try {\n        // Extract the output string from the item\n        const outputString = item.json.output;\n        \n        // Clean the string by removing markdown code blocks and escaped characters\n        const cleanedString = outputString\n          .replace(/```json\\n|\\n```/g, '')  // Remove markdown code block syntax\n          .trim();\n        \n        // Parse the JSON string\n        const parsedData = JSON.parse(cleanedString);\n        \n        // Extract the analysis field which is itself a JSON string\n        let analysisObject = {};\n        try {\n          // Parse the nested analysis JSON string\n          analysisObject = JSON.parse(parsedData.analysis);\n          \n          // Return only the fields we want\n          return {\n            json: {\n              analysis: analysisObject.analysis,\n              phoneNumber: parsedData.phoneNumber,\n              imageUrl: parsedData.image\n            }\n          };\n        } catch (analysisError) {\n          // If analysis isn't parseable JSON, use it as is\n          return {\n            json: {\n              analysis: parsedData.analysis,\n              phoneNumber: parsedData.phoneNumber,\n              imageUrl: parsedData.image\n            }\n          };\n        }\n      } catch (error) {\n        console.error(`Error processing item: ${error.message}`);\n        \n        // For debugging\n        return {\n          json: {\n            error: `Failed to process: ${error.message}`,\n            originalOutput: item.json.output\n          }\n        };\n      }\n    });\n  } catch (error) {\n    console.error(`Error in function: ${error.message}`);\n    throw error;\n  }\n}\n\n// Return the processed data to n8n\nreturn processItems($input.all());"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        0
+      ],
+      "id": "a097a156-528a-4d4e-921c-00796a44898c",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://capitalino.io/api/risk-test/ai-webhook",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1600,
+        0
+      ],
+      "id": "dd28faf6-189d-466a-a225-e43fb7a0b341",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        260,
+        0
+      ],
+      "id": "ddbe2be2-7c1b-40da-afaa-d6230585c7f8",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "5fb6f21f-9326-4e29-82b7-436f1a3091e8",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        20,
+        0
+      ],
+      "id": "26272a90-3c6a-4a67-8369-d46a71f2ff4c",
+      "name": "Webhook",
+      "webhookId": "5fb6f21f-9326-4e29-82b7-436f1a3091e8"
+    }
+  ],
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate_Image": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "make_analysis": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generate_image_prompt": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        []
+      ]
+    },
+    "Respond to Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 1,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

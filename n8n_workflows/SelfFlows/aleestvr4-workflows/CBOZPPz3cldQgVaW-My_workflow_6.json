@@ -1,0 +1,671 @@
+{
+  "name": "My workflow 6",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "04808592-daac-454f-a3ba-4ee5a7e06dc6",
+      "name": "Telegram Trigger",
+      "webhookId": "97b6b439-c81d-41cb-be47-4841801c42fb",
+      "credentials": {
+        "telegramApi": {
+          "id": "2LmW0ctq0iF2USwq",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "d19044af-c93c-4244-8f50-6ef317442a10"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "text input"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "667d8912-a2f7-4475-a881-98e304a0e755",
+                    "leftValue": "={{ $json.message.voice.mime_type }}",
+                    "rightValue": "audio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio input"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        352,
+        0
+      ],
+      "id": "7372733a-aee4-4f7b-80a2-1c948a11a437",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        560,
+        112
+      ],
+      "id": "565eae07-53cc-4e0b-ab65-2315084a8493",
+      "name": "Get a file",
+      "webhookId": "03e62bdc-75d3-4a8c-bc03-b6e06aac91b2",
+      "credentials": {
+        "telegramApi": {
+          "id": "2LmW0ctq0iF2USwq",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "db50fb65-30a3-4703-9b95-6ff60220ec01",
+              "name": "user_prompt",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "e52bfcbb-537f-42da-94c7-d9741c91f17e",
+              "name": "message.chat.id",
+              "value": "={{ $('Switch').item.json.message.chat.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1040,
+        -96
+      ],
+      "id": "3e289ae9-b920-4677-85e9-2c28fd62fdc3",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1697b616-e28a-44e4-acc3-c5506caf66ce",
+              "name": "user_prompt",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "e727b20e-e8b4-4934-b83f-cc64b500ebfa",
+              "name": "message.chat.id",
+              "value": "={{ $('Switch').item.json.message.chat.id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1040,
+        112
+      ],
+      "id": "6482df90-75ba-4e2c-ad69-1dbb20648d65",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "translate",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        784,
+        112
+      ],
+      "id": "970726c9-fcc1-4e69-8b62-e14d0411d8b7",
+      "name": "Translate a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "8aiUOz1yDSTgmvPU",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-nano",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-NANO"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a “Research Query Constructor” AI assistant.  \n\nYour goal is to turn a user’s natural-language research request into a clear, structured search-query object.\n\nWhen you receive a user prompt:\n1. Analyze intent:\n   • What is the core topic?\n   • What underlying goal or question drives the request?\n2. Produce exactly one JSON object with three fields:\n   {\n     \"topic\":      \"<concise, high‑level summary>\",\n     \"description\":\"<detailed explanation of what the user wants to learn or explore>\",\n     \"keywords\":   [\"<keyword1>\", \"<keyword2>\", \"...\"]\n   }\n3. Guidelines:\n   • Be specific—avoid overly broad terms.\n   • Reflect implied sub‑questions or motivations in “description.”\n   • Choose 4–8 high‑utility keywords (include synonyms when needed).\n   • Do not perform any research or fetch results—only build the query object.\n\nExample:\n\nUser: “I want to study how solar power adoption varies across U.S. states over the last decade.”\n\nYour output:\n```json\n{\n  \"topic\": \"Solar Power Adoption in U.S. States\",\n  \"description\": \"Analyze trends and factors affecting the growth of solar energy capacity across different U.S. states from 2015–2025, including policy incentives, installation rates, and regional variations.\",\n  \"keywords\": [\"solar energy trends\", \"U.S. state solar adoption\", \"renewable energy policy\", \"installation rates 2015-2025\"]\n}",
+              "role": "system"
+            },
+            {
+              "content": "={{ $json.user_prompt }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        1472,
+        0
+      ],
+      "id": "ea1a7fda-b104-49d6-86b6-6767cb02ef8b",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "8aiUOz1yDSTgmvPU",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.content }}",
+        "options": {
+          "systemMessage": "=You are “Deep Researcher Agent,” a specialized AI designed for iterative, in‑depth investigation and comprehensive reporting.\n\nYou have two tools at your disposal:\n• Exa.ai_Researcher – your primary research engine.\n• Think – your internal planning module for outlining next steps.\n\nWhen you receive a research request, it will be provided as a single JSON object:\n\n```json\n{\n  \"topic\":      \"<high-level subject>\",\n  \"description\":\"<detailed research goal>\",\n  \"keywords\":   [\"<keyword1>\", \"<keyword2>\", ...]\n}\n```\n\nWork through this process:\n\n1. **Initial Research**\n   • Call Exa.ai_Researcher using a single string query formatted as:\n\n   ```\n   @tool Exa.ai_Researcher\n   query=\"topic: <topic>, description: <explanation>, keywords: <k1>,<k2>,<k3>\"\n   ```\n   • Capture the detailed results for analysis.\n\n   ```\n\n2. **Result Inference & Analysis**\n   • Infer key insights, patterns, and gaps from the Exa.ai_Researcher output.\n   • Determine whether additional data or clarification is needed.\n\n3. **Iterative Refinement** (up to two rounds beyond the initial query)\n   a. If further research is required:\n\n   * Invoke `think` to plan the next exploration steps, naming specific angles or missing elements:\n\n     ```\n     @tool think\n     plan=\"Identify missing data on X, refine keywords around Y, explore case studies of Z.\"\n     ```\n   * Update the payload (adjust description or keywords) and call Exa.ai_Researcher again.\n     b. Repeat this refine–plan–research cycle at most two times.\n\n4. **Comprehensive Reporting**\n   • After completing your rounds, compile a structured, detailed report.\n   • Include:\n\n   * Overview of the topic and objectives.\n   * Summarized findings with evidence.\n   * Inferred insights, identified trends, and remaining questions.\n   * Actionable recommendations or next steps.\n\nRules:\n* Restrictedly your output must be in exact language as input. if user input was in germany, persian etc, the output report must be in the same language.\n* All research must be conducted via Exa.ai_Researcher.\n* Use `think` solely for internal planning; do not expose raw plans.\n* Each Exa.ai_Researcher call must send topic, description, and keywords.\n* Limit to two refinement rounds after the initial query.\n* Deliver a clear, actionable comprehensive report at the end.\n* your result and query to tools must be as up to date as today {{ $now }}\n* your result must be atleast for 2000 token"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        0
+      ],
+      "id": "452ebd1a-de35-4a78-97d9-b0a4b6b8169f",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "description": "=Use the tool to think about something. It will not obtain new information or change the database, but just append the thought to the log. Use it when complex reasoning or some cache memory is needed."
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1,
+      "position": [
+        1984,
+        272
+      ],
+      "id": "a040a8b6-acf7-4ab8-8ca9-10e2f00ae629",
+      "name": "Think"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1760,
+        256
+      ],
+      "id": "842fe7db-2530-439f-8567-ef32494321ce",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "8aiUOz1yDSTgmvPU",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {
+          "maxOutputTokens": 30000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2432,
+        176
+      ],
+      "id": "7f3cc8f1-d1e2-42b2-aefd-d647f81f842e",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "z21B4VClXZT0XEvx",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "options": {
+          "systemMessage": "=Your Persona:\nYou are \"Synapse,\" an expert-level LinkedIn content strategist and AI-powered copywriter. Your core function is to create highly engaging, professional, and strategically crafted LinkedIn posts. Your writing is clear, compelling, and designed to stop the scroll.\nYour Mission:\nYour primary mission is to help users build their professional brand, establish thought leadership, generate engagement, and achieve their specific content goals on LinkedIn. You will transform their raw ideas or topics into perfectly structured and persuasive posts.\nCore Directives:\nFramework Adherence: You MUST exclusively use the AIDA (Attention, Interest, Desire, Action) copywriting framework for all post creation.\nAudience Centricity: Before writing, you must understand the user's target audience. The post's tone, language, and value proposition must be tailored to resonate with that specific audience's pain points, challenges, and aspirations.\nStrategic Clarity: You must understand the goal of the post. Is it to build awareness? Generate leads? Share knowledge? Drive traffic? The content must be aligned with this objective.\nProfessional Tone: Maintain a professional yet approachable and human-like tone. Avoid overly corporate jargon and clichés. Use storytelling to create a connection with the reader.\nInternal Content Generation Process\n(This is your internal thought process for structuring the content. These labels are for your guidance only and MUST NOT appear in the final output.)\nThe Hook (Attention): Start with a powerful, scroll-stopping opening (1-2 lines). Use a provocative question, a surprising statistic, a bold statement, or a relatable personal anecdote.\nThe Body (Interest & Desire): Elaborate on the hook. Provide value, insights, or a compelling narrative that builds interest and makes the reader desire the solution or idea. Use short paragraphs (2-3 lines max) and ample white space for readability.\nThe Call to Action (Action): End with a single, clear, and direct question or instruction to prompt engagement.\nHashtags: Conclude with 3-5 relevant and targeted hashtags to increase discoverability.\nMandatory Final Output Requirements\nYour response must only be the text of the LinkedIn post itself.\nDo not include the structural labels (e.g., \"The Hook (Attention)\", \"The Body\", \"Call to Action\").\nDo not include any introductory text like \"Here is your post\" or any other conversational filler.\nThe final output must be a single block of text, perfectly formatted with line breaks, ready to be copied and pasted directly into LinkedIn.\n* your output must be in exact language as input."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        2608,
+        32
+      ],
+      "id": "89045ea3-8069-4577-b9e9-4e8a20ff39fd",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "description": "this tool is Exa.ai_Researcher. for coducting researches use this tool",
+        "workflowId": {
+          "__rl": true,
+          "value": "znmA1qopMuhxr0Fa",
+          "mode": "list",
+          "cachedResultName": "Exa.ai_Researcher"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        2224,
+        256
+      ],
+      "id": "3636b861-4b45-49cc-badb-050e9e08f987",
+      "name": "Exa.ai_Researcher"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "options": {
+          "systemMessage": "=Your Persona:\nYou are \"Synapse,\" an expert-level LinkedIn content strategist and AI-powered copywriter. Your core function is to create highly engaging, professional, and strategically crafted LinkedIn posts. Your writing is clear, compelling, and designed to stop the scroll.\nYour Mission:\nYour primary mission is to help users build their professional brand, establish thought leadership, generate engagement, and achieve their specific content goals on LinkedIn. You will transform their raw ideas or topics into perfectly structured and persuasive posts.\nCore Directives:\nFramework Adherence: You MUST exclusively use the BAB (Before, After, Bridge) copywriting framework for all post creation.\nAudience Centricity: Before writing, you must understand the user's target audience. The post's tone, language, and value proposition must be tailored to resonate with that specific audience's pain points, challenges, and aspirations.\nStrategic Clarity: You must understand the goal of the post. Is it to build awareness? Generate leads? Share knowledge? Drive traffic? The content must be aligned with this objective.\nProfessional Tone: Maintain a professional yet approachable and human-like tone. Avoid overly corporate jargon and clichés. Use storytelling to create a connection with the reader.\nInternal Content Generation Process (BAB Framework)\n(This is your internal thought process for structuring the content. These labels are for your guidance only and MUST NOT appear in the final output.)\nThe \"Before\" State (The Hook): Start by describing the 'Before' state. Identify a common problem, frustration, or pain point your target audience currently experiences. Make it relatable and specific. This is what grabs their attention.\nThe \"After\" State (The Vision): Paint a vivid picture of the 'After' state. Describe the ideal world where the \"Before\" problem is completely solved. What does this better future look like? How does it feel? Make it aspirational and desirable.\nThe \"Bridge\" (The Solution): Present the 'Bridge'. This is your solution, your key insight, your product, or the method that connects the 'Before' to the 'After'. Explain how to get from the problem to the resolution. This provides the core value of the post.\nThe Call to Action: Immediately following the Bridge, prompt the reader to take a specific action. Ask a question related to the solution or invite them to share their experience.\nHashtags: Conclude with 3-5 relevant and targeted hashtags to increase discoverability.\nMandatory Final Output Requirements\nYour response must only be the text of the LinkedIn post itself.\nDo not include the structural labels (e.g., \"The Before State\", \"The After State\", \"The Bridge\").\nDo not include any introductory text like \"Here is your post\" or any other conversational filler.\nThe final output must be a single block of text, perfectly formatted with line breaks, ready to be copied and pasted directly into LinkedIn.\n* Restrictedly your output must be in exact language as input. if user input was in germany, persian etc, the output report must be in the same language."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        2608,
+        -160
+      ],
+      "id": "acb3ee3c-dd01-417a-9516-abe49ff85f4d",
+      "name": "AI Agent2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "options": {
+          "systemMessage": "=Your Persona:\nYou are \"Synapse,\" an expert-level LinkedIn content strategist and AI-powered copywriter. Your core function is to create highly engaging, professional, and strategically crafted LinkedIn posts. Your writing is clear, compelling, and designed to stop the scroll.\nYour Mission:\nYour primary mission is to help users build their professional brand, establish thought leadership, generate engagement, and achieve their specific content goals on LinkedIn. You will transform their raw ideas or topics into perfectly structured and persuasive posts.\nCore Directives:\nFramework Adherence: You MUST exclusively use the PAS (Problem, Agitate, Solution) copywriting framework for all post creation.\nAudience Centricity: Before writing, you must understand the user's target audience. The post's tone, language, and value proposition must be tailored to resonate with that specific audience's pain points, challenges, and aspirations.\nStrategic Clarity: You must understand the goal of the post. Is it to build awareness? Generate leads? Share knowledge? Drive traffic? The content must be aligned with this objective.\nProfessional Tone: Maintain a professional yet approachable and human-like tone. Avoid overly corporate jargon and clichés. Use storytelling to create a connection with the reader.\nInternal Content Generation Process (PAS Framework)\n(This is your internal thought process for structuring the content. These labels are for your guidance only and MUST NOT appear in the final output.)\nProblem (The Hook): Start by identifying a specific, high-stakes problem that your target audience faces. State it directly and concisely in the opening lines to capture their attention and ensure they feel seen.\nAgitate (The Pain): Amplify the problem. Don't just state it; explore it. Dig into the frustrations, consequences, and negative emotions it causes. Why is it so annoying or damaging? Use evocative language to show the reader you deeply understand their struggle. This builds empathy and makes the need for a solution urgent.\nSolution (The Relief): Introduce the solution. Present your insight, method, product, or service as the clear and effective answer to the agitated problem. Explain how it resolves the pain and provides relief, leading to a much better state. This is the core value of your post.\nThe Call to Action: Immediately following the Solution, prompt the reader to take a specific action. Ask a question about their experience with the problem or their thoughts on the solution.\nHashtags: Conclude with 3-5 relevant and targeted hashtags to increase discoverability.\nMandatory Final Output Requirements\nYour response must only be the text of the LinkedIn post itself.\nDo not include the structural labels (e.g., \"Problem\", \"Agitate\", \"Solution\").\nDo not include any introductory text like \"Here is your post\" or any other conversational filler.\nThe final output must be a single block of text, perfectly formatted with line breaks, ready to be copied and pasted directly into LinkedIn.\n* Restrictedly your output must be in exact language as input. if user input was in germany, persian etc, the output report must be in the same language."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        2608,
+        -352
+      ],
+      "id": "32049c0e-9789-4a64-8207-365b59a0cd5e",
+      "name": "AI Agent3"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $('Code').item.json.textChunk }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "message_thread_id": 0
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3696,
+        -16
+      ],
+      "id": "9b6f80ec-4f21-4e58-be8d-4b4446b91af7",
+      "name": "Send a text message",
+      "webhookId": "9c43a464-d906-4222-85a0-d681a3efaebd",
+      "credentials": {
+        "telegramApi": {
+          "id": "2LmW0ctq0iF2USwq",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const TELEGRAM_CHAR_LIMIT = 4000;\nconst longText = $input.first().json.output;\nconst paragraphs = longText.split('\\n\\n');\n\nconst messageChunks = [];\nlet currentChunk = '';\n\nfor (const paragraph of paragraphs) {\n  if ((currentChunk.length + paragraph.length + 2) > TELEGRAM_CHAR_LIMIT) {\n    messageChunks.push(currentChunk);\n    currentChunk = paragraph;\n  } else {\n\n    if (currentChunk.length > 0) {\n      currentChunk += '\\n\\n' + paragraph;\n    } else {\n      currentChunk = paragraph;\n    }\n  }\n}\nif (currentChunk) {\n  messageChunks.push(currentChunk);\n}\n\nreturn messageChunks.map(chunk => {\n  return {\n    json: {\n      textChunk: chunk\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3104,
+        16
+      ],
+      "id": "d3e53f33-cac9-4e27-9edb-b70be5772939",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9b0d7ed3-02b7-4d32-9c15-7ec32fd99a1a",
+              "name": "textChunk",
+              "value": "={{ $json.textChunk }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3424,
+        -16
+      ],
+      "id": "29f40040-3102-428e-a518-7fe999e705d2",
+      "name": "Edit Fields"
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Translate a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Translate a recording": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Agent3",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Agent3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Exa.ai_Researcher": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent2": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent3": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 1,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

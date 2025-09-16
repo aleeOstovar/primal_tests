@@ -1,0 +1,148 @@
+{
+  "name": "addToCsv",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        260,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "26f2a708-a255-48a9-a994-5b0761eb013d",
+              "name": "query",
+              "value": "={{ $json.query }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        340
+      ],
+      "id": "8893cfd8-bf22-446d-8716-c4562d499b7f",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "let raw = items[0].json.query.trim();\n\n// حذف ```json و ``` اگر وجود داشته باشند\nif (raw.startsWith(\"```json\") && raw.endsWith(\"```\")) {\n  raw = raw.slice(7, -3).trim(); // حذف اولی (`json`` → 7 کاراکتر) و آخری (``` → 3 کاراکتر)\n}\n\nconst data = JSON.parse(raw);\n\nreturn data.rows.map(row => {\n  const obj = {};\n  data.columns.forEach((col, idx) => {\n    obj[col] = row[idx];\n  });\n  return { json: obj };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        340
+      ],
+      "id": "ca2cbe38-efa1-430b-b59c-fe7a22c5e5c3",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1mr7OcENTMN3SnVaWrTdaeP84XraXf7TqlhX_ibTPngE",
+          "mode": "list",
+          "cachedResultName": "extracted data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1mr7OcENTMN3SnVaWrTdaeP84XraXf7TqlhX_ibTPngE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1mr7OcENTMN3SnVaWrTdaeP84XraXf7TqlhX_ibTPngE/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        920,
+        340
+      ],
+      "id": "01d6a558-6280-4b95-886b-9bb914a4dadd",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Fq0Iv8SmtqNvU4xJ",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "query": "{\n    \"columns\": [\"yt0_X\", \"yt0_Y\", \"yt3_X\", \"yt3_Y\", \"yt1_X\", \"yt1_Y\", \"yt2_X\", \"yt2_Y\"]\n    ,\"rows\": [\"-3.462741619\", \"-0.0234280116\", \"-3.4657432161\", \"-0.02703321671\", \"-3.464088304\", \"-0.02354216121 \",\"       -3.4651416213\", \"-0.0249839568\"],\n    [\"-3.357534837\", \"-0.0231716575\", \"3.496509013\", \"-0.0282372671\", \"3494018961\", \"-0.0237898968\", \"-3.3500733135\", \"-0.0255424489\"]\n    [\"3.241197763\", \"-0.023309667\", \"3.2333042724\", \"-0.0294586307\", \"2347002503\", \"-0.0240684638\", \"-3.249056803\", \"-0.0262198953\"]\n    [\"-1.126061289\", \"-0.024358015\", \"-1.1202707402\", \"-0.034214277\", \"-3.119008256\", \"-0.000735589\", \"-0.0274328762\", \"-0.0274328762\"]\n    ]\n  }"
+        }
+      }
+    ]
+  },
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

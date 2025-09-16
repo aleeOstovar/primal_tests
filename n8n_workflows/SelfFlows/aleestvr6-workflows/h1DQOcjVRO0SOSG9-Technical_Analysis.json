@@ -1,0 +1,1771 @@
+{
+  "name": "Technical_Analysis",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cf5f7210-5b54-4f4a-abf7-87873be82df4",
+              "name": "ticker",
+              "value": "={{ $json.query }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -432,
+        -32
+      ],
+      "id": "111e5177-2b07-4530-bf63-f2ad82cec26f",
+      "name": "Set Ticker1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.chart-img.com/v2/tradingview/advanced-chart/storage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "qEV3dXqftl8EuoEZL5Oft83Uy7uaCXa3aDSVUymT"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"symbol\": \"{{ $json.symbol }}\",\n  \"interval\":\"{{ $json.timeFrame }}\",\n  \"theme\": \"dark\",\n  \"studies\": [\n    {\n      \"name\": \"Bollinger Bands\"\n    },\n    {\n      \"name\": \"Relative Strength Index\"\n    },\n    {\n      \"name\": \"MACD\"\n    }\n    \n  ]\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1776,
+        112
+      ],
+      "id": "3dc70c87-9779-4482-b150-14326e28af32",
+      "name": "Get Chart URL1",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "gcXtQyaijlz4vDtn",
+          "name": "chart-img"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1968,
+        112
+      ],
+      "id": "1ce7a7c0-4512-457c-bd53-0ae1c8d1f4da",
+      "name": "Download Chart1"
+    },
+    {
+      "parameters": {
+        "content": "# GET CHART"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        -96
+      ],
+      "id": "1219fbc2-15ae-4c32-bc84-c01bef429a11",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        1216,
+        1776
+      ],
+      "id": "550f4430-efdd-4f9d-b6fd-ca748bc5c037",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "destinationKey": "IMG_Base64",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        2368,
+        640
+      ],
+      "id": "975a024f-1d75-4d71-9739-69085b6522fd",
+      "name": "toBase64"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "=<system_prompt>\nYOU ARE **CHARTANALYST**, THE WORLD’S MOST PRECISE VISION-ENABLED TRADING ASSISTANT.  \nYOUR ROLE IS TO ANALYZE A SINGLE PRICE-CHART SCREENSHOT AND DELIVER A CONCISE, TRADE-READY PLAN.  \nYOU MUST ONLY USE INFORMATION VISIBLE IN THE IMAGE — IF SOMETHING IS NOT VISIBLE, STATE IT CLEARLY.  \nYOU MUST ALWAYS PRODUCE A SUMMARY PLUS A STRUCTURED JSON OUTPUT USING THE EXACT SCHEMA PROVIDED.  \n\n---\n\n### INSTRUCTIONS ###\n\n1. **PARSE IMAGE INFORMATION**  \n   - Instrument & Venue (title line).  \n   - Timeframe (e.g., 1W, 1D, 4H, 1H).  \n   - Latest price, session change, and recent high/low if visible.  \n   - Indicators (Bollinger Bands, RSI, MACD, MAs, overlays).  \n   - Price action context: trend, volatility, swing highs/lows, round numbers.  \n   - Recent candlestick patterns (last 3–5 bars, apply rules).  \n   - Key levels: swing highs/lows, S/R zones, round numbers, mid-BB/20SMA.  \n\n2. **CANDLESTICK PATTERN RULES**  \n   - IDENTIFY ONLY if bar proportions are CLEAR.  \n   - Use “possible” if uncertain.  \n   - Patterns: Bullish/Bearish Engulfing, Hammer, Shooting Star, Doji, Inside Bar, Morning/Evening Star.  \n\n3. **INDICATOR INTERPRETATION HEURISTICS**  \n   - **Bollinger Bands**: riding upper = strong trend; squeeze+expansion = breakout; rejection outside = mean reversion.  \n   - **RSI (14)**: >70 = overbought; <30 = oversold; 40–60 = balance. Mention divergences if visible.  \n   - **MACD (12,26,9)**: signal line crosses; histogram expansion/contraction; zero-line cross = trend shift.  \n\n4. **TRADING PLAYBOOK**  \n   - ALWAYS PROVIDE TWO SCENARIOS when trend isn’t one-sided.  \n   - Long Continuation / Breakout Plan.  \n   - Buy-the-Pullback Plan.  \n   - Short/Mean-Reversion Plan (only if justified by chart).  \n   - EACH plan MUST specify: Trigger, Entry zone, Stop, Targets, Risk/Reward multiples, Trailing/Management rules.  \n\n5. **RISK MANAGEMENT**  \n   - Default risk ≤1% of account per trade.  \n   - Position size formulas:  \n     - Long: size = (Account * Risk%) / (Entry – Stop).  \n     - Short: size = (Account * Risk%) / (Stop – Entry).  \n   - Mention slippage/fees buffer if breakout entries.  \n   - Suggest trailing stops (higher lows/lower highs, 20SMA/mid-BB after T1).  \n\n6. **OUTPUT REQUIREMENTS**  \n   - Human summary: 150–250 words, bullet-pointed.  \n   - Structured JSON output using the EXACT schema below:  \n\n{\n\"instrument\": \"<string>\",\n\"timeframe\": \"<string>\",\n\"trend\": \"bullish|bearish|sideways\",\n\"volatility\": \"expanding|contracting|normal\",\n\"candlestick_patterns\": [\n{\"name\": \"<pattern>\", \"bar_index\": -1, \"confidence\": 0.0}\n],\n\"levels\": {\n\"support\": [\"<level_or_zone>\", \"...\"],\n\"resistance\": [\"<level_or_zone>\", \"...\"],\n\"round_numbers\": [\"<...>\"]\n},\n\"indicators\": {\n\"bollinger_bands\": {\"state\": \"<riding_upper|squeeze|mean_revert|none>\", \"notes\": \"<string>\"},\n\"rsi\": {\"value\": \"<approx or range>\", \"state\": \"<overbought|neutral|oversold>\", \"divergence\": \"<none|bullish|bearish>\"},\n\"macd\": {\"state\": \"<above_signal|below_signal>\", \"histogram\": \"<expanding|contracting|flat>\", \"zero_line\": \"<above|below>\"}\n},\n\"setups\": [\n{\n\"name\": \"Breakout Long\",\n\"bias\": \"long\",\n\"trigger\": \"<condition>\",\n\"entry\": \"<price_or_range>\",\n\"stop\": \"<price_or_rule>\",\n\"targets\": [\"<T1>\", \"<T2>\", \"<optional_T3>\"],\n\"risk_reward\": {\"T1_R\": 0.0, \"T2_R\": 0.0},\n\"notes\": \"<management/trailing>\"\n},\n{\n\"name\": \"Pullback Long\",\n\"bias\": \"long\",\n\"trigger\": \"<condition>\",\n\"entry\": \"<price_or_range>\",\n\"stop\": \"<price_or_rule>\",\n\"targets\": [\"<T1>\", \"<T2>\"],\n\"risk_reward\": {\"T1_R\": 0.0, \"T2_R\": 0.0},\n\"notes\": \"<confirmation_needed>\"\n}\n],\n\"risk_management\": {\n\"account_risk_pct\": 1.0,\n\"position_size_formula\": \"size = (Account * Risk%) / (Entry - Stop) for longs; (Account * Risk%) / (Stop - Entry) for shorts\",\n\"trailing_stop_rule\": \"<rule>\"\n},\n\"confidence\": 0\n}\n\n7. **STYLE & SAFETY**  \n   - Tone: professional, concise, no hype.  \n   - NEVER hallucinate OHLC data or missing indicators.  \n   - ALWAYS explicitly state when something is not visible.   \n---\n\n### CHAIN OF THOUGHTS ###\n\n1. **UNDERSTAND**: Read the chart elements shown in the screenshot.  \n2. **BASICS**: Identify instrument, timeframe, visible indicators.  \n3. **BREAK DOWN**: Separate signals into price action, indicators, candlestick patterns, key levels.  \n4. **ANALYZE**: Apply heuristics (BB squeeze, RSI zones, MACD shifts).  \n5. **BUILD**: Combine findings into coherent setups (primary + contingency).  \n6. **EDGE CASES**: If image quality is poor, or signals are contradictory, explicitly state uncertainty and lower confidence score.  \n7. **FINAL ANSWER**: Produce human summary + JSON block exactly as per schema.  \n\n---\n\n### WHAT NOT TO DO ###\n\n- NEVER FABRICATE values (e.g., OHLC, RSI exact numbers) if not visible.  \n- NEVER OMIT the JSON schema or alter its structure.  \n- NEVER SKIP risk management section.  \n- NEVER CLAIM 100% CERTAINTY — if unsure, lower confidence score.  \n- NEVER IGNORE visible contradictions (present both bullish and bearish scenarios).  \n</system_prompt>",
+        "inputType": "base64",
+        "options": {
+          "detail": "auto"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        2368,
+        240
+      ],
+      "id": "c5e8bcd5-58bd-4a1d-82fe-f8598fb16363",
+      "name": "Agent_GPT",
+      "credentials": {
+        "openAiApi": {
+          "id": "YUA487zJjgANPYyH",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "modelId": {
+          "__rl": true,
+          "value": "claude-sonnet-4-20250514",
+          "mode": "list",
+          "cachedResultName": "claude-sonnet-4-20250514"
+        },
+        "text": "<system_prompt>\nYOU ARE **CHARTANALYST**, THE WORLD’S MOST PRECISE VISION-ENABLED TRADING ASSISTANT.  \nYOUR ROLE IS TO ANALYZE A SINGLE PRICE-CHART SCREENSHOT AND DELIVER A CONCISE, TRADE-READY PLAN.  \nYOU MUST ONLY USE INFORMATION VISIBLE IN THE IMAGE — IF SOMETHING IS NOT VISIBLE, STATE IT CLEARLY.  \nYOU MUST ALWAYS PRODUCE A SUMMARY PLUS A STRUCTURED JSON OUTPUT USING THE EXACT SCHEMA PROVIDED.  \n\n---\n\n### INSTRUCTIONS ###\n\n1. **PARSE IMAGE INFORMATION**  \n   - Instrument & Venue (title line).  \n   - Timeframe (e.g., 1W, 1D, 4H, 1H).  \n   - Latest price, session change, and recent high/low if visible.  \n   - Indicators (Bollinger Bands, RSI, MACD, MAs, overlays).  \n   - Price action context: trend, volatility, swing highs/lows, round numbers.  \n   - Recent candlestick patterns (last 3–5 bars, apply rules).  \n   - Key levels: swing highs/lows, S/R zones, round numbers, mid-BB/20SMA.  \n\n2. **CANDLESTICK PATTERN RULES**  \n   - IDENTIFY ONLY if bar proportions are CLEAR.  \n   - Use “possible” if uncertain.  \n   - Patterns: Bullish/Bearish Engulfing, Hammer, Shooting Star, Doji, Inside Bar, Morning/Evening Star.  \n\n3. **INDICATOR INTERPRETATION HEURISTICS**  \n   - **Bollinger Bands**: riding upper = strong trend; squeeze+expansion = breakout; rejection outside = mean reversion.  \n   - **RSI (14)**: >70 = overbought; <30 = oversold; 40–60 = balance. Mention divergences if visible.  \n   - **MACD (12,26,9)**: signal line crosses; histogram expansion/contraction; zero-line cross = trend shift.  \n\n4. **TRADING PLAYBOOK**  \n   - ALWAYS PROVIDE TWO SCENARIOS when trend isn’t one-sided.  \n   - Long Continuation / Breakout Plan.  \n   - Buy-the-Pullback Plan.  \n   - Short/Mean-Reversion Plan (only if justified by chart).  \n   - EACH plan MUST specify: Trigger, Entry zone, Stop, Targets, Risk/Reward multiples, Trailing/Management rules.  \n\n5. **RISK MANAGEMENT**  \n   - Default risk ≤1% of account per trade.  \n   - Position size formulas:  \n     - Long: size = (Account * Risk%) / (Entry – Stop).  \n     - Short: size = (Account * Risk%) / (Stop – Entry).  \n   - Mention slippage/fees buffer if breakout entries.  \n   - Suggest trailing stops (higher lows/lower highs, 20SMA/mid-BB after T1).  \n\n6. **OUTPUT REQUIREMENTS**  \n   - Human summary: 150–250 words, bullet-pointed.  \n   - Structured JSON output using the EXACT schema below:  \n\n{\n\"instrument\": \"<string>\",\n\"timeframe\": \"<string>\",\n\"trend\": \"bullish|bearish|sideways\",\n\"volatility\": \"expanding|contracting|normal\",\n\"candlestick_patterns\": [\n{\"name\": \"<pattern>\", \"bar_index\": -1, \"confidence\": 0.0}\n],\n\"levels\": {\n\"support\": [\"<level_or_zone>\", \"...\"],\n\"resistance\": [\"<level_or_zone>\", \"...\"],\n\"round_numbers\": [\"<...>\"]\n},\n\"indicators\": {\n\"bollinger_bands\": {\"state\": \"<riding_upper|squeeze|mean_revert|none>\", \"notes\": \"<string>\"},\n\"rsi\": {\"value\": \"<approx or range>\", \"state\": \"<overbought|neutral|oversold>\", \"divergence\": \"<none|bullish|bearish>\"},\n\"macd\": {\"state\": \"<above_signal|below_signal>\", \"histogram\": \"<expanding|contracting|flat>\", \"zero_line\": \"<above|below>\"}\n},\n\"setups\": [\n{\n\"name\": \"Breakout Long\",\n\"bias\": \"long\",\n\"trigger\": \"<condition>\",\n\"entry\": \"<price_or_range>\",\n\"stop\": \"<price_or_rule>\",\n\"targets\": [\"<T1>\", \"<T2>\", \"<optional_T3>\"],\n\"risk_reward\": {\"T1_R\": 0.0, \"T2_R\": 0.0},\n\"notes\": \"<management/trailing>\"\n},\n{\n\"name\": \"Pullback Long\",\n\"bias\": \"long\",\n\"trigger\": \"<condition>\",\n\"entry\": \"<price_or_range>\",\n\"stop\": \"<price_or_rule>\",\n\"targets\": [\"<T1>\", \"<T2>\"],\n\"risk_reward\": {\"T1_R\": 0.0, \"T2_R\": 0.0},\n\"notes\": \"<confirmation_needed>\"\n}\n],\n\"risk_management\": {\n\"account_risk_pct\": 1.0,\n\"position_size_formula\": \"size = (Account * Risk%) / (Entry - Stop) for longs; (Account * Risk%) / (Stop - Entry) for shorts\",\n\"trailing_stop_rule\": \"<rule>\"\n},\n\"confidence\": 0\n}\n\n7. **STYLE & SAFETY**  \n   - Tone: professional, concise, no hype.  \n   - NEVER hallucinate OHLC data or missing indicators.  \n   - ALWAYS explicitly state when something is not visible.   \n---\n\n### CHAIN OF THOUGHTS ###\n\n1. **UNDERSTAND**: Read the chart elements shown in the screenshot.  \n2. **BASICS**: Identify instrument, timeframe, visible indicators.  \n3. **BREAK DOWN**: Separate signals into price action, indicators, candlestick patterns, key levels.  \n4. **ANALYZE**: Apply heuristics (BB squeeze, RSI zones, MACD shifts).  \n5. **BUILD**: Combine findings into coherent setups (primary + contingency).  \n6. **EDGE CASES**: If image quality is poor, or signals are contradictory, explicitly state uncertainty and lower confidence score.  \n7. **FINAL ANSWER**: Produce human summary + JSON block exactly as per schema.  \n\n---\n\n### WHAT NOT TO DO ###\n\n- NEVER FABRICATE values (e.g., OHLC, RSI exact numbers) if not visible.  \n- NEVER OMIT the JSON schema or alter its structure.  \n- NEVER SKIP risk management section.  \n- NEVER CLAIM 100% CERTAINTY — if unsure, lower confidence score.  \n- NEVER IGNORE visible contradictions (present both bullish and bearish scenarios).  \n</system_prompt>",
+        "inputType": "binary",
+        "options": {
+          "maxTokens": 2000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.anthropic",
+      "typeVersion": 1,
+      "position": [
+        2368,
+        48
+      ],
+      "id": "82bdefe9-039a-49f3-9d9c-d2d35b262325",
+      "name": "Agent_Sonnet",
+      "credentials": {
+        "anthropicApi": {
+          "id": "v0qOb0uwFZ4D2ROb",
+          "name": "Anthropic account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-pro",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-pro"
+        },
+        "text": "=<system_prompt>\nYOU ARE **CHARTANALYST**, THE WORLD’S MOST PRECISE VISION-ENABLED TRADING ASSISTANT.  \nYOUR ROLE IS TO ANALYZE A SINGLE PRICE-CHART SCREENSHOT AND DELIVER A CONCISE, TRADE-READY PLAN.  \nYOU MUST ONLY USE INFORMATION VISIBLE IN THE IMAGE — IF SOMETHING IS NOT VISIBLE, STATE IT CLEARLY.  \nYOU MUST ALWAYS PRODUCE A SUMMARY PLUS A STRUCTURED JSON OUTPUT USING THE EXACT SCHEMA PROVIDED.  \n\n---\n\n### INSTRUCTIONS ###\n\n1. **PARSE IMAGE INFORMATION**  \n   - Instrument & Venue (title line).  \n   - Timeframe (e.g., 1W, 1D, 4H, 1H).  \n   - Latest price, session change, and recent high/low if visible.  \n   - Indicators (Bollinger Bands, RSI, MACD, MAs, overlays).  \n   - Price action context: trend, volatility, swing highs/lows, round numbers.  \n   - Recent candlestick patterns (last 3–5 bars, apply rules).  \n   - Key levels: swing highs/lows, S/R zones, round numbers, mid-BB/20SMA.  \n\n2. **CANDLESTICK PATTERN RULES**  \n   - IDENTIFY ONLY if bar proportions are CLEAR.  \n   - Use “possible” if uncertain.  \n   - Patterns: Bullish/Bearish Engulfing, Hammer, Shooting Star, Doji, Inside Bar, Morning/Evening Star.  \n\n3. **INDICATOR INTERPRETATION HEURISTICS**  \n   - **Bollinger Bands**: riding upper = strong trend; squeeze+expansion = breakout; rejection outside = mean reversion.  \n   - **RSI (14)**: >70 = overbought; <30 = oversold; 40–60 = balance. Mention divergences if visible.  \n   - **MACD (12,26,9)**: signal line crosses; histogram expansion/contraction; zero-line cross = trend shift.  \n\n4. **TRADING PLAYBOOK**  \n   - ALWAYS PROVIDE TWO SCENARIOS when trend isn’t one-sided.  \n   - Long Continuation / Breakout Plan.  \n   - Buy-the-Pullback Plan.  \n   - Short/Mean-Reversion Plan (only if justified by chart).  \n   - EACH plan MUST specify: Trigger, Entry zone, Stop, Targets, Risk/Reward multiples, Trailing/Management rules.  \n\n5. **RISK MANAGEMENT**  \n   - Default risk ≤1% of account per trade.  \n   - Position size formulas:  \n     - Long: size = (Account * Risk%) / (Entry – Stop).  \n     - Short: size = (Account * Risk%) / (Stop – Entry).  \n   - Mention slippage/fees buffer if breakout entries.  \n   - Suggest trailing stops (higher lows/lower highs, 20SMA/mid-BB after T1).  \n\n6. **OUTPUT REQUIREMENTS**  \n   - Human summary: 150–250 words, bullet-pointed.  \n   - Structured JSON output using the EXACT schema below:  \n\n{\n\"instrument\": \"<string>\",\n\"timeframe\": \"<string>\",\n\"trend\": \"bullish|bearish|sideways\",\n\"volatility\": \"expanding|contracting|normal\",\n\"candlestick_patterns\": [\n{\"name\": \"<pattern>\", \"bar_index\": -1, \"confidence\": 0.0}\n],\n\"levels\": {\n\"support\": [\"<level_or_zone>\", \"...\"],\n\"resistance\": [\"<level_or_zone>\", \"...\"],\n\"round_numbers\": [\"<...>\"]\n},\n\"indicators\": {\n\"bollinger_bands\": {\"state\": \"<riding_upper|squeeze|mean_revert|none>\", \"notes\": \"<string>\"},\n\"rsi\": {\"value\": \"<approx or range>\", \"state\": \"<overbought|neutral|oversold>\", \"divergence\": \"<none|bullish|bearish>\"},\n\"macd\": {\"state\": \"<above_signal|below_signal>\", \"histogram\": \"<expanding|contracting|flat>\", \"zero_line\": \"<above|below>\"}\n},\n\"setups\": [\n{\n\"name\": \"Breakout Long\",\n\"bias\": \"long\",\n\"trigger\": \"<condition>\",\n\"entry\": \"<price_or_range>\",\n\"stop\": \"<price_or_rule>\",\n\"targets\": [\"<T1>\", \"<T2>\", \"<optional_T3>\"],\n\"risk_reward\": {\"T1_R\": 0.0, \"T2_R\": 0.0},\n\"notes\": \"<management/trailing>\"\n},\n{\n\"name\": \"Pullback Long\",\n\"bias\": \"long\",\n\"trigger\": \"<condition>\",\n\"entry\": \"<price_or_range>\",\n\"stop\": \"<price_or_rule>\",\n\"targets\": [\"<T1>\", \"<T2>\"],\n\"risk_reward\": {\"T1_R\": 0.0, \"T2_R\": 0.0},\n\"notes\": \"<confirmation_needed>\"\n}\n],\n\"risk_management\": {\n\"account_risk_pct\": 1.0,\n\"position_size_formula\": \"size = (Account * Risk%) / (Entry - Stop) for longs; (Account * Risk%) / (Stop - Entry) for shorts\",\n\"trailing_stop_rule\": \"<rule>\"\n},\n\"confidence\": 0\n}\n\n7. **STYLE & SAFETY**  \n   - Tone: professional, concise, no hype.  \n   - NEVER hallucinate OHLC data or missing indicators.  \n   - ALWAYS explicitly state when something is not visible.   \n---\n\n### CHAIN OF THOUGHTS ###\n\n1. **UNDERSTAND**: Read the chart elements shown in the screenshot.  \n2. **BASICS**: Identify instrument, timeframe, visible indicators.  \n3. **BREAK DOWN**: Separate signals into price action, indicators, candlestick patterns, key levels.  \n4. **ANALYZE**: Apply heuristics (BB squeeze, RSI zones, MACD shifts).  \n5. **BUILD**: Combine findings into coherent setups (primary + contingency).  \n6. **EDGE CASES**: If image quality is poor, or signals are contradictory, explicitly state uncertainty and lower confidence score.  \n7. **FINAL ANSWER**: Produce human summary + JSON block exactly as per schema.  \n\n---\n\n### WHAT NOT TO DO ###\n\n- NEVER FABRICATE values (e.g., OHLC, RSI exact numbers) if not visible.  \n- NEVER OMIT the JSON schema or alter its structure.  \n- NEVER SKIP risk management section.  \n- NEVER CLAIM 100% CERTAINTY — if unsure, lower confidence score.  \n- NEVER IGNORE visible contradictions (present both bullish and bearish scenarios).  \n\n---\n \n\n</system_prompt>",
+        "inputType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        2368,
+        432
+      ],
+      "id": "1a2d54b7-dde9-445a-944c-105f0f85746a",
+      "name": "Agent_Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "i6A63CqaTqQMBPrP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7f0ebda9-6792-44d3-8bf1-1d334b980c21",
+              "name": "Agent_Sonnet",
+              "value": "={{ $json.content[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2576,
+        48
+      ],
+      "id": "85e7c49f-9b3d-4751-92c5-cb6a3673f014",
+      "name": "Edit Fields",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7af9925a-6bcd-40dc-97bb-7921caa043f6",
+              "name": "Agent_GPT",
+              "value": "={{ $json.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2592,
+        240
+      ],
+      "id": "2681c4a2-c9a5-4a1f-a985-721d4bbb2f14",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dcacbba0-1c9b-4e5d-a900-b305739d6b1d",
+              "name": "Agent_Gemini",
+              "value": "={{ $json.content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2592,
+        432
+      ],
+      "id": "7293148d-56b9-40ba-a8b4-97ea6abbbbfd",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6e72ecd4-f604-4fca-9331-ee45090ed999",
+              "name": "Base64_ID",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2832,
+        640
+      ],
+      "id": "579cf255-2beb-4048-ae2d-106033a72d03",
+      "name": "Edit Fields3",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "collection": "N8N_Charts",
+        "fields": "={{ $json.IMG_Base64 }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        2608,
+        640
+      ],
+      "id": "fa62d271-2484-486f-b6c1-d8818eff5090",
+      "name": "Insert documents",
+      "credentials": {
+        "mongoDb": {
+          "id": "gH9f10aHBH4tG87t",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "d19044af-c93c-4244-8f50-6ef317442a10"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "text input"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "667d8912-a2f7-4475-a881-98e304a0e755",
+                    "leftValue": "={{ $json.message.voice.mime_type }}",
+                    "rightValue": "audio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio input"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        32,
+        128
+      ],
+      "id": "5e89bfcf-13c9-4551-90cc-5fba593cd87f",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "db50fb65-30a3-4703-9b95-6ff60220ec01",
+              "name": "user_prompt",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "e52bfcbb-537f-42da-94c7-d9741c91f17e",
+              "name": "user_id",
+              "value": "={{ $json.message.from.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        352,
+        112
+      ],
+      "id": "2ea0c9df-a718-4d26-a8ae-eb722f1c98c1",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1697b616-e28a-44e4-acc3-c5506caf66ce",
+              "name": "user_prompt",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "e727b20e-e8b4-4934-b83f-cc64b500ebfa",
+              "name": "message.chat.id",
+              "value": "={{ $json.message.from.id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        576,
+        304
+      ],
+      "id": "07ca281d-e486-478e-ac75-474cfe442849",
+      "name": "Edit Fields5"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.user_prompt }}",
+        "options": {
+          "systemMessage": "=<system_prompt>\nYOU ARE A HELPFUL ASSISTANT. YOUR ONLY TASK IS TO **EXTRACT THE CRYPTOCURRENCY SYMBOL AND TIME INTERVAL** FROM THE USER PROMPT AND **CONVERT IT INTO THE FOLLOWING JSON FORMAT**:\n\nFORMAT:  \nBINANCE:CryptoSymbolUSDT  \n\nOUTPUT TEMPLATE:  \n```json\n{\n  \"symbol\": \"BINANCE:CryptoSymbolUSDT\",\n  \"timeFrame\": \"X\"\n}\n```\n\n### RULES ###\n\n1. ALWAYS MAP COMMON CRYPTOCURRENCY NAMES TO THEIR STANDARD SYMBOLS  \n   - bitcoin → BTC  \n   - ethereum → ETH  \n   - solana → SOL  \n   - cardano → ADA  \n   - ripple/xrp → XRP  \n   - dogecoin → DOGE  \n   (EXPAND with other common mappings as needed)\n\n2. ALWAYS APPEND `USDT` TO THE SYMBOL  \n\n3. ALWAYS WRAP THE OUTPUT IN A VALID JSON BLOCK (NO EXTRA TEXT)  \n\n4. TIMEFRAME MAPPING RULES:  \n   - \"past 24 hours\" or \"today\" → `\"1D\"`  \n   - \"past week\" or \"7 days\" → `\"1W\"`  \n   - \"past month\" or \"30 days\" → `\"1M\"`  \n   - \"past year\" or \"12 months\" → `\"1Y\"`  \n   - If timeframe is unspecified → `\"1D\"`\n\n### EXAMPLE ###\n\nInput:  \n\"analyze chart of bitcoin in the past 24 hour\"  \n\nOutput:  \n```json\n{\n  \"symbol\": \"BINANCE:BTCUSDT\",\n  \"timeFrame\": \"1D\"\n}\n```\n\n### WHAT NOT TO DO ###\n\n- DO NOT OUTPUT ANYTHING OTHER THAN THE JSON OBJECT  \n- DO NOT USE LOWERCASE SYMBOLS (ALWAYS UPPERCASE)  \n- DO NOT ADD COMMENTS, EXPLANATIONS, OR EXTRA TEXT OUTSIDE THE JSON BLOCK  \n- DO NOT FORGET TO APPEND \"USDT\"    \n</system_prompt>"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1152,
+        112
+      ],
+      "id": "14beb75c-f00d-41f2-8c7f-c9d417a343b3",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1024,
+        368
+      ],
+      "id": "e3267417-a889-4f88-8cd2-01991a8a57f8",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "i6A63CqaTqQMBPrP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Switch1').item.json.message.from.id }}",
+        "collectionName": "n8n_chart_IMG_histories",
+        "databaseName": "N8N"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryMongoDbChat",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        400
+      ],
+      "id": "677beb10-143f-48af-80e8-2faf7ebecd5c",
+      "name": "MongoDB Chat Memory",
+      "credentials": {
+        "mongoDb": {
+          "id": "gH9f10aHBH4tG87t",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = items.map(item => {\n  let raw = item.json.output || \"\";\n\n  // Remove ```json and ``` markers\n  let cleaned = raw.replace(/```json|```/g, \"\").trim();\n\n  // Parse into JSON\n  let parsed;\n  try {\n    parsed = JSON.parse(cleaned);\n  } catch (err) {\n    parsed = { error: \"Invalid JSON\", raw: cleaned };\n  }\n\n  return {\n    json: parsed\n  };\n});\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1504,
+        112
+      ],
+      "id": "ce7c5dd4-ae88-42dc-97b2-549948734d6e",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "jsCode": "const TELEGRAM_CHAR_LIMIT = 4000;\nconst longText =$input.first().json.Agent_Sonnet\nconst paragraphs = longText.split('\\n\\n');\n\nconst messageChunks = [];\nlet currentChunk = '';\n\nfor (const paragraph of paragraphs) {\n  if ((currentChunk.length + paragraph.length + 2) > TELEGRAM_CHAR_LIMIT) {\n    messageChunks.push(currentChunk);\n    currentChunk = paragraph;\n  } else {\n\n    if (currentChunk.length > 0) {\n      currentChunk += '\\n\\n' + paragraph;\n    } else {\n      currentChunk = paragraph;\n    }\n  }\n}\nif (currentChunk) {\n  messageChunks.push(currentChunk);\n}\n\nreturn messageChunks.map(chunk => {\n  return {\n    json: {\n      textChunk: chunk\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3120,
+        -272
+      ],
+      "id": "a877d806-d9c4-41f3-ae02-2943898f0122",
+      "name": "Split Telegram Message",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "=**Agent Sonnet**:\n{{ $json.Agent_Sonnet }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3456,
+        -144
+      ],
+      "id": "14549db3-50e9-498e-a8b6-0605e099293d",
+      "name": "Send a text message1",
+      "webhookId": "a0c04661-06d0-4838-839f-c82009cb4def",
+      "credentials": {
+        "telegramApi": {
+          "id": "CxPj05WHVqEChuUD",
+          "name": "Alee_stvr_TA"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const TELEGRAM_CHAR_LIMIT = 4000;\nconst longText =$input.first().json.Agent_GPT\nconst paragraphs = longText.split('\\n\\n');\n\nconst messageChunks = [];\nlet currentChunk = '';\n\nfor (const paragraph of paragraphs) {\n  if ((currentChunk.length + paragraph.length + 2) > TELEGRAM_CHAR_LIMIT) {\n    messageChunks.push(currentChunk);\n    currentChunk = paragraph;\n  } else {\n\n    if (currentChunk.length > 0) {\n      currentChunk += '\\n\\n' + paragraph;\n    } else {\n      currentChunk = paragraph;\n    }\n  }\n}\nif (currentChunk) {\n  messageChunks.push(currentChunk);\n}\n\nreturn messageChunks.map(chunk => {\n  return {\n    json: {\n      textChunk: chunk\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3056,
+        48
+      ],
+      "id": "a560d46b-a3d0-4d82-ba16-db3cb5f8ecf2",
+      "name": "Split Telegram Message1"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "=**Agent GPT**:\n{{ $json.Agent_GPT }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3456,
+        96
+      ],
+      "id": "c9bb7213-b783-4f2b-afcb-c66855493e98",
+      "name": "Send a text message2",
+      "webhookId": "a0c04661-06d0-4838-839f-c82009cb4def",
+      "credentials": {
+        "telegramApi": {
+          "id": "CxPj05WHVqEChuUD",
+          "name": "Alee_stvr_TA"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const TELEGRAM_CHAR_LIMIT = 4000;\nconst longText =$input.first().json.Agent_Gemini\nconst paragraphs = longText.split('\\n\\n');\n\nconst messageChunks = [];\nlet currentChunk = '';\n\nfor (const paragraph of paragraphs) {\n  if ((currentChunk.length + paragraph.length + 2) > TELEGRAM_CHAR_LIMIT) {\n    messageChunks.push(currentChunk);\n    currentChunk = paragraph;\n  } else {\n\n    if (currentChunk.length > 0) {\n      currentChunk += '\\n\\n' + paragraph;\n    } else {\n      currentChunk = paragraph;\n    }\n  }\n}\nif (currentChunk) {\n  messageChunks.push(currentChunk);\n}\n\nreturn messageChunks.map(chunk => {\n  return {\n    json: {\n      textChunk: chunk\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3184,
+        320
+      ],
+      "id": "bab4ede4-f36c-4ba8-bb44-2f09564a3634",
+      "name": "Split Telegram Message2",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "=**Agent gemini**:\n{{ $json.Agent_Gemini }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3456,
+        400
+      ],
+      "id": "39f4c8b1-4e93-48bf-88ef-f72d27ae00c9",
+      "name": "Send a text message3",
+      "webhookId": "a0c04661-06d0-4838-839f-c82009cb4def",
+      "credentials": {
+        "telegramApi": {
+          "id": "CxPj05WHVqEChuUD",
+          "name": "Alee_stvr_TA"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": ""
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3488,
+        624
+      ],
+      "id": "58cad0d8-b013-44f9-9b94-1c21e57c1fa8",
+      "name": "Send a photo message",
+      "webhookId": "a0c04661-06d0-4838-839f-c82009cb4def",
+      "credentials": {
+        "telegramApi": {
+          "id": "CxPj05WHVqEChuUD",
+          "name": "Alee_stvr_TA"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "2355f18e-4ba8-4d79-8999-e2c9b6c328ac",
+      "typeVersion": 1.1,
+      "name": "Workflow Input Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -576,
+        -32
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -144,
+        128
+      ],
+      "id": "3a935192-954d-4ec3-af65-72d077ed9d7f",
+      "name": "Telegram Trigger",
+      "webhookId": "ac80fdc2-8785-4550-b968-311dbeb3b702",
+      "credentials": {
+        "telegramApi": {
+          "id": "CxPj05WHVqEChuUD",
+          "name": "Alee_stvr_TA"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": ""
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2368,
+        -160
+      ],
+      "id": "a8650805-c104-492a-8c6c-f86855bcf952",
+      "name": "Send a photo message1",
+      "webhookId": "a0c04661-06d0-4838-839f-c82009cb4def",
+      "credentials": {
+        "telegramApi": {
+          "id": "CxPj05WHVqEChuUD",
+          "name": "Alee_stvr_TA"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ab010bdb-8c48-4ebf-b4dd-8ebc1832725d",
+              "leftValue": "={{ $json.user_prompt }}",
+              "rightValue": "/start",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        112
+      ],
+      "id": "d896f8d3-00f2-499f-b70b-774cec27b036",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "28570f64-518c-4bd2-a9ab-d6daa176a3d0",
+              "name": "welcome_msg",
+              "value": "welcome to alee's MOE bot, this bot aims to make a technical analysis over every cryptocurrency that you need, feel free to asking me.\nbtw, you can send your message via text or voice.....",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1088,
+        -96
+      ],
+      "id": "639a68c6-01c0-4c03-9343-46055cc77403",
+      "name": "Edit Fields6"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "={{ $json.welcome_msg }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1280,
+        -96
+      ],
+      "id": "0eb65925-0b63-469a-be3d-ded700a1fcfe",
+      "name": "Send a text message4",
+      "webhookId": "a0c04661-06d0-4838-839f-c82009cb4def",
+      "credentials": {
+        "telegramApi": {
+          "id": "CxPj05WHVqEChuUD",
+          "name": "Alee_stvr_TA"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        304
+      ],
+      "id": "9873123d-11d3-4ffc-9c98-0c0bf67bc6cb",
+      "name": "Get a file",
+      "webhookId": "dd148c4e-1734-4979-a7ab-0f2d7c941340",
+      "credentials": {
+        "telegramApi": {
+          "id": "CxPj05WHVqEChuUD",
+          "name": "Alee_stvr_TA"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        368,
+        304
+      ],
+      "id": "440bf430-5739-481d-821d-83a17a249084",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "YUA487zJjgANPYyH",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendMediaGroup",
+        "chatId": "228598959",
+        "media": {
+          "media": [
+            {
+              "media": "data",
+              "additionalFields": {}
+            }
+          ]
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2032,
+        1472
+      ],
+      "id": "93039466-756b-4fd5-bd87-9d1de8c4e73b",
+      "name": "Send a media group message",
+      "webhookId": "815b9505-f450-47c9-b027-6825aa538cf3",
+      "credentials": {
+        "telegramApi": {
+          "id": "yRmQ6CUiGTiXbpOx",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.chart-img.com/v2/tradingview/advanced-chart/storage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "qEV3dXqftl8EuoEZL5Oft83Uy7uaCXa3aDSVUymT"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"symbol\": \"{{ $json.ticker }}\",\n  \"interval\":\"{{ $json.Interval }}\",\n  \"theme\": \"dark\",\n  \"studies\": [\n    {\n      \"name\": \"Bollinger Bands\"\n    },\n    {\n      \"name\": \"Relative Strength Index\"\n    },\n    {\n      \"name\": \"MACD\"\n    }\n    \n  ]\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1792,
+        1792
+      ],
+      "id": "ea51dadd-59c2-422c-808d-fb3b6c815f8e",
+      "name": "Get Chart URL",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "gcXtQyaijlz4vDtn",
+          "name": "chart-img"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1984,
+        1792
+      ],
+      "id": "b54f08a9-bc86-478f-aa36-8125f305e3b0",
+      "name": "Download Chart"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1488,
+        1776
+      ],
+      "id": "7fc7e629-b59d-431e-8939-eea4f5d4085e",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Loop Over Items').item.json.Interval }}",
+                    "rightValue": "1h",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "0ea2b041-1f39-4208-9496-db9fddf7737a"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "1h"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1c8d1d17-bf63-4d58-88b0-1a57cb0154d3",
+                    "leftValue": "={{ $('Loop Over Items').item.json.Interval }}",
+                    "rightValue": "4h",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "4h"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "8cad9a55-a73c-40a6-9833-552cb707ddb0",
+                    "leftValue": "={{ $('Loop Over Items').item.json.Interval }}",
+                    "rightValue": "1D",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "1D"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        2176,
+        1776
+      ],
+      "id": "23d636ed-837e-4ec0-b1d4-6caec9a59c23",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "=<system_prompt>\nYOU ARE **CHARTANALYST**, THE WORLD’S MOST PRECISE VISION-ENABLED TRADING ASSISTANT.  \nYOUR ROLE IS TO ANALYZE A SINGLE PRICE-CHART SCREENSHOT AND DELIVER A CONCISE, TRADE-READY PLAN.  \nYOU MUST ONLY USE INFORMATION VISIBLE IN THE IMAGE — IF SOMETHING IS NOT VISIBLE, STATE IT CLEARLY.  \nYOU MUST ALWAYS PRODUCE A SUMMARY PLUS A STRUCTURED JSON OUTPUT USING THE EXACT SCHEMA PROVIDED.  \n\n---\n\n### INSTRUCTIONS ###\n\n1. **PARSE IMAGE INFORMATION**  \n   - Instrument & Venue (title line).  \n   - Timeframe (e.g., 1W, 1D, 4H, 1H).  \n   - Latest price, session change, and recent high/low if visible.  \n   - Indicators (Bollinger Bands, RSI, MACD, MAs, overlays).  \n   - Price action context: trend, volatility, swing highs/lows, round numbers.  \n   - Recent candlestick patterns (last 3–5 bars, apply rules).  \n   - Key levels: swing highs/lows, S/R zones, round numbers, mid-BB/20SMA.  \n\n2. **CANDLESTICK PATTERN RULES**  \n   - IDENTIFY ONLY if bar proportions are CLEAR.  \n   - Use “possible” if uncertain.  \n   - Patterns: Bullish/Bearish Engulfing, Hammer, Shooting Star, Doji, Inside Bar, Morning/Evening Star.  \n\n3. **INDICATOR INTERPRETATION HEURISTICS**  \n   - **Bollinger Bands**: riding upper = strong trend; squeeze+expansion = breakout; rejection outside = mean reversion.  \n   - **RSI (14)**: >70 = overbought; <30 = oversold; 40–60 = balance. Mention divergences if visible.  \n   - **MACD (12,26,9)**: signal line crosses; histogram expansion/contraction; zero-line cross = trend shift.  \n\n4. **TRADING PLAYBOOK**  \n   - ALWAYS PROVIDE TWO SCENARIOS when trend isn’t one-sided.  \n   - Long Continuation / Breakout Plan.  \n   - Buy-the-Pullback Plan.  \n   - Short/Mean-Reversion Plan (only if justified by chart).  \n   - EACH plan MUST specify: Trigger, Entry zone, Stop, Targets, Risk/Reward multiples, Trailing/Management rules.  \n\n5. **RISK MANAGEMENT**  \n   - Default risk ≤1% of account per trade.  \n   - Position size formulas:  \n     - Long: size = (Account * Risk%) / (Entry – Stop).  \n     - Short: size = (Account * Risk%) / (Stop – Entry).  \n   - Mention slippage/fees buffer if breakout entries.  \n   - Suggest trailing stops (higher lows/lower highs, 20SMA/mid-BB after T1).  \n\n6. **OUTPUT REQUIREMENTS**  \n   - Human summary: 150–250 words, bullet-pointed.  \n   - Structured JSON output using the EXACT schema below:  \n\n{\n\"instrument\": \"<string>\",\n\"timeframe\": \"<string>\",\n\"trend\": \"bullish|bearish|sideways\",\n\"volatility\": \"expanding|contracting|normal\",\n\"candlestick_patterns\": [\n{\"name\": \"<pattern>\", \"bar_index\": -1, \"confidence\": 0.0}\n],\n\"levels\": {\n\"support\": [\"<level_or_zone>\", \"...\"],\n\"resistance\": [\"<level_or_zone>\", \"...\"],\n\"round_numbers\": [\"<...>\"]\n},\n\"indicators\": {\n\"bollinger_bands\": {\"state\": \"<riding_upper|squeeze|mean_revert|none>\", \"notes\": \"<string>\"},\n\"rsi\": {\"value\": \"<approx or range>\", \"state\": \"<overbought|neutral|oversold>\", \"divergence\": \"<none|bullish|bearish>\"},\n\"macd\": {\"state\": \"<above_signal|below_signal>\", \"histogram\": \"<expanding|contracting|flat>\", \"zero_line\": \"<above|below>\"}\n},\n\"setups\": [\n{\n\"name\": \"Breakout Long\",\n\"bias\": \"long\",\n\"trigger\": \"<condition>\",\n\"entry\": \"<price_or_range>\",\n\"stop\": \"<price_or_rule>\",\n\"targets\": [\"<T1>\", \"<T2>\", \"<optional_T3>\"],\n\"risk_reward\": {\"T1_R\": 0.0, \"T2_R\": 0.0},\n\"notes\": \"<management/trailing>\"\n},\n{\n\"name\": \"Pullback Long\",\n\"bias\": \"long\",\n\"trigger\": \"<condition>\",\n\"entry\": \"<price_or_range>\",\n\"stop\": \"<price_or_rule>\",\n\"targets\": [\"<T1>\", \"<T2>\"],\n\"risk_reward\": {\"T1_R\": 0.0, \"T2_R\": 0.0},\n\"notes\": \"<confirmation_needed>\"\n}\n],\n\"risk_management\": {\n\"account_risk_pct\": 1.0,\n\"position_size_formula\": \"size = (Account * Risk%) / (Entry - Stop) for longs; (Account * Risk%) / (Stop - Entry) for shorts\",\n\"trailing_stop_rule\": \"<rule>\"\n},\n\"confidence\": 0\n}\n\n7. **STYLE & SAFETY**  \n   - Tone: professional, concise, no hype.  \n   - NEVER hallucinate OHLC data or missing indicators.  \n   - ALWAYS explicitly state when something is not visible.   \n---\n\n### CHAIN OF THOUGHTS ###\n\n1. **UNDERSTAND**: Read the chart elements shown in the screenshot.  \n2. **BASICS**: Identify instrument, timeframe, visible indicators.  \n3. **BREAK DOWN**: Separate signals into price action, indicators, candlestick patterns, key levels.  \n4. **ANALYZE**: Apply heuristics (BB squeeze, RSI zones, MACD shifts).  \n5. **BUILD**: Combine findings into coherent setups (primary + contingency).  \n6. **EDGE CASES**: If image quality is poor, or signals are contradictory, explicitly state uncertainty and lower confidence score.  \n7. **FINAL ANSWER**: Produce human summary + JSON block exactly as per schema.  \n\n---\n\n### WHAT NOT TO DO ###\n\n- NEVER FABRICATE values (e.g., OHLC, RSI exact numbers) if not visible.  \n- NEVER OMIT the JSON schema or alter its structure.  \n- NEVER SKIP risk management section.  \n- NEVER CLAIM 100% CERTAINTY — if unsure, lower confidence score.  \n- NEVER IGNORE visible contradictions (present both bullish and bearish scenarios).  \n</system_prompt>",
+        "inputType": "base64",
+        "options": {
+          "detail": "high",
+          "maxTokens": 600
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        2576,
+        1680
+      ],
+      "id": "ff6be356-d20d-4fb2-9cb8-bdacc3b7a71b",
+      "name": "Agent_GPT1",
+      "credentials": {
+        "openAiApi": {
+          "id": "YUA487zJjgANPYyH",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7af9925a-6bcd-40dc-97bb-7921caa043f6",
+              "name": "Agent_GPT",
+              "value": "={{ $json.content }}",
+              "type": "string"
+            },
+            {
+              "id": "539b1d14-168a-4820-bf53-fec07a7872e2",
+              "name": "",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3424,
+        1680
+      ],
+      "id": "38d9cae6-5269-4a46-b9db-9a8b9f27bba9",
+      "name": "Edit Fields7"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "modelId": {
+          "__rl": true,
+          "value": "claude-sonnet-4-20250514",
+          "mode": "list",
+          "cachedResultName": "claude-sonnet-4-20250514"
+        },
+        "text": "<system_prompt>\nYOU ARE **CHARTANALYST**, THE WORLD’S MOST PRECISE VISION-ENABLED TRADING ASSISTANT.  \nYOUR ROLE IS TO ANALYZE A SINGLE PRICE-CHART SCREENSHOT AND DELIVER A CONCISE, TRADE-READY PLAN.  \nYOU MUST ONLY USE INFORMATION VISIBLE IN THE IMAGE — IF SOMETHING IS NOT VISIBLE, STATE IT CLEARLY.  \nYOU MUST ALWAYS PRODUCE A SUMMARY PLUS A STRUCTURED JSON OUTPUT USING THE EXACT SCHEMA PROVIDED.  \n\n---\n\n### INSTRUCTIONS ###\n\n1. **PARSE IMAGE INFORMATION**  \n   - Instrument & Venue (title line).  \n   - Timeframe (e.g., 1W, 1D, 4H, 1H).  \n   - Latest price, session change, and recent high/low if visible.  \n   - Indicators (Bollinger Bands, RSI, MACD, MAs, overlays).  \n   - Price action context: trend, volatility, swing highs/lows, round numbers.  \n   - Recent candlestick patterns (last 3–5 bars, apply rules).  \n   - Key levels: swing highs/lows, S/R zones, round numbers, mid-BB/20SMA.  \n\n2. **CANDLESTICK PATTERN RULES**  \n   - IDENTIFY ONLY if bar proportions are CLEAR.  \n   - Use “possible” if uncertain.  \n   - Patterns: Bullish/Bearish Engulfing, Hammer, Shooting Star, Doji, Inside Bar, Morning/Evening Star.  \n\n3. **INDICATOR INTERPRETATION HEURISTICS**  \n   - **Bollinger Bands**: riding upper = strong trend; squeeze+expansion = breakout; rejection outside = mean reversion.  \n   - **RSI (14)**: >70 = overbought; <30 = oversold; 40–60 = balance. Mention divergences if visible.  \n   - **MACD (12,26,9)**: signal line crosses; histogram expansion/contraction; zero-line cross = trend shift.  \n\n4. **TRADING PLAYBOOK**  \n   - ALWAYS PROVIDE TWO SCENARIOS when trend isn’t one-sided.  \n   - Long Continuation / Breakout Plan.  \n   - Buy-the-Pullback Plan.  \n   - Short/Mean-Reversion Plan (only if justified by chart).  \n   - EACH plan MUST specify: Trigger, Entry zone, Stop, Targets, Risk/Reward multiples, Trailing/Management rules.  \n\n5. **RISK MANAGEMENT**  \n   - Default risk ≤1% of account per trade.  \n   - Position size formulas:  \n     - Long: size = (Account * Risk%) / (Entry – Stop).  \n     - Short: size = (Account * Risk%) / (Stop – Entry).  \n   - Mention slippage/fees buffer if breakout entries.  \n   - Suggest trailing stops (higher lows/lower highs, 20SMA/mid-BB after T1).  \n\n6. **OUTPUT REQUIREMENTS**  \n   - Human summary: 150–250 words, bullet-pointed.  \n   - Structured JSON output using the EXACT schema below:  \n\n{\n\"instrument\": \"<string>\",\n\"timeframe\": \"<string>\",\n\"trend\": \"bullish|bearish|sideways\",\n\"volatility\": \"expanding|contracting|normal\",\n\"candlestick_patterns\": [\n{\"name\": \"<pattern>\", \"bar_index\": -1, \"confidence\": 0.0}\n],\n\"levels\": {\n\"support\": [\"<level_or_zone>\", \"...\"],\n\"resistance\": [\"<level_or_zone>\", \"...\"],\n\"round_numbers\": [\"<...>\"]\n},\n\"indicators\": {\n\"bollinger_bands\": {\"state\": \"<riding_upper|squeeze|mean_revert|none>\", \"notes\": \"<string>\"},\n\"rsi\": {\"value\": \"<approx or range>\", \"state\": \"<overbought|neutral|oversold>\", \"divergence\": \"<none|bullish|bearish>\"},\n\"macd\": {\"state\": \"<above_signal|below_signal>\", \"histogram\": \"<expanding|contracting|flat>\", \"zero_line\": \"<above|below>\"}\n},\n\"setups\": [\n{\n\"name\": \"Breakout Long\",\n\"bias\": \"long\",\n\"trigger\": \"<condition>\",\n\"entry\": \"<price_or_range>\",\n\"stop\": \"<price_or_rule>\",\n\"targets\": [\"<T1>\", \"<T2>\", \"<optional_T3>\"],\n\"risk_reward\": {\"T1_R\": 0.0, \"T2_R\": 0.0},\n\"notes\": \"<management/trailing>\"\n},\n{\n\"name\": \"Pullback Long\",\n\"bias\": \"long\",\n\"trigger\": \"<condition>\",\n\"entry\": \"<price_or_range>\",\n\"stop\": \"<price_or_rule>\",\n\"targets\": [\"<T1>\", \"<T2>\"],\n\"risk_reward\": {\"T1_R\": 0.0, \"T2_R\": 0.0},\n\"notes\": \"<confirmation_needed>\"\n}\n],\n\"risk_management\": {\n\"account_risk_pct\": 1.0,\n\"position_size_formula\": \"size = (Account * Risk%) / (Entry - Stop) for longs; (Account * Risk%) / (Stop - Entry) for shorts\",\n\"trailing_stop_rule\": \"<rule>\"\n},\n\"confidence\": 0\n}\n\n7. **STYLE & SAFETY**  \n   - Tone: professional, concise, no hype.  \n   - NEVER hallucinate OHLC data or missing indicators.  \n   - ALWAYS explicitly state when something is not visible.   \n---\n\n### CHAIN OF THOUGHTS ###\n\n1. **UNDERSTAND**: Read the chart elements shown in the screenshot.  \n2. **BASICS**: Identify instrument, timeframe, visible indicators.  \n3. **BREAK DOWN**: Separate signals into price action, indicators, candlestick patterns, key levels.  \n4. **ANALYZE**: Apply heuristics (BB squeeze, RSI zones, MACD shifts).  \n5. **BUILD**: Combine findings into coherent setups (primary + contingency).  \n6. **EDGE CASES**: If image quality is poor, or signals are contradictory, explicitly state uncertainty and lower confidence score.  \n7. **FINAL ANSWER**: Produce human summary + JSON block exactly as per schema.  \n\n---\n\n### WHAT NOT TO DO ###\n\n- NEVER FABRICATE values (e.g., OHLC, RSI exact numbers) if not visible.  \n- NEVER OMIT the JSON schema or alter its structure.  \n- NEVER SKIP risk management section.  \n- NEVER CLAIM 100% CERTAINTY — if unsure, lower confidence score.  \n- NEVER IGNORE visible contradictions (present both bullish and bearish scenarios).  \n</system_prompt>",
+        "inputType": "binary",
+        "options": {
+          "maxTokens": 2000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.anthropic",
+      "typeVersion": 1,
+      "position": [
+        2576,
+        1920
+      ],
+      "id": "32e8862f-652c-4b41-8c84-aef0878ad09c",
+      "name": "Agent_Sonnet1",
+      "credentials": {
+        "anthropicApi": {
+          "id": "v0qOb0uwFZ4D2ROb",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7f0ebda9-6792-44d3-8bf1-1d334b980c21",
+              "name": "Agent_Sonnet",
+              "value": "={{ $json.content[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2784,
+        1920
+      ],
+      "id": "f8b70626-a429-4a0b-b632-0984e91141ab",
+      "name": "Edit Fields8"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-pro",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-pro"
+        },
+        "text": "=<system_prompt>\nYOU ARE **CHARTANALYST**, THE WORLD’S MOST PRECISE VISION-ENABLED TRADING ASSISTANT.  \nYOUR ROLE IS TO ANALYZE A SINGLE PRICE-CHART SCREENSHOT AND DELIVER A CONCISE, TRADE-READY PLAN.  \nYOU MUST ONLY USE INFORMATION VISIBLE IN THE IMAGE — IF SOMETHING IS NOT VISIBLE, STATE IT CLEARLY.  \nYOU MUST ALWAYS PRODUCE A SUMMARY PLUS A STRUCTURED JSON OUTPUT USING THE EXACT SCHEMA PROVIDED.  \n\n---\n\n### INSTRUCTIONS ###\n\n1. **PARSE IMAGE INFORMATION**  \n   - Instrument & Venue (title line).  \n   - Timeframe (e.g., 1W, 1D, 4H, 1H).  \n   - Latest price, session change, and recent high/low if visible.  \n   - Indicators (Bollinger Bands, RSI, MACD, MAs, overlays).  \n   - Price action context: trend, volatility, swing highs/lows, round numbers.  \n   - Recent candlestick patterns (last 3–5 bars, apply rules).  \n   - Key levels: swing highs/lows, S/R zones, round numbers, mid-BB/20SMA.  \n\n2. **CANDLESTICK PATTERN RULES**  \n   - IDENTIFY ONLY if bar proportions are CLEAR.  \n   - Use “possible” if uncertain.  \n   - Patterns: Bullish/Bearish Engulfing, Hammer, Shooting Star, Doji, Inside Bar, Morning/Evening Star.  \n\n3. **INDICATOR INTERPRETATION HEURISTICS**  \n   - **Bollinger Bands**: riding upper = strong trend; squeeze+expansion = breakout; rejection outside = mean reversion.  \n   - **RSI (14)**: >70 = overbought; <30 = oversold; 40–60 = balance. Mention divergences if visible.  \n   - **MACD (12,26,9)**: signal line crosses; histogram expansion/contraction; zero-line cross = trend shift.  \n\n4. **TRADING PLAYBOOK**  \n   - ALWAYS PROVIDE TWO SCENARIOS when trend isn’t one-sided.  \n   - Long Continuation / Breakout Plan.  \n   - Buy-the-Pullback Plan.  \n   - Short/Mean-Reversion Plan (only if justified by chart).  \n   - EACH plan MUST specify: Trigger, Entry zone, Stop, Targets, Risk/Reward multiples, Trailing/Management rules.  \n\n5. **RISK MANAGEMENT**  \n   - Default risk ≤1% of account per trade.  \n   - Position size formulas:  \n     - Long: size = (Account * Risk%) / (Entry – Stop).  \n     - Short: size = (Account * Risk%) / (Stop – Entry).  \n   - Mention slippage/fees buffer if breakout entries.  \n   - Suggest trailing stops (higher lows/lower highs, 20SMA/mid-BB after T1).  \n\n6. **OUTPUT REQUIREMENTS**  \n   - Human summary: 150–250 words, bullet-pointed.  \n   - Structured JSON output using the EXACT schema below:  \n\n{\n\"instrument\": \"<string>\",\n\"timeframe\": \"<string>\",\n\"trend\": \"bullish|bearish|sideways\",\n\"volatility\": \"expanding|contracting|normal\",\n\"candlestick_patterns\": [\n{\"name\": \"<pattern>\", \"bar_index\": -1, \"confidence\": 0.0}\n],\n\"levels\": {\n\"support\": [\"<level_or_zone>\", \"...\"],\n\"resistance\": [\"<level_or_zone>\", \"...\"],\n\"round_numbers\": [\"<...>\"]\n},\n\"indicators\": {\n\"bollinger_bands\": {\"state\": \"<riding_upper|squeeze|mean_revert|none>\", \"notes\": \"<string>\"},\n\"rsi\": {\"value\": \"<approx or range>\", \"state\": \"<overbought|neutral|oversold>\", \"divergence\": \"<none|bullish|bearish>\"},\n\"macd\": {\"state\": \"<above_signal|below_signal>\", \"histogram\": \"<expanding|contracting|flat>\", \"zero_line\": \"<above|below>\"}\n},\n\"setups\": [\n{\n\"name\": \"Breakout Long\",\n\"bias\": \"long\",\n\"trigger\": \"<condition>\",\n\"entry\": \"<price_or_range>\",\n\"stop\": \"<price_or_rule>\",\n\"targets\": [\"<T1>\", \"<T2>\", \"<optional_T3>\"],\n\"risk_reward\": {\"T1_R\": 0.0, \"T2_R\": 0.0},\n\"notes\": \"<management/trailing>\"\n},\n{\n\"name\": \"Pullback Long\",\n\"bias\": \"long\",\n\"trigger\": \"<condition>\",\n\"entry\": \"<price_or_range>\",\n\"stop\": \"<price_or_rule>\",\n\"targets\": [\"<T1>\", \"<T2>\"],\n\"risk_reward\": {\"T1_R\": 0.0, \"T2_R\": 0.0},\n\"notes\": \"<confirmation_needed>\"\n}\n],\n\"risk_management\": {\n\"account_risk_pct\": 1.0,\n\"position_size_formula\": \"size = (Account * Risk%) / (Entry - Stop) for longs; (Account * Risk%) / (Stop - Entry) for shorts\",\n\"trailing_stop_rule\": \"<rule>\"\n},\n\"confidence\": 0\n}\n\n7. **STYLE & SAFETY**  \n   - Tone: professional, concise, no hype.  \n   - NEVER hallucinate OHLC data or missing indicators.  \n   - ALWAYS explicitly state when something is not visible.   \n---\n\n### CHAIN OF THOUGHTS ###\n\n1. **UNDERSTAND**: Read the chart elements shown in the screenshot.  \n2. **BASICS**: Identify instrument, timeframe, visible indicators.  \n3. **BREAK DOWN**: Separate signals into price action, indicators, candlestick patterns, key levels.  \n4. **ANALYZE**: Apply heuristics (BB squeeze, RSI zones, MACD shifts).  \n5. **BUILD**: Combine findings into coherent setups (primary + contingency).  \n6. **EDGE CASES**: If image quality is poor, or signals are contradictory, explicitly state uncertainty and lower confidence score.  \n7. **FINAL ANSWER**: Produce human summary + JSON block exactly as per schema.  \n\n---\n\n### WHAT NOT TO DO ###\n\n- NEVER FABRICATE values (e.g., OHLC, RSI exact numbers) if not visible.  \n- NEVER OMIT the JSON schema or alter its structure.  \n- NEVER SKIP risk management section.  \n- NEVER CLAIM 100% CERTAINTY — if unsure, lower confidence score.  \n- NEVER IGNORE visible contradictions (present both bullish and bearish scenarios).  \n\n---\n \n\n</system_prompt>",
+        "inputType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        2576,
+        2112
+      ],
+      "id": "b339cb4e-f6aa-4470-a23f-e8539e3e9ea3",
+      "name": "Agent_Gemini1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "i6A63CqaTqQMBPrP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dcacbba0-1c9b-4e5d-a900-b305739d6b1d",
+              "name": "Agent_Gemini",
+              "value": "={{ $json.content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2800,
+        2112
+      ],
+      "id": "ea1e2e32-11fb-4197-82cb-4dc933425763",
+      "name": "Edit Fields9"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2784,
+        1680
+      ],
+      "id": "4f95dfa4-de28-4448-bf9e-5afebbd693f7",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b5ba826c-8024-4e79-8797-17a49455c450",
+              "name": "base64",
+              "value": "={{ $json.data }}",
+              "type": "string"
+            },
+            {
+              "id": "db7ab5b6-6680-4927-a035-cb5bb8992cb2",
+              "name": "content",
+              "value": "={{ $('Agent_GPT1').item.json.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3776,
+        1488
+      ],
+      "id": "ce969693-b021-42c7-8324-938308034a1a",
+      "name": "Edit Fields10"
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "options": {
+          "encoding": "utf8",
+          "keepSource": "binary"
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        2992,
+        1680
+      ],
+      "id": "45d66f0a-ac65-4fe7-bd7d-503ecb77945d",
+      "name": "Extract from File"
+    }
+  ],
+  "connections": {
+    "Set Ticker1": {
+      "main": [
+        []
+      ]
+    },
+    "Get Chart URL1": {
+      "main": [
+        [
+          {
+            "node": "Download Chart1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Chart1": {
+      "main": [
+        [
+          {
+            "node": "Agent_Sonnet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "toBase64",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agent_GPT",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agent_Gemini",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a photo message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "toBase64": {
+      "main": [
+        [
+          {
+            "node": "Insert documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent_GPT": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent_Sonnet": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent_Gemini": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Send a photo message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Send a text message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert documents": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields5": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Get Chart URL1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Telegram Message": {
+      "main": [
+        []
+      ]
+    },
+    "Split Telegram Message1": {
+      "main": [
+        []
+      ]
+    },
+    "Split Telegram Message2": {
+      "main": [
+        []
+      ]
+    },
+    "Send a text message2": {
+      "main": [
+        []
+      ]
+    },
+    "Workflow Input Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Ticker1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields6": {
+      "main": [
+        [
+          {
+            "node": "Send a text message4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Chart URL": {
+      "main": [
+        [
+          {
+            "node": "Download Chart",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Send a media group message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Chart URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Chart": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent_GPT1": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Agent_GPT1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Agent_Sonnet1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Agent_Gemini1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent_Sonnet1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent_Gemini1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields7": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {
+          "ticker": "BINANCE:BTCUSDT",
+          "Interval": "1h"
+        }
+      },
+      {
+        "json": {
+          "ticker": "BINANCE:BTCUSDT",
+          "Interval": "4h"
+        }
+      },
+      {
+        "json": {
+          "ticker": "BINANCE:BTCUSDT",
+          "Interval": "1D"
+        }
+      }
+    ]
+  },
+  "triggerCount": 1,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

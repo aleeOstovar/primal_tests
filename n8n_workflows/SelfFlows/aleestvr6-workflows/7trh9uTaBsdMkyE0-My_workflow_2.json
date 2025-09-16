@@ -1,0 +1,231 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ee5c6c52-61eb-4dd0-bfd3-d98155ecebc3",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "authentication": "headerAuth",
+        "url": "https://deep-index.moralis.io/api/v2.2/wallet/balance?chain=eth&address=0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+        "options": {}
+      },
+      "name": "Get Balance",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        640,
+        320
+      ],
+      "id": "ca58488f-5511-4dce-9ba3-519c7cc39da6",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "7BMMlVI2nfkVbnva",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "number": [
+            {
+              "name": "eth_balance",
+              "value": "={{ $node['Get Balance'].json['balances'].find(b => b.symbol === 'ETH').balance / 1e18 }}"
+            },
+            {
+              "name": "usdt_balance",
+              "value": "={{ $node['Get Balance'].json['balances'].find(b => b.symbol === 'USDT').balance / 1e6 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set Balances",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        864,
+        320
+      ],
+      "id": "7b09d729-8426-4083-8296-767f0ff2e89d"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "{{YOUR_SHEET_ID}}",
+        "range": "Sheet1!A:D",
+        "options": {}
+      },
+      "name": "Log to Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        432
+      ],
+      "id": "e75be952-4495-4fe8-b5e4-f493641d520f"
+    },
+    {
+      "parameters": {
+        "authentication": "headerAuth",
+        "url": "https://deep-index.moralis.io/api/v2.2/wallet/transactions?chain=eth&address=0xd8da6bf26964af9d7eed9e03e53415d37aa96045&limit=10",
+        "options": {}
+      },
+      "name": "Get Balance1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        624,
+        528
+      ],
+      "id": "e4ca99a0-7086-4053-ab54-8c95931e1256",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "7BMMlVI2nfkVbnva",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "command-r-plus",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatCohere",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        448
+      ],
+      "id": "44436f54-be79-41b7-a18e-370c86ac9b6e",
+      "name": "Cohere Chat Model",
+      "credentials": {
+        "cohereApi": {
+          "id": "Sv7zIGB3zsnZwfXH",
+          "name": "CohereApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const transactions = $node['Get Transactions'].json.result;\nconst whaleThreshold = 0.5 * 1e18;\nconst whaleTxs = transactions.filter(tx => Number(tx.value) > whaleThreshold);\nreturn [{\n  json: {\n    whale_transactions: whaleTxs.map(tx => ({\n      hash: tx.hash,\n      value_eth: Number(tx.value) / 1e18,\n      from: tx.from_address,\n      to: tx.to_address,\n      timestamp: tx.block_timestamp\n    }))\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        528
+      ],
+      "id": "ad7d71c4-d3c0-4fc4-810a-7cd05794f5ec",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "authentication": "headerAuth",
+        "url": "https://deep-index.moralis.io/api/v2.2/wallet/transactions?chain=eth&address=0xd8da6bf26964af9d7eed9e03e53415d37aa96045&limit=10",
+        "options": {}
+      },
+      "name": "Get Balance2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        592,
+        816
+      ],
+      "id": "49f72026-390a-442d-9450-18a186fdc282",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "7BMMlVI2nfkVbnva",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.etherscan.io/api?module=token&action=tokenholderlist&contractaddress=0xdAC17F958D2ee523a2206206994597C13D831ec7&page=1&offset=100   &apikey=ES2MYFT3B12AXDMZ9X8Q4C2MC7G8SSJQDU",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        832,
+        864
+      ],
+      "id": "573a7cec-ba7b-4c41-8ade-f4c6d9ce2ab9",
+      "name": "HTTP Request"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get Balance",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Balance1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Balance": {
+      "main": [
+        [
+          {
+            "node": "Set Balances",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Balances": {
+      "main": [
+        [
+          {
+            "node": "Log to Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Balance1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cohere Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 0,
+  "meta": null
+}

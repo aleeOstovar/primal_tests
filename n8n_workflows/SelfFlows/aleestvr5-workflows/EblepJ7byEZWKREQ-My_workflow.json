@@ -1,0 +1,204 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "n8n",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        192,
+        -16
+      ],
+      "id": "d034b4c0-f254-484d-a543-83c971690b69",
+      "name": "Webhook",
+      "webhookId": "62130017-6d77-49ce-ae49-5dc9c9965589"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body }}",
+        "options": {
+          "systemMessage": "=You are Alee’s personal AI assistant. Your job is to send emails on his behalf.\n\nYou’ll be given a text input (could be notes, a message, or a rough idea).\nYour task is to convert it into a concise, catchy email written in Alee’s voice — casual-professional, punchy, and clear.\nYou MUST send the final version using the Send email tool. Do not reply in chat.\n\nTools:\n- Send email — you MUST use this to send the final message. This is always your last step.\n\nIf anything is unclear, make the best reasonable guess and move forward.\n\nOutput NOTHING to chat. Your job is to take action, not explain."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        416,
+        -16
+      ],
+      "id": "fa8724ca-edaa-44e2-a346-83c66f43d246",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        768,
+        -16
+      ],
+      "id": "024a9ce5-7f02-4aa8-ab99-2490a2dbfc84",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "sendTo": "=aleeostovar@gmail.com",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        816,
+        256
+      ],
+      "id": "73bb2cca-6618-407c-8d46-c7121ea5b768",
+      "name": "Send email",
+      "webhookId": "09713a67-ad45-4d0b-a09a-afc84bc21fc2",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "KWl5UoIGPdrfOXtL",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appOLDC931hTVYG3Y",
+          "mode": "list",
+          "cachedResultName": "Untitled Base",
+          "cachedResultUrl": "https://airtable.com/appOLDC931hTVYG3Y"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblnsn0VBVCPgk8ot",
+          "mode": "list",
+          "cachedResultName": "Table 1",
+          "cachedResultUrl": "https://airtable.com/appOLDC931hTVYG3Y/tblnsn0VBVCPgk8ot"
+        },
+        "filterByFormula": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Filter_By_Formula', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.1,
+      "position": [
+        544,
+        272
+      ],
+      "id": "9e612add-7dd8-4f86-9263-16c58cea4ffc",
+      "name": "Get contact email from name",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "xQw9UdXnAEHDF0xc",
+          "name": "Airtable Personal Access Token account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        320,
+        256
+      ],
+      "id": "b16fdc4c-d1c7-40bf-8334-efe2cf44ac83",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "GZN025b0p0AstCbO",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send email": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get contact email from name": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

@@ -1,0 +1,536 @@
+{
+  "name": "DialPadDataStoring - CallsTranscript",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const results = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  const call_id = item.json.call_id;\n  const call_duration = $('Loop Over Items1').first().json.duration;\n  const agent_id = $('Loop Over Items1').first().json.target.id;\n  const agent_name = $('Loop Over Items1').first().json.target.name;\n  const call_datetime = $('Loop Over Items1').first().json.date_connected;\n  const contact_id = $('Loop Over Items1').first().json.contact.id;\n  const contact_name = $('Loop Over Items1').first().json.contact.name;\n  const lines = item.json.lines || [];\n  \n  // Initialize empty transcript text\n  let transcriptText = \"\";\n  \n  // Add each transcript entry with labels\n  for (const line of lines) {\n    if (line.type === \"transcript\") {\n      transcriptText += \"Time: \" + line.time + \"\\n\";\n      transcriptText += \"Speaker: \" + line.name + \"\\n\";\n      transcriptText += \"Transcript: \" + line.content + \"\\n\\n\";\n    }\n  }\n  \n  // Only add if we have transcript content\n  if (transcriptText.length > 0) {\n    results.push({\n      json: {\n        call_id,\n        agent_id,\n        agent_name,\n        call_datetime,\n        call_duration,\n        contact_id,\n        contact_name,\n        transcript: transcriptText\n      }\n    });\n  }\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1728,
+        544
+      ],
+      "id": "1f1a9275-b2d9-4d3e-b4a7-78351a5eaea8",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "DialPad_Transcripts",
+        "updateKey": "=call_id",
+        "fields": "call_id,agent_id,agent_name,call_datetime,call_duration,contact_id,contact_name,transcript",
+        "upsert": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        1952,
+        544
+      ],
+      "id": "40380830-92b8-404e-96e7-c39453ee0f99",
+      "name": "MongoDB1",
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2144,
+        688
+      ],
+      "id": "7465128c-4fa6-4f10-8fb9-b072c40f7296",
+      "name": "Wait2",
+      "webhookId": "907c88e3-36df-42e2-9a2d-286b3191524a"
+    },
+    {
+      "parameters": {
+        "content": "The workflow will now run every 24hrs to get new calls (that were inserted in DialPadCalls collection) transcripts. For openAI transcripts you can use it from here.",
+        "height": 180,
+        "width": 460,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -768,
+        592
+      ],
+      "id": "a606a9e5-aa44-46d0-87da-0e4d2ab42659",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.entry_point_call_id }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "e3e612d3-36f8-46e9-be5e-1ef7adedaf9c"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DialPadHasTranscripts"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b1409abd-9bcc-41bc-8a12-db085b8b3823",
+                    "leftValue": "={{ $json.entry_point_call_id }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "empty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DialPadNoTranscripts"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        672,
+        400
+      ],
+      "id": "1917891b-74e4-4822-acd4-75d4183bb104",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 23,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -528,
+        640
+      ],
+      "id": "4bac51ad-254c-4fce-81b7-69cec4756ea3",
+      "name": "Schedule Trigger1"
+    },
+    {
+      "parameters": {
+        "content": "# Merging Calls and Transcripts \n## add duration so i can filter +180 second and +60 seconds sepratly\n",
+        "height": 200,
+        "width": 420,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        320
+      ],
+      "id": "215adc8f-c68b-4280-8c59-732ac4dbabd8",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "url": "=https://dialpad.com/api/v2/transcripts/{{ $json.entry_point_call_id }}?apikey={{ $('DialPadAPISettings1').item.json.DialPadAPIKey }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1104,
+        560
+      ],
+      "id": "6879d837-71e6-4de6-9bc0-a6a93a98db73",
+      "name": "GetTranscriptsAPI1",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "collection": "DialPad_Calls",
+        "options": {
+          "projection": "{\n\"entry_point_call_id\":1,\n\"duration\":1,\n\"contact\":1,\n\"date_connected\":1,\n\"target.id\":1,\n  \"target.name\":1\n}"
+        },
+        "query": "={\n  \"target.id\": \"{{ $json.id }}\"\n}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        192,
+        752
+      ],
+      "id": "0cda3dfd-b1be-42ad-bd01-3f4adb221c01",
+      "name": "DialPadCallID1",
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        880,
+        640
+      ],
+      "id": "923c02fa-3613-4e8c-8db9-b311213f2aad",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "collection": "DialPad_Transcripts",
+        "options": {
+          "projection": "{ \"call_datetime\": 1,\n\"call_id\":1,\n  \"agent_id\":1\n}"
+        },
+        "query": "={\n  \"agent_id\": \"{{ $json.id }}\"\n}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        192,
+        544
+      ],
+      "id": "40a649b7-be8e-4a35-acd6-5e16b12cdcc0",
+      "name": "PreviousStoredTranscripts1",
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "advanced": true,
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "call_id",
+              "field2": "entry_point_call_id"
+            }
+          ]
+        },
+        "joinMode": "keepNonMatches",
+        "outputDataFrom": "input2",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        448,
+        640
+      ],
+      "id": "c08fc19a-d0c5-4de8-b896-a6e22ee07e1c",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5f53d85e-9dd5-4399-a4cb-7cdbae94081b",
+              "leftValue": "={{ $json.lines && $json.lines.some(line => line.type === 'transcript') }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1408,
+        560
+      ],
+      "id": "54b39ae0-1b46-43fe-94ad-4659603c1d66",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "collection": "DialPad_Users",
+        "options": {
+          "projection": "{\n  \"id\":1,\n  \"status\":1,\n  \"display_name\":1\n}"
+        },
+        "query": "={\n\"qualified_in_AI\":true\n}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        -128,
+        640
+      ],
+      "id": "62b7de83-fed9-4147-9480-514ffb971f8a",
+      "name": "getAgents",
+      "retryOnFail": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f5c4188c-58c7-4559-95ad-f9e07dbabc94",
+              "name": "DialPadAPIKey",
+              "value": "s5FEM88vvenF5zp9FQErufBGkrrpWwf834QwetbB5B6y8zvVdCuaaWFcgmwapczENfNnZrdHFkvpAAtxyMZzqv5Pca9tYPbUxJSG",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -304,
+        640
+      ],
+      "id": "ca727280-4ce1-42fe-92bb-1a86c5e6b8be",
+      "name": "DialPadAPISettings1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "MongoDB1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB1": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "DialPadAPISettings1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GetTranscriptsAPI1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DialPadCallID1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "GetTranscriptsAPI1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PreviousStoredTranscripts1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DialPadAPISettings1": {
+      "main": [
+        [
+          {
+            "node": "getAgents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "getAgents": {
+      "main": [
+        [
+          {
+            "node": "PreviousStoredTranscripts1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "DialPadCallID1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "bdf6d481-c7ff-4bb4-a571-0732c1e325d5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1492f4d88835c9aa4ef9f92114084d45e62f070cbfca1060935e9b804d7507de"
+  },
+  "id": "HimmLS2Z2UR8gdxx",
+  "tags": []
+}

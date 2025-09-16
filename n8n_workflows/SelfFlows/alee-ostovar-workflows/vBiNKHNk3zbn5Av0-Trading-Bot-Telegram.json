@@ -1,0 +1,407 @@
+{
+  "name": "Trading Bot Telegram",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        40,
+        320
+      ],
+      "id": "46f2b095-06de-42c7-a94d-a09d671feb9c",
+      "name": "Telegram Trigger",
+      "webhookId": "ae275266-3971-4b84-b1db-6962a5b6b092",
+      "credentials": {
+        "telegramApi": {
+          "id": "orYxDQVOrKBN8m3y",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "19ec337d-50ba-4f9f-98fb-01ac5c3c67df",
+                    "leftValue": "={{ $json.message.voice.file_id }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        220,
+        320
+      ],
+      "id": "714e9054-e19c-4540-83b8-61f4fd33fcba",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "41e48c8c-9f85-4c67-bd5a-c47e37d9371f",
+              "name": "text",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        600,
+        220
+      ],
+      "id": "b089d51c-317f-4049-9189-648e4d5d58dc",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        500,
+        420
+      ],
+      "id": "67a0da08-9438-4c55-805f-1bc1aafa3759",
+      "name": "Telegram",
+      "webhookId": "026d1f72-b50f-40f3-9b4f-29dd1eab831f",
+      "credentials": {
+        "telegramApi": {
+          "id": "orYxDQVOrKBN8m3y",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        700,
+        420
+      ],
+      "id": "9ea1b832-ac30-4afa-9ae5-d33115a807ed",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "CWJYp93mxQT3xD4V",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "you are \"Capitali Bot\" developed and Created by AI team in Capitalino. a financial assistant equipped with tools to fetch cryptocurrency prices and provide technical analysis. \n\nWhen a user requests the price of a specific cryptocurrency, construct the CoinMarketCap API URL using the template: `https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol={symbol}`. Replace the `{symbol}` placeholder with the symbol provided by the user to fetch the correct data.\n\nWhen discussing technical analysis related to stocks or cryptocurrencies, pass a standard prompt to the Technical_analysis tool, where a specialized agent can assist with the analysis.\n\n# Steps\n\n1. **Cryptocurrency Price Fetching:**\n   - Identify the user's request for a cryptocurrency price.\n   - Use the provided cryptocurrency symbol to construct the API URL.\n   - Fetch cryptocurrency prices using the CoinMarketCap API.\n\n2. **Technical Analysis Discussion:**\n   - Recognize requests for technical analysis on stocks or cryptocurrencies.\n   - Prepare a standard prompt to pass to the Technical_analysis tool.\n\n# Output Format\n\n- For cryptocurrency prices: Provide the current price in USD with additional information if available (like price changes in past 24h or market rank).\n- For technical analysis requests: Confirm receipt, present an smooth key elements of the analysis if applicable.\n\n# Examples\n\n**Example 1: Cryptocurrency Price Request**\n\n- *User Input:* \"What is the price of BTC?\"\n  \n- *Process:* \n  - Identify 'BTC' as the symbol.\n  - Construct the API URL: `https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=BTC`\n  - Fetch and provide the current price of BTC in USD.\n\n**Example 2: Technical Analysis Request**\n\n- *User Input:* \"Can you perform a technical analysis on ETH?\"\n  \n- *Process:*\n  - Recognize the request for technical analysis on 'ETH'.\n  - Pass a standard prompt to the Technical_analysis tool.\n  - Summarize the analysis received from the tool.\n\n# Notes\n\n- Always confirm which cryptocurrency or stock the user is inquiring about before proceeding.\n- The CoinMarketCap API URL should always be checked for accuracy with the user's input.\n- Ensure the standard prompt for technical analysis is engaging and clear for the specialized agent to deliver effective results.\n- your response to user must be in the same language user talked to you.\n- never mention  or add external links or urls except www.capitalino.io.\n- if user asked about analysis at the end of your response always invite them to visit WWW.capitalino.io for more consults and professional advices"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        1020,
+        320
+      ],
+      "id": "586b289e-7332-4c49-9c29-df6af28d0c29",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        920,
+        580
+      ],
+      "id": "49572215-aa53-46a0-ad2c-6da73d875a5e",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "CWJYp93mxQT3xD4V",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Switch').item.json.message.chat.id }}\n228598959",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1360,
+        320
+      ],
+      "id": "f6a0c4b6-77ce-48db-9f23-e2914cba4f9f",
+      "name": "Telegram1",
+      "webhookId": "c1252f4e-55a7-43a8-9fb2-d305ab4a8947",
+      "credentials": {
+        "telegramApi": {
+          "id": "orYxDQVOrKBN8m3y",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Function to fetch cryptocurrency price by using CoinMarketCap API",
+        "url": "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol={symbol}",
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [
+            {
+              "name": "=X-CMC_PRO_API_KEY",
+              "valueProvider": "fieldValue",
+              "value": "092920d0-3b51-42c0-8ffc-a84589149e8d"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        1160,
+        640
+      ],
+      "id": "b1a3a673-76f1-43ed-8265-967dd5b6416f",
+      "name": "fetch_crypto_price"
+    },
+    {
+      "parameters": {
+        "name": "Technical_analysis",
+        "workflowId": {
+          "__rl": true,
+          "value": "tb6siCOPquhslfeT",
+          "mode": "list",
+          "cachedResultName": "TechnicalAnalysis workflow"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        640
+      ],
+      "id": "102cb2b5-0bff-4d24-a899-119372244685",
+      "name": "Technical_analysis"
+    },
+    {
+      "parameters": {
+        "content": "# Capitali Bot Workflow",
+        "height": 820,
+        "width": 1740,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f619e2be-d93d-4717-a30c-0c2d4aca175c",
+      "name": "Sticky Note"
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Telegram1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch_crypto_price": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Technical_analysis": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 1,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

@@ -1,0 +1,633 @@
+{
+  "name": "Standardize Post",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "79a006eb-f339-4ab6-9575-882f911674c9",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -1340,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const regex = /https?:\\/\\/(?:www\\.)?([^.]+)\\./;\n\nreturn items.map(item => {\n  \n  const inputUrl = item.json.link || '';\n  let serviceName = '';\n\n  const match = inputUrl.match(regex);\n  if (match && match[1]) {\n    serviceName = match[1];\n  } else {\n  \n    serviceName = \"unknown\";\n  }\n  \n  return {\n      url: serviceName\n    }\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -880,
+        380
+      ],
+      "id": "ee1e7d06-08da-45ea-8e32-6da6d3e0d7e2",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "jsCode": "const newsData = $('news').first().json;\n\n\nlet categories = Array.isArray(newsData.categories) ? newsData.categories\n  .filter(category => typeof category === 'string')\n  .map(category => category.trim())\n  .filter(category => category !== '') : [];\n\nconst outputData = {\n    sourceUrl: newsData.link,\n    title: newsData.title,\n    creator: newsData.creator,\n    content: newsData.contentEncodedSnippet,\n    contentSnippet: newsData.contentSnippet,\n    thumbnailImage: newsData.enclosure.url,\n    categories: categories,\n    pubDate: newsData.pubDate\n};\n\nreturn [outputData];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        240
+      ],
+      "id": "404d9ef3-a046-4e18-b0c0-523195b42598",
+      "name": "cryptoPotato selector"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the JSON data from the 'news' node.\nconst newsData = $('news').first().json;\n\n\nlet rawPubDate = newsData.pubDate || newsData[\"pub Date\"];\nlet pubDateUTC = rawPubDate ? new Date(rawPubDate).toISOString() : null;\n\n\nlet thumbnailImage = newsData.enclosure;\nif (!thumbnailImage && newsData.contentEncoded) {\n    const imgRegex = /<img[^>]+src=\"([^\">]+)/i;\n    const match = newsData.contentEncoded.match(imgRegex);\n    if (match && match[1]) {\n        thumbnailImage = match[1];\n    }\n}\n\n\nif (thumbnailImage && typeof thumbnailImage === 'string') {\n    const questionMarkIndex = thumbnailImage.indexOf('?');\n    if (questionMarkIndex !== -1) {\n        thumbnailImage = thumbnailImage.substring(0, questionMarkIndex);\n    }\n}\n\nlet categories = [];\nif (newsData.categories && Array.isArray(newsData.categories)) {\n    categories = newsData.categories.map(catObj => {\n        return catObj._ ? catObj._.trim() : '';\n    }).filter(cat => cat.length > 0);\n}\n\nconst outputData = {\n    sourceUrl: newsData.link,\n    title: newsData.title,\n    creator: newsData.creator,\n    content: newsData.contentEncodedSnippet,\n    contentSnippet: newsData.contentSnippet,\n    thumbnailImage: thumbnailImage,\n    categories: categories,\n    pubDate: newsData.pubDate\n};\nreturn [outputData];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "840c7026-79c6-4083-817d-0a08ad51e383",
+      "name": "coindesk selector"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c2df0b35-2cb0-4361-84ad-da7b1832f6ce",
+                    "leftValue": "={{ $json.url }}",
+                    "rightValue": "coindesk",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "coindesk"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "9213f68c-ea9b-4c46-a573-741ce1e50d80",
+                    "leftValue": "={{ $json.url }}",
+                    "rightValue": "cryptopotato",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "cryptopotato"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "10f8a999-8941-4c25-a7f4-59f181df8ba9",
+                    "leftValue": "={{ $json.url }}",
+                    "rightValue": "ambcrypto",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ambcrypto"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ff1184d5-e9e7-463b-8710-d5126af7115a",
+                    "leftValue": "={{ $json.url }}",
+                    "rightValue": "decrypt",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "decrypt"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -660,
+        360
+      ],
+      "id": "01a679cb-007b-4cb8-8785-cfcbbcdfbf31",
+      "name": "Switch",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d9a7458d-730a-4190-9919-20c67e5597bf",
+              "name": "creator",
+              "value": "={{ $json.data.creator }}",
+              "type": "string"
+            },
+            {
+              "id": "8b078d4a-8f62-47bb-a3bb-376e41b3cdcb",
+              "name": "title",
+              "value": "={{ $json.data.title }}",
+              "type": "string"
+            },
+            {
+              "id": "5fbd4e0e-252b-4e43-a4aa-16e29dce494e",
+              "name": "link",
+              "value": "={{ $json.data.link }}",
+              "type": "string"
+            },
+            {
+              "id": "0dc78d57-8ccd-4c65-a032-bbeda2b2c1e1",
+              "name": "pubDate",
+              "value": "={{ $json.data.pubDate }}",
+              "type": "string"
+            },
+            {
+              "id": "26cab33a-21e2-4b8d-87c8-608b647e9d2f",
+              "name": "contentEncoded",
+              "value": "={{ $json.data[\"content:encoded\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "5c6c2af4-43f3-4ddb-bfae-caff1301daa5",
+              "name": "contentEncodedSnippet",
+              "value": "={{ $json.data[\"content:encodedSnippet\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "36eee78c-00f4-4a9e-8b37-69b60d987668",
+              "name": "enclosure",
+              "value": "={{ $json.data.enclosure }}",
+              "type": "object"
+            },
+            {
+              "id": "bb3c7214-656f-46c8-9e09-065e5377a37d",
+              "name": "dcCreator",
+              "value": "={{ $json.data[\"dc:creator\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "2740ed2b-a115-4095-8ef8-90e7eda54b98",
+              "name": "content",
+              "value": "={{ $json.data.content }}",
+              "type": "string"
+            },
+            {
+              "id": "171c9222-a2d7-4d88-afc0-77541e1bee1a",
+              "name": "contentSnippet",
+              "value": "={{ $json.data.contentSnippet }}",
+              "type": "string"
+            },
+            {
+              "id": "8e740059-b64e-4216-a310-69158f86590f",
+              "name": "guid",
+              "value": "={{ $json.data.guid }}",
+              "type": "string"
+            },
+            {
+              "id": "cd5f15d9-c329-4b84-bf75-1b0f7f8d01d8",
+              "name": "categories",
+              "value": "={{ $json.data.categories }}",
+              "type": "array"
+            },
+            {
+              "id": "c19e5eff-2135-4461-af77-4755ab469621",
+              "name": "isoDate",
+              "value": "={{ $json.data.isoDate }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1100,
+        380
+      ],
+      "id": "52058b6b-ca48-4a03-bdbb-50ab6d8e389a",
+      "name": "news"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst newsData = $('news').first().json;\nlet contentHtml = $input.first().json.content|| \"\";\n\nfunction cleanContent(raw) {\n  return raw\n    .replace(/\\[https?:\\/\\/[^\\]]+\\]/g, '')\n    .replace(/\\[data:image\\/[^\\]]+\\]/g, '')\n    .replace(/https?:\\/\\/\\S+/g, '')\n    .replace(/data:image\\/\\S+/g, '')\n    .replace(/\\[([^\\]]*)\\]/g, '$1')\n    .replace(/<[^>]*>/g, '')\n    .replace(/&/g, '&')\n    .replace(/</g, '<')\n    .replace(/>/g, '>')\n    .replace(/\"/g, '\"')\n    .replace(/'/g, \"'\")\n    .replace(/ /g, ' ')\n    .replace(/\\n{2,}/g, '\\n\\n')\n    .replace(/[ \\t]{2,}/g, ' ')\n    .trim();\n}\n\nlet plainContent = cleanContent(contentHtml);\nlet categories = Array.isArray(newsData.categories) ? newsData.categories\n  .filter(category => typeof category === 'string')\n  .map(category => category.trim())\n  .filter(category => category !== '') : [];\n\nconst outputData = {\n    sourceUrl: newsData.link,\n    title: newsData.title,\n    creator: newsData.creator,\n    content: plainContent,\n    contentSnippet: newsData.contentSnippet,\n    thumbnailImage: newsData.enclosure.url,\n    categories: categories,\n    pubDate: newsData.pubDate\n};\n\nreturn [outputData];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        340,
+        800
+      ],
+      "id": "9c93ceb3-a482-4c6a-a547-2f9f96ad0c12",
+      "name": "ambcrypto selector1"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('news').item.json.link }}",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36\",\n  \"Accept\": \"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8\",\n  \"Accept-Language\": \"en-US,en;q=0.9\",\n  \"Connection\": \"keep-alive\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -200,
+        800
+      ],
+      "id": "364cfe89-a544-4651-abfb-63d98c63d742",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "content",
+              "cssSelector": "div.grid",
+              "skipSelectors": "div"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        80,
+        800
+      ],
+      "id": "a38d4405-9206-40c1-89ae-8ab91aa97abd",
+      "name": "HTML1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const newsData = $('news').first().json\nlet contentHtml = $input.first().json.content|| \"\";\nlet thumbnailImage = null;\nconst imgRegex = /<img[^>]+src=\"([^\">]+)/i;\nconst imgMatch = newsData.content.match(imgRegex);\nif (imgMatch && imgMatch[1]) {\n    thumbnailImage = imgMatch[1];\n}\n\nfunction cleanContent(raw) {\n  return raw\n    .replace(/\\[https?:\\/\\/[^\\]]+\\]/g, '')\n    .replace(/\\[data:image\\/[^\\]]+\\]/g, '')\n    .replace(/https?:\\/\\/\\S+/g, '')\n    .replace(/data:image\\/\\S+/g, '')\n    .replace(/\\[([^\\]]*)\\]/g, '$1')\n    .replace(/<[^>]*>/g, '')\n    .replace(/&/g, '&')\n    .replace(/</g, '<')\n    .replace(/>/g, '>')\n    .replace(/\"/g, '\"')\n    .replace(/'/g, \"'\")\n    .replace(/ /g, ' ')\n    .replace(/\\n{2,}/g, '\\n\\n')\n    .replace(/[ \\t]{2,}/g, ' ')\n    .trim();\n}\n\nlet plainContent = cleanContent(contentHtml);\nlet categories = Array.isArray(newsData.categories) ? newsData.categories\n  .filter(category => typeof category === 'string')\n  .map(category => category.trim())\n  .filter(category => category !== '') : [];\n\nconst outputData = {\n    sourceUrl: newsData.link,\n    title: newsData.title,\n    creator: newsData.creator,\n    content: plainContent,\n    contentSnippet: newsData.contentSnippet,\n    thumbnailImage: thumbnailImage,\n    categories: categories,\n    pubDate: newsData.pubDate\n};\n\nreturn [outputData];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        560
+      ],
+      "id": "712f965c-763f-4eff-b860-40e7cead5662",
+      "name": "ambcrypto selector2"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('news').item.json.link }}",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36\",\n  \"Accept\": \"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8\",\n  \"Accept-Language\": \"en-US,en;q=0.9\",\n  \"Connection\": \"keep-alive\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -220,
+        540
+      ],
+      "id": "5ea5d97a-967e-495f-9c58-41f42f39fd4d",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "content",
+              "cssSelector": "div.markdown "
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        540
+      ],
+      "id": "14cf972b-231f-4bda-a012-5c3b995c31b4",
+      "name": "HTML3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fb291f22-acfa-431d-b69f-df1bd3e7be02",
+              "leftValue": "={{ $json.content }}",
+              "rightValue": "={{ $json.content }}",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        540
+      ],
+      "id": "6ed5439e-0212-4741-a075-d1e3ecd81bda",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "content",
+              "cssSelector": "div.single-post-main-middle",
+              "skipSelectors": "div"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        620,
+        440
+      ],
+      "id": "fad1f7b3-0f8f-486d-9acc-c88eb3c6f0ff",
+      "name": "HTML4"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('news').item.json.link }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        440
+      ],
+      "id": "b895e523-8763-4ae8-93a0-f971e346c1c1",
+      "name": "HTTP Request3"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "news",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "coindesk selector",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "cryptoPotato selector",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "news": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "HTML1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML1": {
+      "main": [
+        [
+          {
+            "node": "ambcrypto selector1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "HTML3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML3": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ambcrypto selector2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML4": {
+      "main": [
+        [
+          {
+            "node": "ambcrypto selector2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "HTML4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "data": {
+            "creator": "Gladys Makena",
+            "title": "Bitcoin whale activity drops by $3B – What next for BTC’s recovery",
+            "link": "https://ambcrypto.com/bitcoin-whale-activity-drops-by-3b-impact-on-btcs-recovery/",
+            "pubDate": "Mon, 14 Apr 2025 14:00:26 +0000",
+            "dc:creator": "Gladys Makena",
+            "comments": "https://ambcrypto.com/bitcoin-whale-activity-drops-by-3b-impact-on-btcs-recovery/#respond",
+            "content": "Bitcoin whales on Binance are not selling as demand for BTC recovers .",
+            "contentSnippet": "Bitcoin whales on Binance are not selling as demand for BTC recovers .",
+            "guid": "https://ambcrypto.com/?p=482621",
+            "categories": [
+              "Bitcoin",
+              "BTC Trading View",
+              "News",
+              "News 1",
+              "Social",
+              "Trading View",
+              "ambcrypto"
+            ],
+            "isoDate": "2025-04-14T14:00:26.000Z"
+          }
+        }
+      }
+    ]
+  },
+  "triggerCount": 0,
+  "meta": null
+}

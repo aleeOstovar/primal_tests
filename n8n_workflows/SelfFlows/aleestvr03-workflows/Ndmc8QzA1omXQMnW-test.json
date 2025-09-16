@@ -1,0 +1,474 @@
+{
+  "name": "test",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        680
+      ],
+      "id": "5e9e9548-5609-48f3-81c0-a1ed0e946b16",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "news",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        120,
+        700
+      ],
+      "id": "b7e39432-8fa4-4eca-8935-1d0500f09d98",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "news",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        880,
+        840
+      ],
+      "id": "317d780a-9fda-4e6e-b0c6-cb83c94c4528",
+      "name": "Aggregate2"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "news",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        860,
+        380
+      ],
+      "id": "3c862e6b-f76f-4096-9c7b-b1cf7071ffe4",
+      "name": "Split Out1"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1080,
+        600
+      ],
+      "id": "363709c1-ca3d-4542-b0e9-3f1a6076b448",
+      "name": "Wait",
+      "webhookId": "b4a7fd8f-ff22-4700-83ab-045e28d235fe"
+    },
+    {
+      "parameters": {
+        "url": "https://jsonplaceholder.typicode.com/posts",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n    \"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36\",\n    \"Accept\": \"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8\",\n    \"Accept-Language\": \"en-US,en;q=0.9\",\n    \"Accept-Encoding\": \"gzip, deflate, br\",\n    \"Referer\": \"https://www.google.com/\",\n    \"Connection\": \"keep-alive\",\n    \"Upgrade-Insecure-Requests\": \"1\",\n    \"DNT\": \"1\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        120,
+        500
+      ],
+      "id": "47e8a3f8-d7b9-4b23-968a-85cd36198314",
+      "name": "Fetch data from api",
+      "retryOnFail": true,
+      "notesInFlow": true,
+      "waitBetweenTries": 400,
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const newsList = $input.first().json.news\n\nconst filteredNews = newsList.filter(newsItem => newsItem.id <= 10);\n\n// Return each filtered news item as a separate n8n item\nreturn filteredNews.map(newsItem => ({ json: newsItem }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        280,
+        700
+      ],
+      "id": "57580a9c-4dc9-4cb4-8a8a-7752c28db148",
+      "name": "extract posts with id <= 10"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        460,
+        680
+      ],
+      "id": "2c7ccdab-5a9c-4dc5-8eba-203b92a8c2b1",
+      "name": "Loop Over posts"
+    },
+    {
+      "parameters": {
+        "jsCode": "const id = $input.first().json.id ?? 0;\nconst title = $input.first().json.title ?? 'Untitled';\nconst body = $input.first().json.body ?? '';\nfunction toTitleCase(str) {\n  return str\n    .toLowerCase()\n    .replace(/\\s+/g, ' ')\n    .trim()\n    .split(' ')\n    .map(word => word.charAt(0).toUpperCase() + word.slice(1))\n    .join(' ');\n}\n\n// Truncate body\nfunction truncateBody(body) {\n  const cleanBody = body.replace(/\\s+/g, ' ').trim();\n  return cleanBody.length > 100\n    ? cleanBody.slice(0, 100) + '...'\n    : cleanBody;\n}\n\n// Extract keywords (first 3 words of title in lowercase)\nfunction extractKeywords(title) {\n  return title\n    .toLowerCase()\n    .replace(/\\s+/g, ' ')\n    .trim()\n    .split(' ')\n    .slice(0, 3);\n}\n\n// Word count\nfunction countWords(text) {\n  return text.trim().split(/\\s+/).length;\n}\n\n// Category by word count\nfunction getCategory(wordCount) {\n  if (wordCount < 20) return 'short';\n  if (wordCount <= 40) return 'medium';\n  return 'long';\n}\n\n// Stop words\nconst stopWords = new Set(['the', 'and', 'of', 'in', 'to', 'a', 'is', 'it', 'that', 'on', 'for', 'with', 'as', 'was', 'at', 'by', 'an', 'be']);\n\n// Extract common words\nfunction extractCommonWords(text) {\n  const wordCounts = {};\n  const words = text.toLowerCase().replace(/[^\\w\\s]/g, '').split(/\\s+/);\n\n  for (const word of words) {\n    if (stopWords.has(word)) continue;\n    if (!word) continue;\n    wordCounts[word] = (wordCounts[word] || 0) + 1;\n  }\n\n  const sorted = Object.entries(wordCounts)\n    .sort((a, b) => b[1] - a[1])\n    .slice(0, 3)\n    .map(([word]) => word);\n\n  return sorted;\n}\n\nconst cleanedTitle = toTitleCase(title);\n  const titleLength = cleanedTitle.length;\n  const truncatedBody = truncateBody(body);\n  const wordCount = countWords(body);\n  const category = getCategory(wordCount);\n  const keywords = extractKeywords(cleanedTitle);\n  const bodyLength = Math.min(100, body.replace(/\\s+/g, ' ').trim().length);\n\n  // Build tags\n  const tags = ['processed'];\n  const normalizedBody = body.toLowerCase().replace(/\\s+/g, ' ');\n\n  if (normalizedBody.includes(' et ')) tags.push('latin');\n  else if (normalizedBody.includes('et')) tags.push('latin');\n\n  if (titleLength > 30) tags.push('long_title');\n\n  // Status\n  const status = titleLength > 50 ? 'needs_review' : 'processed';\n\n  const transformed = {\n    record_id: `POST_${String(id).padStart(3, '0')}`,\n    content: {\n      title: cleanedTitle,\n      body: truncatedBody,\n      word_count: wordCount,\n      category,\n      keywords,\n    },\n    metadata: {\n      original_id: id,\n      processed_date: new Date().toISOString().split('T')[0],\n      status,\n      tags,\n      processing_steps: [\n        'title_cleaned',\n        'body_truncated',\n        'keywords_extracted',\n        'category_assigned',\n      ],\n    },\n    analytics: {\n      title_length: titleLength,\n      body_length: bodyLength,\n      has_long_title: titleLength > 30,\n      common_words: extractCommonWords(body),\n    },\n  };\nreturn { json: transformed };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        760
+      ],
+      "id": "8eead68e-abf5-4aa7-9c51-ca786f0d3725",
+      "name": "process post"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1060,
+        380
+      ],
+      "id": "28a69c10-21b2-4e11-94dd-b32b0878b555",
+      "name": "Loop Over processed post",
+      "alwaysOutputData": true,
+      "notesInFlow": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1o9Fg95exWPaSBkjGOeNohBpcDOXdq6npe2XaDEUKweA",
+          "mode": "list",
+          "cachedResultName": "Test",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1o9Fg95exWPaSBkjGOeNohBpcDOXdq6npe2XaDEUKweA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1o9Fg95exWPaSBkjGOeNohBpcDOXdq6npe2XaDEUKweA/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "record_id",
+              "displayName": "record_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "content",
+              "displayName": "content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "metadata",
+              "displayName": "metadata",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "analytics",
+              "displayName": "analytics",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1380,
+        400
+      ],
+      "id": "0638f47e-8bb0-4462-9c57-11671f50bc4a",
+      "name": "store post in db",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "mmhYWQ15M0FdjIjg",
+          "name": "Google Sheets account 2"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n        Error: \"Could not save post in DB\",\n          record_id:$input.first().json.record_id,\n          title:$input.first().json.content.title,\n          processed_date: $input.first().json.metadata.processed_date\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1340,
+        720
+      ],
+      "id": "a9ba8d5b-ca01-4f1c-b7b9-06a237cfe473",
+      "name": "err log",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "18Z3vGQxS3_1UeNdJVicNRtKX7rKVdy9rP5fRevbqZ94",
+          "mode": "list",
+          "cachedResultName": "Errors",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18Z3vGQxS3_1UeNdJVicNRtKX7rKVdy9rP5fRevbqZ94/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18Z3vGQxS3_1UeNdJVicNRtKX7rKVdy9rP5fRevbqZ94/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "error",
+              "displayName": "error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1560,
+        720
+      ],
+      "id": "afd9b92a-3c27-49a6-9c0e-9c8d49980c72",
+      "name": "store Error Log in DB",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "mmhYWQ15M0FdjIjg",
+          "name": "Google Sheets account 2"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Fetch data from api",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "extract posts with id <= 10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over processed post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over processed post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch data from api": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extract posts with id <= 10": {
+      "main": [
+        [
+          {
+            "node": "Loop Over posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over posts": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "process post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "process post": {
+      "main": [
+        [
+          {
+            "node": "Aggregate2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over processed post": {
+      "main": [
+        [],
+        [
+          {
+            "node": "store post in db",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "store post in db": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "err log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "err log": {
+      "main": [
+        [
+          {
+            "node": "store Error Log in DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "store Error Log in DB": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 1,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

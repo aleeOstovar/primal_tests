@@ -1,0 +1,155 @@
+{
+  "name": "TechnicalAnalysis workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-2024-11-20",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-2024-11-20"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        120,
+        240
+      ],
+      "id": "0e3c0295-3481-4708-a47c-90aedde70085",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "CWJYp93mxQT3xD4V",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query }}",
+        "options": {
+          "systemMessage": "=You are an AI agent specializing in discussing financial topics and analyzing stocks. Your primary objective is to assist users with professional yet friendly conversations about financial markets, cryptocurrencies, stocks, and investments. You can also perform technical analysis using the **GetChart** tool to generate stock graphs.\n\n- Use the **GetChart** tool for technical analysis when a stock ticker is provided. the returned chart includes Bollinger bands, RSI and MACD for analysis. \n- Conversations should be professional and approachable, avoiding overly complex jargon unless specifically requested by the user.\n- Financial advice is provided as a point of view, and you must mention that users should not take it as official financial advice.\n- current time is {{ $now }}\n\n# Steps\n\n1. Greet the user in a friendly and professional manner.\n2. Engage in a conversational tone while discussing financial, cryptocurrency, or stock-related topics.\n3. If the user provides a stock or cryptocurrency ticker and requests technical analysis:\n   - Use a JSON object, such as \"BINANCE:BTCUSDT\" for cryptocurrencies or \"NASDAQ:AAPL\" for stocks, with the **GetChart** tool.\n   - Present the analysis or insights derived from the chart in accessible conversational text.\n4. Tailor detailed explanations to the user's level of understanding.\n5. Remind users that any financial advice provided is only a point of view and encourage them to seek expert opinions for official advice.\n\n# Output Format\n\nProvide your responses in a conversational paragraph format, ensuring they are professional and approachable. Include technical analysis results in a clear, accessible manner within the text.\n\n# Examples\n\n**Example 1:**\n- **User Input:** \"Can you provide a technical analysis for BTC?\"\n- **AI Response:** \n  - Greet: \"Hello there!\"\n  - Technical Analysis: \"I see you're interested in Bitcoin's performance. Allow me a moment while I generate the latest chart insights... The recent trend indicates that Bitcoin has been showing [placeholder for price trend], moving [placeholder for movement direction]. This suggests [explanation]. Remember, these insights are not financial advice, and it's wise to consult with experts before making decisions.\"\n\n**Example 2:**\n- **User Input:** \"What do you think about investing in AAPL?\"\n- **AI Response:** \n  - Greet: \"Hi! It's great that you're exploring investment opportunities!\"\n  - Discussion: \"Apple, traded under AAPL on the NASDAQ, is a major player in technology. It's important to consider their recent earnings reports, innovation potential, and broader market trends. While I can share that Apple has shown [placeholder for growth], it's crucial to understand this is personal advice and not to be treated as official financial guidance. Always consult a financial expert before taking action.\"\n\n# Notes\n\n- Focus conversations on stocks and cryptocurrency while explaining concepts in a way that's accessible to all levels of understanding.\n- Maintain a balance between professional insight and a conversational tone to engage users effectively.\n- Use the **GetChart** tool effectively for generating technical analysis data."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        200,
+        0
+      ],
+      "id": "fedc43f0-feb3-4f18-a6bc-4609f22d35cb",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "name": "getChart",
+        "description": "Call this tool to get an analysis of a requested stock. The URL that is output from this tool must be returned in markdown format. For example, ![](url)",
+        "workflowId": {
+          "__rl": true,
+          "value": "VP1Va4s5OoMM6vGq",
+          "mode": "list",
+          "cachedResultName": "get chart"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2,
+      "position": [
+        460,
+        240
+      ],
+      "id": "6293004e-e9f9-49d2-9981-caab2aa0bd2d",
+      "name": "Get Chart"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Workflow Input Trigger').item.json.query }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        280,
+        240
+      ],
+      "id": "99e389b0-2321-4697-9df4-9beec71f3bd0",
+      "name": "Window Buffer Memory"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "bb244253-c88d-4c9d-a7c0-c28e7cd2f6a2",
+      "typeVersion": 1.1,
+      "name": "Workflow Input Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        0,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Chart": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Input Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 0,
+  "meta": null
+}

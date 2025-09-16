@@ -1,0 +1,167 @@
+{
+  "name": "generate_image_prompt",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "b0223a73-a4a0-4079-b48b-20bd413aa33f",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2eadea64-32eb-4afe-aed1-ab46cea70ce6",
+              "name": "analysis",
+              "value": "={{ $json.analysis }}",
+              "type": "string"
+            },
+            {
+              "id": "185de4e6-6f9f-459d-8ad5-8812533195fc",
+              "name": "tags",
+              "value": "={{ $json.tags }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        360,
+        0
+      ],
+      "id": "2e1117cf-9a13-44af-b530-f5902ced2901",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json}}",
+        "options": {
+          "systemMessage": "=You are an AI agent tasked with generating prompts for creating 3D cute cartoon portraits in a specific art style: 3D-rendered with smooth, glossy textures, exaggerated proportions, vibrant colors, and a polished, animated look, similar to modern CGI animations or high-quality video game art. The input will be a JSON object containing an \"analysis\" with a textual description and a \"tags\" field which includes the user's age, gender, and income level.\n\n# Steps\n\n1. **Extract Key Information:**\n   - **Age Group:** Identify if specified in the tags(e.g.,age: 15-20); otherwise, assume young adult (20-30 years old).\n   - **Gender:** Determine gender references from tags or use a gender-neutral approach if unspecified.\n   - **Risk Tolerance:** Look for risk levels in the analysis or descriptors (\"low,\" \"aggressive\"). Assume moderate if unclear.\n   - **Income Level:** Identify income clues, it is in tags field. Assume an average if unspecified.(income levels based on analysis is one of : less than 10 Milion Toman, between 10-20 Milion Toman, between 20-30 Milion Toman, more than 30 milion Toman)\n   - **Savings:** Note savings status from analysis  or assume some savings if missing.\n   - **Future Prospects:** Identify future predictions from the analysis; assume stable if missing.\n   - **Additional Details:** Note information on occupation, education, or goals for added character detail.\n\n2. **Generate the Portrait Prompt:**\n   - **Character Description:** Integrate identified/assumed age, gender, expression, and attire reflecting financial insights. also must reflact persian characteristics and naturality in facial\n   - **Visual Metaphors:** Use symbols for risk tolerance, income level, savings, and future prospects.\n   - **Background & Environment:** Design a setting that complements the character and emphasizes the financial context.this must be in detail describe of a fancy related environment( randomaize the background location). also consider adding symbols specially cryptocurrencies.\n- **ensure that if the gender was female, prompt must contain wearing persian style hijab and be a stylish and hijabi. it should be persianized.IT IS A MUST!!! also the facial must be natural \n\n# Guidelines for Visual Elements\n- **Age Group:**\n  - Teenage (15-20): Youthful, casual.\n  - Young Adult (20-30): Modern, slightly mature.\n  - Adult (30-50): Defined, professional.\n  - Old (50+): Similar to adult but a retired.\n\n- **Gender:**\n  - Male: Masculine traits(مرد).\n  - Female: Feminine traits(زن) wearing persian hijab.\n  - \n\n- **Risk Tolerance:** \n  - Low: Caution symbols.\n  - Moderate: Balanced symbols.\n  - High: Bold symbols.\n\n- **Income Level:** \n  - Low: Simple attire, basic setting.\n  - Medium: Casual, comfortable setting.\n  - High: Affluent, luxurious setting.\n\n- **Savings:** \n  - None: Empty symbols, worried look.\n  - Some: Partial savings symbols, neutral.\n  - Substantial: Full savings symbols, confident smile.\n\n- **Future Prospects:** \n  - Stable: Subtle growth symbols.\n  - Moderate: Medium growth symbols.\n  - High: Bold growth symbols.\n\n- **Additional Details:** Incorporate creatively (e.g., educational or occupational symbols).\n\n# Compose the Portrait\n- **Character Focus:** Central figure, interacting with financial symbols.\n- **3D Depth:** Use layered elements for a 3D effect.\n- **Vertical Composition:** Fit within a 1024x1792 frame.\n- **Tone:** Ensure the portrait is cute, 3D-rendered with smooth, glossy textures, exaggerated proportions, vibrant colors, and a polished, animated look, similar to modern CGI animations or high-quality video game art, and aligns with the analysis.\n\n# Output Format\n\nThe output should be an English prompt that begins with:\n\"Create a portrait in a 3D-rendered style with smooth, glossy textures, exaggerated proportions, vibrant colors, and a polished, animated look, similar to modern CGI animations or high-quality video game art. The portrait should feature...\"\nfollowed by:\n- The character's age, gender, attire, expression, and interacted objects.\n- The background setting and environmental details tied to the analysis. you can use persian symbols in background minor details.\n\n# Examples\n\n- **Example 1:**\n  - **Input:** Analysis indicates a 25-year-old male with moderate risk tolerance and average income.\n  - **Output:** \"Design a 25-year-old male character with modern attire, a neutral expression, and balanced symbols like a small stack of coins. The background shows a cozy home with a straight path to symbolize stable growth.\"\n\n- **Example 2:**\n  - **Input:** Analysis text in Persian not specifying age or gender but indicates high risk tolerance and high income.\n  - **Output:** \"Create a young adult, gender-neutral character in affluent clothing, showing an excited expression, and interacting with bold symbols like a rocket. The environment should be luxurious with vibrant colors and a steep upward chart.\"\n\n# Notes\n- ensure that if the gender was female, the character must wear hijab and be a stylish and hijabi. IT IS A MUST!!!\n- Ensure coherence and appeal even with incomplete data.\n- ensure extracting user age group, gender and income level from the tags field to use in making prompt\n- Use translations accurately to maintain analysis context.\n- No Other Changes: All other aspects of the system message, such as the JSON input processing, visual metaphor guidelines, hijab requirement for female characters, and the 1024x1792 vertical composition, remain unchanged.\n- Consistency with Image Description: The new art style aligns with the image’s playful, cartoonish aesthetic while introducing the specific 3D-rendered, glossy, and polished characteristics you requested."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        620,
+        0
+      ],
+      "id": "d2dda1c5-2a7c-461a-8ca3-1f199c5a014a",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "o3-mini",
+          "mode": "list",
+          "cachedResultName": "o3-mini"
+        },
+        "options": {
+          "reasoningEffort": "low"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        300,
+        280
+      ],
+      "id": "5e6dd441-8e9d-4d52-8556-5f8f26770b21",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "CWJYp93mxQT3xD4V",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// This function extracts the JSON content from the string with proper handling\nfunction processItems(items) {\n  try {\n    // Map through each item in the input array\n    return items.map(item => {\n      try {\n        // Extract the query string from the item\n        const queryString = item.json.query;\n        \n        // Since the input query contains escaped JSON, we need to extract it properly\n        // First, remove the leading and trailing brackets and extra quotes\n        const cleanedString = queryString.trim()\n          .replace(/^\\[ *{ *\"query\": *\"|\" *} *\\]$/g, \"\")\n          .replace(/\\\\n/g, \"\")  // Remove escaped newlines\n          .replace(/\\\\/g, \"\");  // Remove remaining escape characters\n        \n        // Now parse the cleaned JSON\n        const parsedData = JSON.parse(cleanedString);\n        \n        // Check if tags and age exist, then add 10 to both numbers in the age range\n        if (parsedData.tags && parsedData.tags.age) {\n          const ageRange = parsedData.tags.age.split('-');\n          if (ageRange.length === 2) {\n            const low = parseInt(ageRange[0], 10);\n            const high = parseInt(ageRange[1], 10);\n            if (!isNaN(low) && !isNaN(high)) {\n              parsedData.tags.age = (low + 10) + '-' + (high + 10);\n            }\n          }\n        }\n        \n        // Return the properly formatted result\n        return {\n          json: {\n            analysis: parsedData.analysis,\n            tags: parsedData.tags\n          }\n        };\n      } catch (error) {\n        console.error(`Error processing item: ${error.message}`);\n        \n        // For debugging, return the error and the string we tried to parse\n        return {\n          json: {\n            error: `Failed to process: ${error.message}`,\n            originalQuery: item.json.query\n          }\n        };\n      }\n    });\n  } catch (error) {\n    console.error(`Error in function: ${error.message}`);\n    throw error;\n  }\n}\n\n// Return the processed data to n8n\nreturn processItems($input.all());\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        180,
+        0
+      ],
+      "id": "07bec02c-d6ac-4180-bed3-5ea834175a06",
+      "name": "Code2"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "query": "{\n  \"analysis\": \"با امتیاز کل ۳۷، نشان می‌دهد که سطح تحمل ریسک شما بسیار بالا (سرمایه‌گذار تهاجمی) است. با توجه به اینکه شما در گروه سنی ۳۰-۴۰ سال و دارای درآمد بیش از ۳۰ میلیون تومان هستید، موقعیت مناسبی برای بهره‌برداری از فرصت‌های سرمایه‌گذاری نوین خصوصاً سرمایه‌گذاری در ارزهای دیجیتال دارید. با بیش از ۳۰ میلیون تومان پس‌انداز، شما می‌توانید در دهه آینده با مدیریت ریسک صحیح، با ترکیب سرمایه‌گذاری‌های نوین مانند ارزهای دیجیتال و بازار سهام، نسبت به رشد مالی قابل توجهی دست یابید. توصیه می‌شود دانش خود را در مورد بازارهای مالی و به‌ویژه حوزه ارزهای دیجیتال افزایش دهید تا با دیدی جامع‌تر و اطلاعات به‌روز، تصمیمات سرمایه‌گذاری شما مبتنی بر استراتژی‌های مدرن و هوشمندانه‌تر صورت گیرد.\",\n  \"tags\": {\n    \"age\": \"30-40\",\n    \"gender\": \"زن\",\n    \"income\": \"بیشتر از 30 میلیون تومان\"\n  }\n}"
+        }
+      }
+    ]
+  },
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

@@ -1,0 +1,1673 @@
+{
+  "name": "InvestorBase2SF",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        448,
+        0
+      ],
+      "id": "cedfc033-5fa8-4cc7-b279-b425a41d4f7f",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        3152,
+        -48
+      ],
+      "id": "5ec11063-c689-4d13-aa93-e349df789330",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3189e99e-9ada-47ce-b37c-889d0790b67e",
+              "name": "Near To",
+              "value": "={{ $('RegEx On File Name').item.json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "7425d952-479c-4bbe-936a-5b7a988198ca",
+              "name": "fileID",
+              "value": "={{ $('RegEx On File Name').item.json.fileID }}",
+              "type": "string"
+            },
+            {
+              "id": "21450d60-ec08-46a9-865c-71a20aa4ec21",
+              "name": "extension",
+              "value": "={{ $('RegEx On File Name').item.json.extension }}",
+              "type": "string"
+            },
+            {
+              "id": "ca6646a2-3a37-4314-b8e2-dfae5e8b285e",
+              "name": "importName",
+              "value": "={{ $('RegEx On File Name').item.json.importName }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2176,
+        128
+      ],
+      "id": "46df8984-8047-4cd0-941e-cb94606b41c2",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "fileId": "={{ $('RegEx On File Name').item.json.fileID }}"
+      },
+      "type": "n8n-nodes-base.microsoftOneDrive",
+      "typeVersion": 1,
+      "position": [
+        3104,
+        352
+      ],
+      "id": "4d3bf575-aaed-4e3b-936c-f1cd69e3e410",
+      "name": "Delete a file",
+      "credentials": {
+        "microsoftOneDriveOAuth2Api": {
+          "id": "7EAniHJhc2jyz0B8",
+          "name": "Microsoft Drive account EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fileName": "=imported_{{ $('RegEx On File Name').item.json.name }}",
+        "parentId": "01WL6XH3RJS7COLWYNOJF2LAE6HZXBOLQA",
+        "binaryData": true
+      },
+      "type": "n8n-nodes-base.microsoftOneDrive",
+      "typeVersion": 1,
+      "position": [
+        2896,
+        352
+      ],
+      "id": "545f813a-d362-41ec-93d6-a82a0da72211",
+      "name": "Upload a file",
+      "credentials": {
+        "microsoftOneDriveOAuth2Api": {
+          "id": "7EAniHJhc2jyz0B8",
+          "name": "Microsoft Drive account EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": "={{ $('Edit Fields').item.json.fileID }}"
+      },
+      "type": "n8n-nodes-base.microsoftOneDrive",
+      "typeVersion": 1,
+      "position": [
+        2592,
+        128
+      ],
+      "id": "0cacfd5a-50d5-4402-8a7f-c0345539e7ca",
+      "name": "Download a file",
+      "credentials": {
+        "microsoftOneDriveOAuth2Api": {
+          "id": "7EAniHJhc2jyz0B8",
+          "name": "Microsoft Drive account EHB"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        5104,
+        368
+      ],
+      "id": "b66bf6df-b884-4960-82f1-416dde991070",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "830fd459-585e-4b8e-bea5-109f48c422c8",
+              "leftValue": "={{ $json.extension }}",
+              "rightValue": "csv",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2880,
+        48
+      ],
+      "id": "2c41198f-933e-45d0-8631-c54db824e77d",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        3152,
+        176
+      ],
+      "id": "71a231f3-b0cf-4b4e-9d26-075cc8d6156b",
+      "name": "Extract from File1"
+    },
+    {
+      "parameters": {
+        "resource": "search",
+        "query": "=SELECT Id, Name, Ownerid, Transactions__c FROM Opportunity WHERE Name = '{{ $('RegEx On File Name').item.json.name }}'"
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1,
+      "position": [
+        1984,
+        128
+      ],
+      "id": "4020bc6f-9992-4fcb-b95b-0818ea9066e7",
+      "name": "Perform a query",
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "CBdxVaEpIAhpORgk",
+          "name": "Salesforce account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "collection": "InvestorBase",
+        "fields": "Near To ID, First Name, Last Name, Buyer Type, Wireless 1, Wireless 2, Landline 1, Address, City, State, Zip, Bedrooms, Bathrooms, Sqft, Smart Match, Status, Most Recent Sale Date, Most Recent Sale Price, Prior Sale Date, Prior Sale Price, Buyer Transaction Count (On This Search), Registered Owner Name, Registered Seller Name, Beta: Possible Email, Buyer Mailing Address, Buyer Mailing City, Buyer Mailing State, Buyer Mailing Zip,Opportunity__c,Record_ID",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        4384,
+        224
+      ],
+      "id": "b209bf65-a080-409b-99b9-661fb4d21354",
+      "name": "MongoDB2",
+      "credentials": {
+        "mongoDb": {
+          "id": "jka7kqAz73MBRd0n",
+          "name": "investors"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2c08c588-74a3-4c3b-863f-fc6af8347aa7",
+              "name": "Near To ID",
+              "value": "={{ $('Data Type Conversion').item.json[\"Near To ID\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "92a8d168-f6bc-4906-8d08-e7c950cebb44",
+              "name": "Entity Name",
+              "value": "={{ $('Data Type Conversion').item.json[\"Entity Name\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "583be0a6-088e-408d-806e-827eb5d6d49c",
+              "name": "First Name",
+              "value": "={{ $('Data Type Conversion').item.json[\"First Name\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "6bf3f390-33a1-4563-93ac-b1c246e87b42",
+              "name": "Last Name",
+              "value": "={{ $('Data Type Conversion').item.json[\"Last Name\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "95173816-a715-476f-87f0-7aad2e18e4b8",
+              "name": "Buyer Type",
+              "value": "={{ $('Data Type Conversion').item.json[\"Buyer Type\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "8ead0f14-caac-441f-a05f-2bd01f42dde4",
+              "name": "Address",
+              "value": "={{ $('Data Type Conversion').item.json.Address }}",
+              "type": "string"
+            },
+            {
+              "id": "07892c8b-f673-46a1-b6f7-bb56303ae0bf",
+              "name": "City",
+              "value": "={{ $('Data Type Conversion').item.json.City }}",
+              "type": "string"
+            },
+            {
+              "id": "f472a3fe-030d-4920-84b0-e685c617c1ab",
+              "name": "State",
+              "value": "={{ $('Data Type Conversion').item.json.State }}",
+              "type": "string"
+            },
+            {
+              "id": "fb81b3ca-91da-4d5f-a40d-81bd8414cd6f",
+              "name": "Status",
+              "value": "={{ $('Data Type Conversion').item.json.Status }}",
+              "type": "string"
+            },
+            {
+              "id": "865801ca-2baf-4660-aa05-7906d7ac3ec0",
+              "name": "Registered Owner Name",
+              "value": "={{ $('Data Type Conversion').item.json[\"Registered Owner Name\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "be1aceba-dc71-4732-b10d-37b83a0b9996",
+              "name": "Registered Seller Name",
+              "value": "={{ $('Data Type Conversion').item.json[\"Registered Seller Name\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "d9ed1fda-3f53-4ce5-9047-75c18dd9d73f",
+              "name": "Beta: Possible Email",
+              "value": "={{ $('Data Type Conversion').item.json[\"Beta: Possible Email\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "8cb8fb56-d9bc-4194-bc4a-919319cec080",
+              "name": "Buyer Mailing Address",
+              "value": "={{ $('Data Type Conversion').item.json[\"Buyer Mailing Address\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "30d67c5d-bfba-4d38-8e92-d380251cb2c7",
+              "name": "Buyer Mailing City",
+              "value": "={{ $('Data Type Conversion').item.json[\"Buyer Mailing City\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "5e383d29-279d-40f7-bbda-3393f6501fc9",
+              "name": "Buyer Mailing State",
+              "value": "={{ $('Data Type Conversion').item.json[\"Buyer Mailing State\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "8169bbf7-7b37-4608-85ad-868fa0798aa2",
+              "name": "Buyer Mailing Zip",
+              "value": "={{ $('Data Type Conversion').item.json[\"Buyer Mailing Zip\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "8d2b90cd-564f-44f1-a8a1-a817351c867e",
+              "name": "Wireless 1",
+              "value": "={{ $('Data Type Conversion').item.json[\"Wireless 1\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "72d8732a-9290-40d8-84b7-fed1db605ae5",
+              "name": "Wireless 2",
+              "value": "={{ $('Data Type Conversion').item.json[\"Wireless 2\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "6e357c60-9d0c-4ab7-8f3b-dce8c9740572",
+              "name": "Landline 1",
+              "value": "={{ $('Data Type Conversion').item.json[\"Landline 1\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "038f069e-6ee9-4dbc-833e-cc7a24784758",
+              "name": "Zip",
+              "value": "={{ $('Data Type Conversion').item.json.Zip }}",
+              "type": "string"
+            },
+            {
+              "id": "77a935d0-eba4-4dbd-b50c-e5015db88131",
+              "name": "Bedrooms",
+              "value": "={{ $('Data Type Conversion').item.json.Bedrooms }}",
+              "type": "string"
+            },
+            {
+              "id": "1f19afe6-4e3c-49b3-a477-4dff17b974db",
+              "name": "Bathrooms",
+              "value": "={{ $('Data Type Conversion').item.json.Bathrooms }}",
+              "type": "string"
+            },
+            {
+              "id": "c60fee41-b413-4417-9af2-a41dcce03f57",
+              "name": "Sqft",
+              "value": "={{ $('Data Type Conversion').item.json.Sqft }}",
+              "type": "string"
+            },
+            {
+              "id": "bbd060b0-3215-465b-b520-04284979e7e9",
+              "name": "Smart Match",
+              "value": "={{ $('Data Type Conversion').item.json[\"Smart Match\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "264c697c-0cc4-472e-a409-e23d8972670f",
+              "name": "Most Recent Sale Price",
+              "value": "={{ $('Data Type Conversion').item.json[\"Most Recent Sale Price\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "6ee88a64-7f28-4ba4-84c2-a654a10a0ab9",
+              "name": "Prior Sale Price",
+              "value": "={{ $('Data Type Conversion').item.json[\"Prior Sale Price\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "9067a8ff-983c-4dd9-804c-e33001335829",
+              "name": "Buyer Transaction Count (On This Search)",
+              "value": "={{ $('Data Type Conversion').item.json[\"Buyer Transaction Count (On This Search)\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "f055ed92-010f-4e1f-be1d-20c2cd661176",
+              "name": "Most Recent Sale Date",
+              "value": "={{ $('Data Type Conversion').item.json[\"Most Recent Sale Date\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "4718d12e-57a5-4349-9419-51deb93b3028",
+              "name": "Prior Sale Date",
+              "value": "={{ $('Data Type Conversion').item.json[\"Prior Sale Date\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "c2d3459e-b868-417c-a1ea-8974864bfb06",
+              "name": "Opportunity__c",
+              "value": "={{ $('Perform a query').item.json.Id }}",
+              "type": "string"
+            },
+            {
+              "id": "01e92510-1eec-4846-87a0-71712348446e",
+              "name": "Record_ID",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4192,
+        112
+      ],
+      "id": "6926df9e-22f6-4e26-ac02-4753b5bb809b",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "resource": "customObject",
+        "operation": "getAll",
+        "customObject": "Potential_Investors__c",
+        "returnAll": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1,
+      "position": [
+        2512,
+        864
+      ],
+      "id": "aa39a8b2-9911-485f-8d5d-2daa0a12ca0f",
+      "name": "Get many custom objects",
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "CBdxVaEpIAhpORgk",
+          "name": "Salesforce account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "customObject",
+        "operation": "delete",
+        "customObject": "Potential_Investors__c",
+        "recordId": "={{ $json.Id }}"
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1,
+      "position": [
+        2752,
+        864
+      ],
+      "id": "473bda7d-6a85-4288-ac80-22c63e6136c9",
+      "name": "Delete a custom object",
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "CBdxVaEpIAhpORgk",
+          "name": "Salesforce account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## To Delete All! \nUse it if you need to delete records in custom object",
+        "width": 608,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2384,
+        768
+      ],
+      "typeVersion": 1,
+      "id": "7639b787-ed1b-4719-bed8-bdf36ee938e0",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## SF Object Change\n\nObject in SF is changed. Updated all in this field. If Smart Match is empty then its false.",
+        "height": 288,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2752,
+        -192
+      ],
+      "typeVersion": 1,
+      "id": "bb97743c-a82b-43c2-b814-13c209c8352e",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Change Info inside Plz\n\nSome fields are changed. Please update. Near to ID should be same as OpportunityID. No need for extra ID",
+        "height": 288,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3040,
+        -96
+      ],
+      "typeVersion": 1,
+      "id": "ea700d77-e60d-4933-baef-30f7f6d85ff6",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "resource": "customObject",
+        "customObject": "Potential_Investors__c",
+        "customFieldsUi": {
+          "customFieldsValues": [
+            {
+              "fieldId": "Name",
+              "value": "={{ $('Data Type Conversion').item.json[\"Entity Name\"] }}"
+            },
+            {
+              "fieldId": "First_Name__c",
+              "value": "={{ $('Data Type Conversion').item.json[\"First Name\"] }}"
+            },
+            {
+              "fieldId": "Last_Name__c",
+              "value": "={{ $('Data Type Conversion').item.json[\"Last Name\"] }}"
+            },
+            {
+              "fieldId": "Buyer_Type__c",
+              "value": "={{ $('Data Type Conversion').item.json[\"Buyer Type\"] }}"
+            },
+            {
+              "fieldId": "Address__c",
+              "value": "={{ $('Data Type Conversion').item.json.Address }}"
+            },
+            {
+              "fieldId": "City__c",
+              "value": "={{ $('Data Type Conversion').item.json.City }}"
+            },
+            {
+              "fieldId": "State__c",
+              "value": "={{ $('Data Type Conversion').item.json.State }}"
+            },
+            {
+              "fieldId": "Status__c",
+              "value": "={{ $('Data Type Conversion').item.json.Status }}"
+            },
+            {
+              "fieldId": "Registered_Owner_Name__c",
+              "value": "={{ $('Data Type Conversion').item.json[\"Registered Owner Name\"] }}"
+            },
+            {
+              "fieldId": "Registered_Seller_Name__c",
+              "value": "={{ $('Data Type Conversion').item.json[\"Registered Seller Name\"] }}"
+            },
+            {
+              "fieldId": "Beta_Possible_Email__c",
+              "value": "={{ $('Data Type Conversion').item.json[\"Beta: Possible Email\"] }}"
+            },
+            {
+              "fieldId": "Buyer_Mailing_Address__c",
+              "value": "={{ $('Data Type Conversion').item.json[\"Buyer Mailing Address\"] }}"
+            },
+            {
+              "fieldId": "Buyer_Mailing_City__c",
+              "value": "={{ $('Data Type Conversion').item.json[\"Buyer Mailing City\"] }}"
+            },
+            {
+              "fieldId": "Buyer_Mailing_State__c",
+              "value": "={{ $('Data Type Conversion').item.json[\"Buyer Mailing State\"] }}"
+            },
+            {
+              "fieldId": "Buyer_Mailing_Zip__c",
+              "value": "={{ $('Data Type Conversion').item.json[\"Buyer Mailing Zip\"] }}"
+            },
+            {
+              "fieldId": "Wireless_1__c",
+              "value": "={{ $('Data Type Conversion').item.json[\"Wireless 1\"] }}"
+            },
+            {
+              "fieldId": "Wireless_2__c",
+              "value": "={{ $('Data Type Conversion').item.json[\"Wireless 2\"] }}"
+            },
+            {
+              "fieldId": "Landline_1__c",
+              "value": "={{ $('Data Type Conversion').item.json[\"Landline 1\"] }}"
+            },
+            {
+              "fieldId": "Zip__c",
+              "value": "={{ $('Data Type Conversion').item.json.Zip }}"
+            },
+            {
+              "fieldId": "Bedrooms__c",
+              "value": "={{ $('Data Type Conversion').item.json.Bedrooms }}"
+            },
+            {
+              "fieldId": "Bathrooms__c",
+              "value": "={{ $('Data Type Conversion').item.json.Bathrooms }}"
+            },
+            {
+              "fieldId": "Sqft__c",
+              "value": "={{ $('Data Type Conversion').item.json.Sqft }}"
+            },
+            {
+              "fieldId": "InvestorBase_Smart_Match__c",
+              "value": "={{ $('Data Type Conversion').item.json[\"Smart Match\"] || false }}"
+            },
+            {
+              "fieldId": "Most_Recent_Sale_Price__c",
+              "value": "={{ $('Data Type Conversion').item.json[\"Most Recent Sale Price\"] }}"
+            },
+            {
+              "fieldId": "Most_Recent_Sale_Date__c",
+              "value": "={{ $('Data Type Conversion').item.json[\"Most Recent Sale Date\"] }}"
+            },
+            {
+              "fieldId": "Prior_Sale_Price__c",
+              "value": "={{ $('Data Type Conversion').item.json[\"Prior Sale Price\"] }}"
+            },
+            {
+              "fieldId": "Prior_Sale_Date__c",
+              "value": "={{ $('Data Type Conversion').item.json[\"Prior Sale Date\"] }}"
+            },
+            {
+              "fieldId": "Buyer_Transaction_Count_On_This_Search__c",
+              "value": "={{ $('Data Type Conversion').item.json[\"Buyer Transaction Count (On This Search)\"] }}"
+            },
+            {
+              "fieldId": "Data_Source__c",
+              "value": "InvestorBase"
+            },
+            {
+              "fieldId": "OpportunityID__c",
+              "value": "={{ $('Perform a query').item.json.Id }}"
+            }
+          ]
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1,
+      "position": [
+        4000,
+        48
+      ],
+      "id": "c744dec4-1f0a-4ede-a4ee-d8becd9aa56d",
+      "name": "Create a Custom Object",
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "CBdxVaEpIAhpORgk",
+          "name": "Salesforce account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// N8N Code Node - Data Type Converter\n// This code transforms extracted data according to specified column types\n\nconst items = $input.all();\nconst Near_To_ID = $('Storing Parent Location').first().json.id\nconst convertedItems = items.map(item => {\n  const data = item.json;\n  \n  // Helper functions for type conversion\n  const convertToInteger = (value) => {\n    if (value === null || value === undefined || value === '') return null;\n    const num = parseInt(value, 10);\n    return isNaN(num) ? null : num;\n  };\n  \n  const convertToBoolean = (value) => {\n    if (value === null || value === undefined || value === '') return null;\n    if (typeof value === 'boolean') return value;\n    const str = String(value).toLowerCase().trim();\n    return ['true', '1', 'yes', 'y'].includes(str);\n  };\n  \n  const convertToText = (value) => {\n    if (value === null || value === undefined) return '';\n    return String(value).trim();\n  };\n  \n  const convertToTelephone = (value) => {\n    if (value === null || value === undefined || value === '') return null;\n    // Remove all non-digit characters\n    const cleaned = String(value).replace(/\\D/g, '');\n    // Return as integer if it's a valid phone number length\n    return cleaned.length >= 10 ? parseInt(cleaned, 10) : null;\n  };\n  \n  const convertToDate = (value) => {\n    if (value === null || value === undefined || value === '') return null;\n    // Try to parse as date, return as YYYY-MM-DD format if valid\n    const date = new Date(value);\n    return isNaN(date.getTime()) ? String(value) : date.toISOString().split('T')[0];\n  };\n  \n  // Apply conversions based on column specifications\n  const converted = {\n    // Text fields\n    'Near To ID':Near_To_ID,\n    'Entity Name': convertToText(data['Entity Name']).split(',')[0],\n    'First Name': convertToText(data['First Name']),\n    'Last Name': convertToText(data['Last Name']),\n    'Buyer Type': convertToText(data['Buyer Type']),\n    'Address': convertToText(data['Address']),\n    'City': convertToText(data['City']),\n    'State': convertToText(data['State']),\n    'Status': convertToText(data['Status']),\n    'Registered Owner Name': convertToText(data['Registered Owner Name']),\n    'Registered Seller Name': convertToText(data['Registered Seller Name']).split(',')[0],\n    'Beta: Possible Email': convertToText(data['Beta: Possible Email']),\n    'Buyer Mailing Address': convertToText(data['Buyer Mailing Address']),\n    'Buyer Mailing City': convertToText(data['Buyer Mailing City']),\n    'Buyer Mailing State': convertToText(data['Buyer Mailing State']),\n    'Buyer Mailing Zip': convertToText(data['Buyer Mailing Zip']),\n    \n    // Telephone/Integer fields\n    'Wireless 1': convertToTelephone(data['Wireless 1']),\n    'Wireless 2': convertToTelephone(data['Wireless 2']),\n    'Landline 1': convertToTelephone(data['Landline 1']),\n    \n    // Integer fields\n    'Zip': convertToInteger(data['Zip']),\n    'Bedrooms': convertToInteger(data['Bedrooms']),\n    'Bathrooms': convertToInteger(data['Bathrooms']),\n    'Sqft': convertToInteger(data['Sqft']),\n    'Smart Match': convertToInteger(data['Smart Match']),\n    'Most Recent Sale Price': convertToInteger(data['Most Recent Sale Price']),\n    'Prior Sale Price': convertToInteger(data['Prior Sale Price']),\n    'Buyer Transaction Count (On This Search)': convertToInteger(data['Buyer Transaction Count (On This Search)']),\n    \n    // String/Date fields (keep as string but validate date format)\n    'Most Recent Sale Date': convertToDate(data['Most Recent Sale Date']),\n    'Prior Sale Date': convertToDate(data['Prior Sale Date'])\n  };\n  \n  // Handle any additional fields that might exist in the data\n  Object.keys(data).forEach(key => {\n    if (!(key in converted)) {\n      converted[key] = data[key]; // Keep original value for unmapped fields\n    }\n  });\n  \n  return {\n    json: converted,\n    pairedItem: item.pairedItem\n  };\n});\n\nreturn convertedItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3776,
+        48
+      ],
+      "id": "2774ec89-08ef-4d2a-8a99-e8f4b1bc114e",
+      "name": "Data Type Conversion"
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "collection": "=scraped_property",
+        "fields": "Near To",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        2384,
+        128
+      ],
+      "id": "90a9caa8-1b46-4446-a003-b0041c412db7",
+      "name": "Storing Parent Location",
+      "credentials": {
+        "mongoDb": {
+          "id": "jka7kqAz73MBRd0n",
+          "name": "investors"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "collection": "scraped_property",
+        "options": {},
+        "query": "={}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        1136,
+        144
+      ],
+      "id": "40154023-a4bb-452a-bb2e-75bd0b44fc7c",
+      "name": "MongoDB",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "jka7kqAz73MBRd0n",
+          "name": "investors"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1736049f-f76c-49e0-bd18-02e795c31ff1",
+              "leftValue": "={{ $('RegEx On File Name').item.json.is_duplicate }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1568,
+        144
+      ],
+      "id": "cf249ecb-8e8a-4961-8d68-4525e45a0375",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const currentItemNsme = $('Is File or Folder?').first().json.name\nconst currentItemID = $('Is File or Folder?').first().json.id\n\nconst nameParts = currentItemNsme.split('.');\nconst extension = nameParts.pop(); \nconst nameWithoutExtension = nameParts.join('.'); \nconst importName = `${nameWithoutExtension}_imported.${extension}`;\n\n\n\nconst olderRecords = $('MongoDB').all();\n\nconst escapedName = nameWithoutExtension.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');\nconst regexPattern = new RegExp(escapedName, 'i');\n\nconst existingRecord = olderRecords.find(item => {\n  const propertyName = item.json['Near To']; \n  \n  return propertyName ? regexPattern.test(propertyName) : false;\n});\n\nif (existingRecord) {\n  return [{\n    is_duplicate: true,\n    reason: \"A property matching '${currentName}' already exists.\",\n    fileID:currentItemID,\n    name:nameWithoutExtension,\n    extension:extension,\n    importName:importName,\n  }]\n} else {\n  return [{\n    fileID:currentItemID,\n    name:nameWithoutExtension,\n    extension:extension,\n    importName:importName,\n    is_duplicate: false,\n  }]\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        144
+      ],
+      "id": "5dd2d25e-de65-4e9e-bac9-8f39ba881676",
+      "name": "RegEx On File Name"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        4752,
+        352
+      ],
+      "id": "e865c75c-6f26-4ff2-8c69-2fb652c239f5",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "671a6be8-e516-4b72-b566-0affdea2a10f",
+              "leftValue": "={{ $json[\"@microsoft.graph.downloadUrl\"] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        656,
+        144
+      ],
+      "id": "176377f5-e8ef-4634-ad3d-bc0e528b61c9",
+      "name": "Is File or Folder?"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        2112,
+        1392
+      ],
+      "id": "198e7d25-3fc6-485c-98a8-487c7b2acfc0",
+      "name": "Extract from File2"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": "=01WL6XH3UKXWWFKRXXPRAYWGXCJX2NUSPM"
+      },
+      "type": "n8n-nodes-base.microsoftOneDrive",
+      "typeVersion": 1,
+      "position": [
+        1536,
+        1584
+      ],
+      "id": "36f6732d-b4d6-404f-a18f-ad8264df3209",
+      "name": "Download a file1",
+      "credentials": {
+        "microsoftOneDriveOAuth2Api": {
+          "id": "7EAniHJhc2jyz0B8",
+          "name": "Microsoft Drive account EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "830fd459-585e-4b8e-bea5-109f48c422c8",
+              "leftValue": "={{ $json.extension }}",
+              "rightValue": "csv",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1824,
+        1504
+      ],
+      "id": "d86df13b-62bf-488e-92d1-fb06b9a28956",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        2096,
+        1632
+      ],
+      "id": "b22155cd-8136-4d02-a7bf-12c9e32569a3",
+      "name": "Extract from File3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// N8N Code Node - Data Type Converter\n// This code transforms extracted data according to specified column types\n\nconst items = $input.all();\nconst Near_To_ID = $('Storing Parent Location').first().json.id\nconst convertedItems = items.map(item => {\n  const data = item.json;\n  \n  // Helper functions for type conversion\n  const convertToInteger = (value) => {\n    if (value === null || value === undefined || value === '') return null;\n    const num = parseInt(value, 10);\n    return isNaN(num) ? null : num;\n  };\n  \n  const convertToBoolean = (value) => {\n    if (value === null || value === undefined || value === '') return null;\n    if (typeof value === 'boolean') return value;\n    const str = String(value).toLowerCase().trim();\n    return ['true', '1', 'yes', 'y'].includes(str);\n  };\n  \n  const convertToText = (value) => {\n    if (value === null || value === undefined) return '';\n    return String(value).trim();\n  };\n  \n  const convertToTelephone = (value) => {\n    if (value === null || value === undefined || value === '') return null;\n    // Remove all non-digit characters\n    const cleaned = String(value).replace(/\\D/g, '');\n    // Return as integer if it's a valid phone number length\n    return cleaned.length >= 10 ? parseInt(cleaned, 10) : null;\n  };\n  \n  const convertToDate = (value) => {\n    if (value === null || value === undefined || value === '') return null;\n    // Try to parse as date, return as YYYY-MM-DD format if valid\n    const date = new Date(value);\n    return isNaN(date.getTime()) ? String(value) : date.toISOString().split('T')[0];\n  };\n  \n  // Apply conversions based on column specifications\n  const converted = {\n    // Text fields\n    'Near To ID':Near_To_ID,\n    'Entity Name': convertToText(data['Entity Name']),\n    'First Name': convertToText(data['First Name']),\n    'Last Name': convertToText(data['Last Name']),\n    'Buyer Type': convertToText(data['Buyer Type']),\n    'Address': convertToText(data['Address']),\n    'City': convertToText(data['City']),\n    'State': convertToText(data['State']),\n    'Status': convertToText(data['Status']),\n    'Registered Owner Name': convertToText(data['Registered Owner Name']),\n    'Registered Seller Name': convertToText(data['Registered Seller Name']),\n    'Beta: Possible Email': convertToText(data['Beta: Possible Email']),\n    'Buyer Mailing Address': convertToText(data['Buyer Mailing Address']),\n    'Buyer Mailing City': convertToText(data['Buyer Mailing City']),\n    'Buyer Mailing State': convertToText(data['Buyer Mailing State']),\n    'Buyer Mailing Zip': convertToText(data['Buyer Mailing Zip']),\n    \n    // Telephone/Integer fields\n    'Wireless 1': convertToTelephone(data['Wireless 1']),\n    'Wireless 2': convertToTelephone(data['Wireless 2']),\n    'Landline 1': convertToTelephone(data['Landline 1']),\n    \n    // Integer fields\n    'Zip': convertToInteger(data['Zip']),\n    'Bedrooms': convertToInteger(data['Bedrooms']),\n    'Bathrooms': convertToInteger(data['Bathrooms']),\n    'Sqft': convertToInteger(data['Sqft']),\n    'Most Recent Sale Price': convertToInteger(data['Most Recent Sale Price']),\n    'Prior Sale Price': convertToInteger(data['Prior Sale Price']),\n    'Buyer Transaction Count (On This Search)': convertToInteger(data['Buyer Transaction Count (On This Search)']),\n    \n    // Boolean field\n    'Smart Match': convertToBoolean(data['Smart Match']),\n    \n    // String/Date fields (keep as string but validate date format)\n    'Most Recent Sale Date': convertToDate(data['Most Recent Sale Date']),\n    'Prior Sale Date': convertToDate(data['Prior Sale Date'])\n  };\n  \n  // Handle any additional fields that might exist in the data\n  Object.keys(data).forEach(key => {\n    if (!(key in converted)) {\n      converted[key] = data[key]; // Keep original value for unmapped fields\n    }\n  });\n  \n  return {\n    json: converted,\n    pairedItem: item.pairedItem\n  };\n});\n\nreturn convertedItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2384,
+        1504
+      ],
+      "id": "831facaf-ea24-41ba-bed7-e4c2ca0846b3",
+      "name": "Data Type Conversion1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst items = $input.all();\n\nconst salePrices = items.map(item => Number(item.json['Most Recent Sale Price'])).filter(price => !isNaN(price) && price !== null);\n\n\nif (salePrices.length < 2) {\n  return items;\n}\n\nsalePrices.sort((a, b) => a - b);\n\nconst getQuartile = (arr, q) => {\n  const pos = (arr.length - 1) * q;\n  const base = Math.floor(pos);\n  const rest = pos - base;\n  if (arr[base + 1] !== undefined) {\n    return arr[base] + rest * (arr[base + 1] - arr[base]);\n  } else {\n    return arr[base];\n  }\n};\n\nconst q1 = getQuartile(salePrices, 0.25);\nconst q3 = getQuartile(salePrices, 0.75);\n\n// Calculate IQR\nconst iqr = q3 - q1;\n\n// Define the upper and lower bounds for outlier detection\n//const lowerBound = q1 - 1.5 * iqr;\nconst upperBound = q3 + 1.5 * iqr;\n\n// Iterate through each item and remove the outlier prices\nfor (const item of items) {\n  const currentPrice = item.json['Most Recent Sale Price'];\n  //currentPrice < lowerBound ||\n  if (currentPrice > upperBound) {\n    item.json['Most Recent Sale Price'] = null; \n  }\n}\n\n// Return the modified items\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        1504
+      ],
+      "id": "c7d80b40-d4af-4169-805b-96b2617933fd",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3189e99e-9ada-47ce-b37c-889d0790b67e",
+              "name": "Near To",
+              "value": "={{ $('RegEx On File Name1').item.json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "7425d952-479c-4bbe-936a-5b7a988198ca",
+              "name": "fileID",
+              "value": "={{ $('RegEx On File Name1').item.json.fileID }}",
+              "type": "string"
+            },
+            {
+              "id": "21450d60-ec08-46a9-865c-71a20aa4ec21",
+              "name": "extension",
+              "value": "={{ $('RegEx On File Name1').item.json.extension }}",
+              "type": "string"
+            },
+            {
+              "id": "ca6646a2-3a37-4314-b8e2-dfae5e8b285e",
+              "name": "importName",
+              "value": "={{ $('RegEx On File Name1').item.json.importName }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1024,
+        1600
+      ],
+      "id": "f9770d71-b30a-4a8d-9346-39bd1c405604",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "resource": "search",
+        "query": "=SELECT Id, Name, Ownerid, Transactions__c FROM Opportunity WHERE Name = '{{ $('RegEx On File Name1').item.json.name }}'"
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1,
+      "position": [
+        832,
+        1600
+      ],
+      "id": "5bf4f1e0-8b94-4069-8b71-7ff65b733e59",
+      "name": "Perform a query1",
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "CBdxVaEpIAhpORgk",
+          "name": "Salesforce account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "collection": "=scraped_property",
+        "fields": "Near To",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        1232,
+        1600
+      ],
+      "id": "ec337694-6994-434d-bc1c-a9f777f43480",
+      "name": "Storing Parent Location1",
+      "credentials": {
+        "mongoDb": {
+          "id": "jka7kqAz73MBRd0n",
+          "name": "investors"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "collection": "scraped_property",
+        "options": {},
+        "query": "={}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        192,
+        1616
+      ],
+      "id": "58960b6e-ce1f-4f00-a22d-d51b622da603",
+      "name": "MongoDB1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "jka7kqAz73MBRd0n",
+          "name": "investors"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1736049f-f76c-49e0-bd18-02e795c31ff1",
+              "leftValue": "={{ $('RegEx On File Name1').item.json.is_duplicate }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        624,
+        1616
+      ],
+      "id": "061fcee0-0cf5-4f81-a9ac-aa2a34240020",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const currentItemNsme = \"10512 Mullikin Dr, Clinton MD 20735-3844\"\nconst currentItemID = \"01WL6XH3UKXWWFKRXXPRAYWGXCJX2NUSPM\"\n\nconst nameParts = currentItemNsme.split('.');\nconst extension = nameParts.pop(); \nconst nameWithoutExtension = nameParts.join('.'); \nconst importName = `${nameWithoutExtension}_imported.${extension}`;\n\n\n\nconst olderRecords = $('MongoDB1').all();\n\nconst escapedName = nameWithoutExtension.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');\nconst regexPattern = new RegExp(escapedName, 'i');\n\nconst existingRecord = olderRecords.find(item => {\n  const propertyName = item.json['Near To']; \n  \n  return propertyName ? regexPattern.test(propertyName) : false;\n});\n\nif (existingRecord) {\n  return [{\n    is_duplicate: true,\n    reason: \"A property matching '${currentName}' already exists.\"\n  }]\n} else {\n  return [{\n    fileID:currentItemID,\n    name:currentItemNsme,\n    extension:extension,\n    importName:importName,\n    is_duplicate: false,\n  }]\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        1616
+      ],
+      "id": "46c33f54-2ddd-4152-9d2e-49f9dd19839f",
+      "name": "RegEx On File Name1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst salePrices = items.map(item => Number(item.json['Most Recent Sale Price'])).filter(price => !isNaN(price) && price !== null);\n\n// If there are fewer than two valid prices, quartiles cannot be calculated, so return the original items.\nif (salePrices.length < 2) {\n  return items;\n}\n\n// Sort the prices in ascending order to prepare for quartile calculation.\nsalePrices.sort((a, b) => a - b);\n\n\nconst getQuartile = (arr, q) => {\n  const pos = (arr.length - 1) * q;\n  const base = Math.floor(pos);\n  const rest = pos - base;\n  if (arr[base + 1] !== undefined) {\n    return arr[base] + rest * (arr[base + 1] - arr[base]);\n  } else {\n    return arr[base];\n  }\n};\n\nconst q1 = getQuartile(salePrices, 0.25);\nconst q3 = getQuartile(salePrices, 0.75);\n\n\nconst iqr = q3 - q1;\n\nconst lowerBound = q1 - 1.5 * iqr;\nconst upperBound = q3 + 1.5 * iqr;\n\n\nfor (const item of items) {\n  const currentPrice = item.json['Most Recent Sale Price'];\n\n  // If the price is above the upper bound (outlier) or below 10000, set it to null.\n  if (currentPrice > upperBound || currentPrice < lowerBound || currentPrice < 10000) {\n    item.json['Most Recent Sale Price'] = null;\n  }\n}\n\n// Return the modified items.\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3552,
+        48
+      ],
+      "id": "44fe0e3a-8b02-4a45-bce1-dcd3b5591fb8",
+      "name": "Make Outliers to Null "
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "fileId": "={{ $('RegEx On File Name').item.json.fileID }}"
+      },
+      "type": "n8n-nodes-base.microsoftOneDrive",
+      "typeVersion": 1,
+      "position": [
+        2240,
+        336
+      ],
+      "id": "537ccdba-e9ef-4b30-b358-8ffb1a69deb0",
+      "name": "Delete a file1",
+      "credentials": {
+        "microsoftOneDriveOAuth2Api": {
+          "id": "7EAniHJhc2jyz0B8",
+          "name": "Microsoft Drive account EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fileName": "=imported_{{ $('RegEx On File Name').item.json.name }}",
+        "parentId": "01WL6XH3RJS7COLWYNOJF2LAE6HZXBOLQA",
+        "binaryData": true
+      },
+      "type": "n8n-nodes-base.microsoftOneDrive",
+      "typeVersion": 1,
+      "position": [
+        2064,
+        336
+      ],
+      "id": "3fb759a6-611a-4cf4-ae5d-6f361a55e360",
+      "name": "Upload a file1",
+      "credentials": {
+        "microsoftOneDriveOAuth2Api": {
+          "id": "7EAniHJhc2jyz0B8",
+          "name": "Microsoft Drive account EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": "={{ $json.fileID }}"
+      },
+      "type": "n8n-nodes-base.microsoftOneDrive",
+      "typeVersion": 1,
+      "position": [
+        1872,
+        336
+      ],
+      "id": "d86c4598-837c-4e7a-bf92-63c5900877dd",
+      "name": "Download a file2",
+      "credentials": {
+        "microsoftOneDriveOAuth2Api": {
+          "id": "7EAniHJhc2jyz0B8",
+          "name": "Microsoft Drive account EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "watchFolder": true,
+        "folderId": {
+          "__rl": true,
+          "value": "01WL6XH3XY36G4D3TXBBHL7CQDHK63IVGB",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftOneDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        0
+      ],
+      "id": "ea4974d7-acbc-41e6-92f1-55e2204e02ce",
+      "name": "Microsoft OneDrive Trigger",
+      "credentials": {
+        "microsoftOneDriveOAuth2Api": {
+          "id": "7EAniHJhc2jyz0B8",
+          "name": "Microsoft Drive account EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "folderId": "01WL6XH3XY36G4D3TXBBHL7CQDHK63IVGB"
+      },
+      "type": "n8n-nodes-base.microsoftOneDrive",
+      "typeVersion": 1,
+      "position": [
+        144,
+        0
+      ],
+      "id": "d6e014e2-71cd-42f0-a458-4464bc5b6f35",
+      "name": "Get items in a folder",
+      "credentials": {
+        "microsoftOneDriveOAuth2Api": {
+          "id": "7EAniHJhc2jyz0B8",
+          "name": "Microsoft Drive account EHB"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Is File or Folder?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Make Outliers to Null ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Storing Parent Location",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a file": {
+      "main": [
+        [
+          {
+            "node": "Delete a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download a file": {
+      "main": [
+        [
+          {
+            "node": "Upload a file",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete a file": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File1": {
+      "main": [
+        [
+          {
+            "node": "Make Outliers to Null ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Perform a query": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "MongoDB2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many custom objects": {
+      "main": [
+        [
+          {
+            "node": "Delete a custom object",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a Custom Object": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Type Conversion": {
+      "main": [
+        [
+          {
+            "node": "Create a Custom Object",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Storing Parent Location": {
+      "main": [
+        [
+          {
+            "node": "Download a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB": {
+      "main": [
+        [
+          {
+            "node": "RegEx On File Name",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Perform a query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download a file2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RegEx On File Name": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is File or Folder?": {
+      "main": [
+        [
+          {
+            "node": "MongoDB",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File2": {
+      "main": [
+        [
+          {
+            "node": "Data Type Conversion1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download a file1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Extract from File2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from File3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File3": {
+      "main": [
+        [
+          {
+            "node": "Data Type Conversion1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Type Conversion1": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Storing Parent Location1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Perform a query1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB1": {
+      "main": [
+        [
+          {
+            "node": "RegEx On File Name1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Perform a query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RegEx On File Name1": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Storing Parent Location1": {
+      "main": [
+        [
+          {
+            "node": "Download a file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Make Outliers to Null ": {
+      "main": [
+        [
+          {
+            "node": "Data Type Conversion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a file1": {
+      "main": [
+        [
+          {
+            "node": "Delete a file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete a file1": {
+      "main": [
+        [
+          {
+            "node": "Is File or Folder?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download a file2": {
+      "main": [
+        [
+          {
+            "node": "Upload a file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft OneDrive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get items in a folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get items in a folder": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "86bd7b75-0cb9-4261-a48b-1ad21f039031",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1492f4d88835c9aa4ef9f92114084d45e62f070cbfca1060935e9b804d7507de"
+  },
+  "id": "eZ8xv31Uahe25lAj",
+  "tags": []
+}

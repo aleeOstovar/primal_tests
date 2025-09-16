@@ -1,0 +1,480 @@
+{
+  "name": "Rsss_Translation",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1900,
+        100
+      ],
+      "id": "70242646-8a05-4eb2-8862-69e059a02e26",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=```json\n{\n\"title\": {{ $json.title }},\n\"creator\": {{ $json.creator }},\n\"content\":{{ $json.content }},\n\"contentSnippet\" :{{ $json.contentSnippet }},\n\"categories\":{{ $json.categories }}\n}```",
+        "options": {
+          "systemMessage": "=you are a highly expert financial news manager. your main job is to cordinate tasks between translator Agent\n\nUse the `translator` tool for making persian news article.you should pass the whole input as a json to translator tool.\n\n# Steps\n\n1. **Initial article**\n   - Use the `translator` tool to make a persian article.do not translate or process on links and urls\n2. **final check**\n   - check what you got from translator and check its conversational persian tone is correctly handled.\n\n\n4. **Format JSON Output**\n   - Structure the article into the specified JSON format.\n\n# Output Format\n\nThe output should be a JSON object formatted as follows:\n```json\n{\n  \"title\": \"title of the news post\",\n  \"creator\": \"creator name\",\n  \"content\": \"full translated content of the news in Persian\",\n  \"contentSnippet\": \"short summary or snippet of the content in Persian\",\n  \"categories\":[\"list of secondary categories if any\"]\n}\n```\n# Example\n1) user input: ```json{\n  \"title\": \"lorem ipson...\",\n  \"creator\": \"john doe\",\n  \"content\": \"this is lorem ipson.....\",\n  \"contentSnippet\": \"this is short lorem ipson\",\n  \"categories\":[\"lorem\", \"lorem ipson\"]\n  }```\n2) calling *translator* tool: sending json\n\n3) get back json file from translator\n4) output to user:```json\n{\n  \"title\": \"title of the news post\",\n  \"creator\": \"creator name\",\n  \"content\": \"full translated content of the news in Persian\",\n  \"contentSnippet\": \"short summary or snippet of the content in Persian\",\n  \"categories\":[\"list of secondary categories if any\"]\n}\n```\n\n# Notes\n\n- Ensure the article captures the essence of the original content while reading smoothly in Persian.\n- Adjust category labels to suit the translated content's context effectively.\n- your output must be only JSON"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        -1260,
+        100
+      ],
+      "id": "75ebc214-391b-4c69-a4dc-bd1e86b583fb",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1600,
+        480
+      ],
+      "id": "f5734fe5-983b-473c-be46-6cfa29dcf9a5",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "59c14030-de14-4da4-9986-4d77907ccb91",
+              "leftValue": "={{ $('Code1').item.json.thumbnailImage }}",
+              "rightValue": "^.{3,}$",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -280,
+        300
+      ],
+      "id": "31da0dfa-eb6c-4b75-9086-1e9f9d7128b0",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Code1').item.json.thumbnailImage }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3237444c-379b-453d-89c8-a15381bf7087",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Define your raw JSON data as a string\nlet rawData = $input.first().json.output\nrawData = rawData.trim();\n\nif (rawData.startsWith(\"```json\")) {\n  rawData = rawData.substring(7).trim();\n  if (rawData.endsWith(\"```\")) {\n    rawData = rawData.substring(0, rawData.length - 3).trim();\n  }\n}\n\nlet parsedData;\ntry {\n  parsedData = JSON.parse(rawData);\n  let pubDate  = $('news fields').first().json.pubDate\n  if (pubDate) {\n    const date = new Date(pubDate);\n    \n    const tehranFormatter = new Intl.DateTimeFormat('fa-IR', {\n      timeZone: 'Asia/Tehran',\n      year: 'numeric',\n      month: '2-digit',\n      day: '2-digit',\n      hour: '2-digit',\n      minute: '2-digit',\n      second: '2-digit',\n      hour12: false\n    });\n    \n    parsedData.pubDate = tehranFormatter.format(date);\n    parsedData.thumbnailImage = $('news fields').first().json.thumbnailImage;\n    parsedData.sourceUrl = $('news fields').first().json.sourceUrl\n  }\n  \n} catch (error) {\n  throw new Error(\"Failed to parse JSON: \" + error.message);\n}\n\nreturn [{ json: parsedData }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -740,
+        100
+      ],
+      "id": "0b455f5f-f7fa-4fcf-8d7a-742dff025bf3",
+      "name": "Code1",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "228598959",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": "=خلاصه: {{ $('Code1').item.json.contentSnippet }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        220,
+        240
+      ],
+      "id": "af88fcba-685b-4232-8aa3-4b0a64eba7a2",
+      "name": "Telegram",
+      "webhookId": "93c35af6-6617-488a-ae81-f84ecdcca456"
+    },
+    {
+      "parameters": {
+        "chatId": "228598959",
+        "text": "={{ $('Code1').item.json.title }}\n\nنویسنده: {{ $('Code1').item.json.creator }}\n\nمنتشر شده در تاریخ: {{ $('Code1').item.json.pubDate }}\n\n{{ $('Code1').item.json.content }}\n\nتگ: {{ $('Code1').item.json.categories }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -20,
+        560
+      ],
+      "id": "eec7362e-17bb-481b-8d71-347539bea463",
+      "name": "Telegram1",
+      "webhookId": "72e645ad-c355-4bc5-8942-e0278683bb65"
+    },
+    {
+      "parameters": {
+        "chatId": "228598959",
+        "text": "={{ $('Code1').item.json.title }}\n\nنویسنده: {{ $('Code1').item.json.creator }}\n\nمنتشر شده در تاریخ: {{ $('Code1').item.json.pubDate }}\n\n{{ $('Code1').item.json.content }}\n\nتگ: {{ $('Code1').item.json.categories }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        480,
+        240
+      ],
+      "id": "c7cd46c4-60eb-43c2-bbd2-e4fd0872857f",
+      "name": "Telegram2",
+      "webhookId": "72e645ad-c355-4bc5-8942-e0278683bb65"
+    },
+    {
+      "parameters": {
+        "name": "translator",
+        "description": "use this tool for making persian news article by translating from any language to persian",
+        "workflowId": {
+          "__rl": true,
+          "value": "HHsKzFrP2xmWBfQr",
+          "mode": "list",
+          "cachedResultName": "translator"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.1,
+      "position": [
+        -1340,
+        480
+      ],
+      "id": "3d4faee5-8e89-48c6-91f9-c5fb877cb2db",
+      "name": "translator"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f7db8f43-3a7d-418a-b738-91eba8dd8ef5",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "8ef798e8-d93c-4f74-9bd5-b02c8fc8e49a",
+              "name": "creator",
+              "value": "={{ $json.creator }}",
+              "type": "string"
+            },
+            {
+              "id": "5054137e-876e-4dc8-b143-8e9a3bc2862b",
+              "name": "sourceUrl",
+              "value": "={{ $json.sourceUrl }}",
+              "type": "string"
+            },
+            {
+              "id": "b2d056b8-8a72-4bef-9ef3-4f67adeac82d",
+              "name": "content",
+              "value": "={{ $json.content }}",
+              "type": "string"
+            },
+            {
+              "id": "164b2feb-19a1-4968-84c3-25d8818fa390",
+              "name": "contentSnippet",
+              "value": "={{ $json.contentSnippet }}",
+              "type": "string"
+            },
+            {
+              "id": "57b4d9ff-655d-4816-9584-6a894de26dd2",
+              "name": "thumbnailImage",
+              "value": "={{ $json.thumbnailImage }}",
+              "type": "string"
+            },
+            {
+              "id": "69888ca5-098f-4871-806f-330c5fbae1f3",
+              "name": "categories",
+              "value": "={{ $json.categories }}",
+              "type": "array"
+            },
+            {
+              "id": "034754d8-8f9e-49b2-89ac-c3ac3b8ea90d",
+              "name": "pubDate",
+              "value": "={{ $json.pubDate }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1500,
+        100
+      ],
+      "id": "edf309f2-4796-4ede-aa82-da138dad3571",
+      "name": "news fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3000/api/v1/rss-posts/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "fm_0e0403f6393e01d0fe57b25a912a2f16557b88735ff3cca5"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "=sourceURL",
+              "value": "={{ $json.sourceUrl }}"
+            },
+            {
+              "name": "title",
+              "value": "={{ $json.title }}"
+            },
+            {
+              "name": "creator",
+              "value": "={{ $json.creator }}"
+            },
+            {
+              "name": "content",
+              "value": "={{ $json.content }}"
+            },
+            {
+              "name": "contentSnippet",
+              "value": "={{ $json.contentSnippet }}"
+            },
+            {
+              "name": "categories",
+              "value": "={{ $json.categories }}"
+            },
+            {
+              "name": "thumbnailImage",
+              "value": "={{ $json.thumbnailImage }}"
+            },
+            {
+              "name": "pubDate",
+              "value": "={{ $json.pubDate }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -520,
+        100
+      ],
+      "id": "261e8735-9df8-40be-a913-81dfe559161b",
+      "name": "HTTP Request1"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "news fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram": {
+      "main": [
+        [
+          {
+            "node": "Telegram2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "translator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "news fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {
+    "Code1": [
+      {
+        "json": {
+          "title": "سرمایه‌گذاران بلندمدت بیت‌کوین باید از این سیگنال کلیدی هشدار داشته باشند!",
+          "creator": "Akashnath S",
+          "content": "احساسات کوتاه‌مدت نسبت به بیت‌کوین صعودی بوده و جهش قیمت به سمت 87 هزار دلار محتمل است؛ به علاوه ورود به فاز انباشتی می‌تواند روحیه سرمایه‌گذاران بلندمدت را تقویت کند. بیت‌کوین در شش روز گذشته با افزایش ۱۳.۲٪، از سطح کوتاه‌مدت ۸۱ هزار دلاری عبور کرد؛ سطحی که در اواسط مارس به عنوان حمایت قوی عمل می‌کرد، اما در اوایل آوریل به مقاومت تبدیل شد. تحلیلگر برجسته، پیتر برانت (Peter Brandt) این تغییر را اصلاحی دانست و بر اساس نظریه الیوت، پیش‌بینی کرد که این جهش ممکن است با کاهش قیمتی عمیق‌تر دنبال شود؛ به‌طوری که هدف ۷۲-۷۴ هزار دلار به عنوان «هدف حداکثر درد انباشتی» مطرح شده است. همچنین، حجم معاملات نشان از نسبت long/short برابر با ۱.۰۴ دارد که با ۵۱٪ معاملات بلندمدت، حس صعودگری کوتاه‌مدت را تقویت می‌کند. نمودار سفارشات وال‌ها دیوارهای فروش قوی در سطوح ۸۶، ۸۸ و ۹۱ هزار دلار را نشان می‌دهد که به معامله‌گران بلندمدت امکان برداشت سود را می‌دهد. در همین حال، تحلیل اکسل آدلر جونیور (Axel Adler Jr) از نسبت RVT سخن گفته که میانگین متحرک ۳۰ روزه آن در ۲۰.۵ بوده و عبور از ۲۲ معمولاً فاز انباشتی را نشان می‌دهد؛ این نسبت که از «realized cap» به جای «market cap» استفاده می‌کند، نوسانات کمتری دارد. بعلاوه، باندهای قیمت محقق شده بیت‌کوین نوید جهش قیمت به سمت ۱۰۵ هزار دلار یا بیشتر را می‌دهند؛ اگرچه هنوز مشخص نیست که آیا بیت‌کوین قبل از این جهش، مرحله اصلاحی و آزمون مجدد سطح ۷۴ هزار دلاری را تجربه خواهد کرد یا خیر، اما فاز انباشتی پتانسیل تقویت روند صعودی را دارد.",
+          "contentSnippet": "بیت‌کوین از سطح حمایت 74.6 هزار دلاری جهش کرد؛ تحولی بالقوه صعودی.",
+          "categories": [
+            "بیت‌کوین",
+            "نمایش معامله BTC",
+            "اخبار",
+            "اخبار ۱",
+            "اجتماعی",
+            "نمایش معامله",
+            "امب‌کریپتو",
+            "اخبار جدید"
+          ],
+          "pubDate": "۱۴۰۴/۰۱/۲۶, ۱۰:۳۰:۳۵",
+          "thumbnailImage": "https://ambcrypto.com/wp-content/uploads/2025/04/Bitcoin-Featured-2-1.webp",
+          "sourceUrl": "https://ambcrypto.com/bitcoins-long-term-investors-should-watch-out-for-this-key-signal/"
+        }
+      }
+    ]
+  },
+  "triggerCount": 0,
+  "meta": null
+}

@@ -1,0 +1,131 @@
+{
+  "name": "preprocessData",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        260,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1767b408-d400-4621-a546-9e4255a80b37",
+              "name": "query",
+              "value": "={{ $json.query }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        340
+      ],
+      "id": "9b3f07f9-d115-4cca-add6-0dc4446d4bcd",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query }}",
+        "options": {
+          "systemMessage": "You are WemAssetParserAgent, responsible for parsing and structuring unformatted asset renaming data into a clean and structured JSON format. The input you receive is a raw, messy text string containing two implicit sections: original filenames and their corresponding replacement names. Your task is to extract and structure the data precisely into a JSON object with two keys: columns and rows.\n________________________________________\n🔹 Task Objective\nGiven a single unstructured string that contains original and replacement asset names, your goal is to:\n1.\tDetect the two conceptual columns:\no\t\"Original Asset Name\" — a list of filenames (usually ending in .wem, .wern, or minor variations like .we,-n), which may contain typos, unwanted spaces, or inconsistent formatting.\no\t\"Replacing File Name\" — a list of alphanumeric strings (usually starting with E or containing hexadecimal/decimal characters), that represent the replacement files.\n2.\tOutput a JSON object:\njson\nCopyEdit\n{\n  \"columns\": [\"Original Asset Name\", \"Replacing File Name\"],\n  \"rows\": [\n    [\"18579.wem\", \"E0000000004893\"],\n    [\"32660.wem\", \"E00000000007F94\"],\n    ...\n  ]\n}\n________________________________________\n🔹 Input Characteristics\n•\tThe input string contains two mislabeled column titles with typos or irregular spacing, such as:\no\tOr.g.nal Asset Narme, Original Asset Nare, etc.\no\tReplac.ng FIe Narme, Replcing FileName, etc.\n•\tThe original filenames are typically numeric + .wem or .wern, but there might be:\no\tRandom spacing before/after the dot or extension\no\tTypos in extensions like .we,-n, .wern, .wem, etc.\n•\tThe replacement names are uppercase alphanumeric strings, typically starting with E or 0.\n________________________________________\n🔹 Processing Instructions\n1.\tDetect column headers, even if misspelled or malformed. Normalize them to exactly:\njson\nCopyEdit\n[\"Original Asset Name\", \"Replacing File Name\"]\n2.\tExtract filenames:\no\tMust end in .wem, .wern, or similar typo (e.g., .we,-n)\no\tFix extension typos: normalize all to .wem or .wern as applicable\no\tRemove spaces around file name and extension\no\tDiscard anything not looking like a valid filename\n3.\tExtract replacement values:\no\tAlphanumeric strings like E00000000003C302, 000000000008391, etc.\no\tThese come after the second column title and align with the filenames above\n4.\tBuild aligned pairs:\no\tEnsure one-to-one mapping between filenames and replacement names\no\tIf there's a mismatch, return an error message describing the issue\n________________________________________\n🔹 Output Format\nThe output must be a JSON object:\njson\nCopyEdit\n{\n  \"columns\": [\"Original Asset Name\", \"Replacing File Name\"],\n  \"rows\": [\n    [\"65714.wern\", \"E000000000010245\"],\n    [\"261116.wern\", \"E000000000025C14\"]\n  ]\n}\n________________________________________\n🔹 Response Rules\n•\tOn success: return only the structured JSON object as shown above.\n•\tOn error (e.g., mismatched row counts, no filenames found): return an error message in the following format:\njson\nCopyEdit\n{ \"error\": \"Mismatch between number of original filenames and replacement names.\" }\n________________________________________\n🔹 Example Input\nmathematica\nCopyEdit\nOr.g.nal Asset Narme 18579.wem 32660. wem ... 427088.wem 435133.wem 441931 489527.wem 492761 .wern Replac.ng FIe  Narme  Em0000000004893  E00000000007F94 ... E00000000006BE4B\n🔹 Example Output\njson\nCopyEdit\n{\n  \"columns\": [\"Original Asset Name\", \"Replacing File Name\"],\n  \"rows\": [\n    [\"18579.wem\", \"Em0000000004893\"],\n    [\"32660.wem\", \"E00000000007F94\"],\n    ...\n  ]\n}\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        700,
+        340
+      ],
+      "id": "462c221f-7a9c-45ee-bc18-92d624b3d409",
+      "name": "AI Agent",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "modelName": "models/learnlm-2.0-flash-experimental",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        620,
+        560
+      ],
+      "id": "a3b898ac-06cb-4356-b7bc-f9b32ccc0ef9",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "s03mjiGtP7PKN2qw",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "query": "Or.g.nal Asset Narme 18579.wem 32660. wem 33681 56883 .wem 65714.wern 66117 148445 154u4.wem 246530.wern 258927 .wem 261116.wern 276151.we,-n 286352.wem 292345 .wem 328157.wem 329234.wem 375295.wem 403378-wem 418023 .wern 425887.wem 427088.wem 435133.wem 441931 489527.wem 492761 .wern Replac.ng FIe  Narme  Em0000000004893  E00000000007F94  000000000008391  EOOOOOOOOOOODE33  EOOOOOOOOOO OOB2  E000000000010245  E0000000000243DD  E000000000025C 14  E000000000027557  E00000000003C302  E00000000003F36F  E0000000000436B7  E000000000045E90  EOOØ000000Z75F9  E0000000000501 DO  12  E00000000005B9FF  E0000000000627B2  E000000000067F9F  E00000000006A3BD  E00000000006BE4B"
+        }
+      }
+    ]
+  },
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

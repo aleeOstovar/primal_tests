@@ -1,0 +1,1768 @@
+{
+  "name": "SalesForceDialPadCallIDStore",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -880,
+        400
+      ],
+      "id": "e1d5a6fa-2dc7-4f6b-a761-1c5aeec6bbee",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "collection": "DialPad_Calls",
+        "options": {
+          "limit": 250,
+          "projection": "{\"entry_point_call_id\":1,\n\"duration\":1,\n\"contact.name\":1,\n\"contact.email\":1,\n\"_id\":0\n}"
+        },
+        "query": "{\n  \"address\": { \"$exists\": false },\n  \"entry_point_call_id\": { \"$ne\": null },\n  \"duration\": { \"$gt\": 60000 },\n  \"has_Lead_ID\": { \"$exists\": false },\n  \"has_transcript\": { \"$exists\": false }\n}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        208
+      ],
+      "id": "dcc5b1e6-c31f-47a2-9253-9721f0c01eea",
+      "name": "GetCallIDsDialPad2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        272,
+        208
+      ],
+      "id": "1099aaf6-08a1-4538-a72d-57b460837564",
+      "name": "Loop Over Items4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e95453cd-50b4-4c2e-923f-99948fd99cc3",
+              "leftValue": "={{ $json.contact.name }}",
+              "rightValue": "Marilyn Carrington",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -176,
+        208
+      ],
+      "id": "695286fc-02e0-4103-a108-36272d8d3d99",
+      "name": "Filter6",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "50ec125c-a474-4ec4-9f01-d8df2bcdfaae",
+              "name": "entry_point_call_id",
+              "value": "={{ $json.call_id }}",
+              "type": "string"
+            },
+            {
+              "id": "4c974658-1eda-4309-8cac-77d705194d97",
+              "name": "SF_Task_ID",
+              "value": "={{ $json.SF_Task_ID }}",
+              "type": "string"
+            },
+            {
+              "id": "8d0f5843-8d55-40d5-b794-37d382b736e0",
+              "name": "call_id",
+              "value": "={{ $json.call_id }}",
+              "type": "string"
+            },
+            {
+              "id": "7fff6a52-26b5-4fa4-acc1-13838cd214e8",
+              "name": "address",
+              "value": "={{ $json.Company }}",
+              "type": "string"
+            },
+            {
+              "id": "2c0483a9-f1bb-4c92-b9fc-25882060140d",
+              "name": "lead_ID",
+              "value": "={{ $json.SourceId }}",
+              "type": "string"
+            },
+            {
+              "id": "7ec4d565-1a34-4436-9606-ced428af86fd",
+              "name": "SourceType",
+              "value": "={{ $json.SourceType}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4848,
+        48
+      ],
+      "id": "e7178af1-e79f-4dc5-a916-112f8f7f7426",
+      "name": "Edit Fields5"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        5776,
+        544
+      ],
+      "id": "ec3f2954-bd2b-4a62-9892-f3704cbdf467",
+      "name": "Wait3",
+      "webhookId": "ac6e0e67-b072-478f-8958-ae679f92dd42"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "AI_Agent_Call_Scoring",
+        "updateKey": "=call_id",
+        "fields": "SF_Task_ID",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        5056,
+        48
+      ],
+      "id": "6c4c6af3-d3d0-4fad-ad14-31c5a800dc4c",
+      "name": "update Ai Score collection1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "DialPad_Calls",
+        "updateKey": "=entry_point_call_id",
+        "fields": "SF_Task_ID,address,lead_ID, SourceType",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        5520,
+        48
+      ],
+      "id": "3f4b077c-deb8-4176-ba0f-9681ce4ac565",
+      "name": "update Dialpad Calls1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "50ec125c-a474-4ec4-9f01-d8df2bcdfaae",
+              "name": "entry_point_call_id",
+              "value": "={{ $('Edit Fields5').item.json.entry_point_call_id }}",
+              "type": "string"
+            },
+            {
+              "id": "4c974658-1eda-4309-8cac-77d705194d97",
+              "name": "SF_Task_ID",
+              "value": "={{ $('Edit Fields5').item.json.SF_Task_ID }}",
+              "type": "string"
+            },
+            {
+              "id": "45c5526b-bad9-4f04-9daa-967f1a9a9522",
+              "name": "address",
+              "value": "={{ $('Edit Fields5').item.json.address }}",
+              "type": "string"
+            },
+            {
+              "id": "40305d79-38d4-4cee-ab36-3e871b3342f5",
+              "name": "lead_ID",
+              "value": "={{ $('Edit Fields5').item.json.lead_ID }}",
+              "type": "string"
+            },
+            {
+              "id": "d8a0fbb1-ddfe-49be-b8b4-f483dea32af3",
+              "name": "SourceType",
+              "value": "={{ $('Edit Fields5').item.json.SourceType }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5280,
+        48
+      ],
+      "id": "db7939de-12ac-4a32-ae5f-2fd0f5c995cb",
+      "name": "Edit Fields6"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c106976f-c7fa-4344-a627-8668b54322f2",
+              "leftValue": "={{ $json.WhatId }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1104,
+        48
+      ],
+      "id": "71fb8867-8183-493f-aa24-aa5c2829613b",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "resource": "search",
+        "query": "=SELECT Id, WhoId, WhatId, AccountId ,CreatedDate,LastModifiedDate,Dialpad__CallId__c \nFROM Task \nWHERE Dialpad__CallId__c = '{{ $json.entry_point_call_id }}'\nORDER BY CreatedDate DESC \nLIMIT 1"
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1,
+      "position": [
+        752,
+        272
+      ],
+      "id": "f825eb8d-907c-41b1-a807-a7018cfc6e36",
+      "name": "FindSFTask By Query",
+      "executeOnce": false,
+      "alwaysOutputData": true,
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "CBdxVaEpIAhpORgk",
+          "name": "Salesforce account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "collection": "DialPad_Transcripts",
+        "options": {},
+        "query": "={{ $json.mongoQuery }}"
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        1728,
+        432
+      ],
+      "id": "017bab4f-2d5a-463f-b46a-b0592afb39d3",
+      "name": "MongoDB2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Loop Over Items4').first().json\nconst entryPointCallIds = input.entry_point_call_id;\n\nconst mongoQuery = {\n  call_id: entryPointCallIds };\n\nreturn {\n  json: {\n    mongoQuery: JSON.stringify(mongoQuery),\n    contact_name:input.contact.name,\n    contact_email: input.contact.email\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1552,
+        432
+      ],
+      "id": "6fdfff84-df99-4293-84cd-413295586578",
+      "name": "Code5"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "options": {
+          "conditionsUi": {
+            "conditionValues": [
+              {
+                "field": "Name",
+                "value": "={{ $('Code5').item.json.contact_name.replace(/'/g, \"\\\\'\") }}"
+              }
+            ]
+          },
+          "fields": "Id,Company,Email"
+        }
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1,
+      "position": [
+        2816,
+        592
+      ],
+      "id": "343c6202-9a0f-4d3d-b730-1fb77c70e23d",
+      "name": "Get many leads2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "CBdxVaEpIAhpORgk",
+          "name": "Salesforce account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b382f54a-0fec-41c3-94d3-5d3fd6337b2d",
+              "leftValue": "={{ $('Code5').item.json.contact_email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2400,
+        416
+      ],
+      "id": "61290add-1db8-4388-9d4a-2294d8453f76",
+      "name": "If5"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "options": {
+          "conditionsUi": {
+            "conditionValues": [
+              {
+                "field": "Left_Main__Email__c",
+                "value": "={{ $('Code5').item.json.contact_email }}"
+              }
+            ]
+          },
+          "fields": "Id,Company,Email"
+        }
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1,
+      "position": [
+        2816,
+        304
+      ],
+      "id": "31a846e9-de02-4c2c-b576-2511bc65bc2b",
+      "name": "Get many leads3",
+      "alwaysOutputData": true,
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "CBdxVaEpIAhpORgk",
+          "name": "Salesforce account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "02aaaebe-08bb-4422-ac14-cfb8211fe545",
+              "name": "leads",
+              "value": "={{ $json.data }}",
+              "type": "string"
+            },
+            {
+              "id": "248a4417-7e96-4490-bf64-79b0ca50f09f",
+              "name": "transcript",
+              "value": "={{ $('MongoDB2').item.json.transcript }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3696,
+        352
+      ],
+      "id": "1d6e23ee-d17b-46f8-80e3-89b57db49435",
+      "name": "Edit Fields7"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Your job is to check the Transcription  provided by the user and find the address of property the user and EHB call agents are discussing about. Then from list of SalesForce leads with same name which is again given by then user, detect the correct property address.\nOutput should be the in following format in a standard JSON object and not as a string JSON wirh \"\\n\" in it.\nCompany:infered address base on the transcript\nId: ID of the corresponding selected address. \n\nThe correct output JSON object should be like this:\n[\n  {\n    \"output\": {\n      \"Company\": \"105 Brick Kiln Rd, Washington NC 27889-3901\",\n      \"Id\": \"00QUp00000MngCjMAJ\"\n    }\n  }\n]",
+              "role": "system"
+            },
+            {
+              "content": "=list of leads:\n{{ $json.leads }}\n\ntranscript:\n{{ $json.transcript }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        3920,
+        352
+      ],
+      "id": "f848b758-980d-40b6-b896-a257c27a8b26",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "obrCoVwP9hvbq5OW",
+          "name": "EHB_App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4d9eb98d-0a34-48b7-aee4-1913fba28161",
+              "leftValue": "={{$items().length}}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3264,
+        416
+      ],
+      "id": "60b2e967-bfe9-4377-a812-401d4e40e22e",
+      "name": "If6"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3488,
+        352
+      ],
+      "id": "4f5288da-60d0-45ce-b171-388081dee46e",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const contentString = item.json?.message?.content;\n\n  // Clean the string to remove the markdown code fences\n  const cleanedString = contentString.replace(/^```json\\n/, '').replace(/\\n```$/, '');\n\n  try {\n    const parsedData = JSON.parse(cleanedString);\n    const finalJson = parsedData[0].output;\n\n    return {\n      json: finalJson\n    };\n  } catch (error) {\n    // If JSON parsing fails, return an error object for debugging\n    return {\n      json: {\n        error: \"Failed to parse JSON from content string.\",\n        originalContent: contentString\n      }\n    };\n  }\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4288,
+        352
+      ],
+      "id": "c59b5d6e-405d-4570-aec8-13e6f4b70f50",
+      "name": "Code6"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6b5805ef-f543-4c84-9ca3-b2894d772624",
+              "name": "Company",
+              "value": "={{ $json.Company }}",
+              "type": "string"
+            },
+            {
+              "id": "df26d344-638b-487a-9fa9-97c02ef23ec4",
+              "name": "SourceId",
+              "value": "={{ $json.Id }}",
+              "type": "string"
+            },
+            {
+              "id": "99a6b540-e0eb-4882-81fb-da98f1766947",
+              "name": "=SF_Task_ID",
+              "value": "={{ $('FindSFTask By Query').item.json.Id }}",
+              "type": "string"
+            },
+            {
+              "id": "d38ba325-492d-4365-baf9-a90e3d03531e",
+              "name": "entry_point_call_id",
+              "value": "={{ $('Loop Over Items4').item.json.entry_point_call_id }}",
+              "type": "string"
+            },
+            {
+              "id": "de48ec66-b825-41a9-bbbb-302b6d630448",
+              "name": "call_id",
+              "value": "={{ $('Loop Over Items4').item.json.entry_point_call_id }}",
+              "type": "string"
+            },
+            {
+              "id": "77ab0abc-df93-4e75-a6c0-33fdcd04e986",
+              "name": "SourceType",
+              "value": "Lead",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4528,
+        416
+      ],
+      "id": "d1be6cea-0374-49fa-b183-e728600238e1",
+      "name": "Edit Fields8"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        48,
+        208
+      ],
+      "id": "03a7bb0f-1afd-4ca8-b88f-8a9dcb7e548c",
+      "name": "Edit Fields9",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "resource": "search",
+        "query": "=SELECT Id, Company, FirstName, LastName, Street, City, PostalCode, Email, Status, ConvertedOpportunityId, CreatedDate \nFROM Lead \nWHERE Id IN ({{ $json.LeadId_Array.map(id => `'${id}'`).join(', ') }}) \nORDER BY CreatedDate DESC \nLIMIT 1"
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1,
+      "position": [
+        3456,
+        144
+      ],
+      "id": "7a56d0a4-3e95-4cf0-acc2-28d843027f1d",
+      "name": "Perform a query",
+      "alwaysOutputData": false,
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "CBdxVaEpIAhpORgk",
+          "name": "Salesforce account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Changed With Query to retunr only latest lead based on created datetime.",
+        "height": 480,
+        "width": 304
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3360,
+        -176
+      ],
+      "typeVersion": 1,
+      "id": "a86883a9-8df9-4b43-acb4-1000d2cef977",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get input items from previous node\nconst items = $input.all();\n\n// Extract unique WhatIds\nconst whatIdsSet = new Set();\n// const entery_point_call_id_set = new Set();\n\nfor (const item of items) {\n  const whatId = item.json.WhatId;\n  // const entery_point_call_id = item.json.Dialpad__CallId__c\n  if (whatId) {\n    whatIdsSet.add(whatId);\n    // entery_point_call_id_set.add(entery_point_call_id);\n  }\n}\n\nconst whatIdArray = Array.from(whatIdsSet);\n// const entery_point_call_id_array = Array.from(entery_point_call_id_set);\n\n// Split WhatIds into Opportunity and Lead IDs\nconst oppIds = whatIdArray.filter(id => id.startsWith('006'));\nconst leadIds = whatIdArray.filter(id => id.startsWith('00Q'));\n\n// Return object with separated arrays for use in Salesforce nodes\nreturn [\n  {\n    json: {\n      WhatId_Array: whatIdArray,\n      // entery_point_call_id_Array: entery_point_call_id_array,\n      OpportunityId_Array: oppIds,\n      LeadId_Array: leadIds\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2304,
+        32
+      ],
+      "id": "32ae8891-836c-4b9a-83e1-b02d010810a4",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get input (could be a Lead or Opportunity record)\nconst record = $input.item.json;\n\n// Determine record type and key ID\nconst recordId = record.Id;\nconst isLead = record.ConvertedOpportunityId !== undefined;\nconst whatId = isLead ? record.ConvertedOpportunityId : recordId;\n\n// Get task items (update name if needed)\nconst taskItems = $items('FindSFTask By Query', 0);\n\n// Find task where WhatId matches the Opportunity ID\nconst matchingTask = taskItems.find(task => task.json.WhatId === whatId);\n\nif (!matchingTask) {\n  throw new Error(`No task found for WhatId ${whatId}`);\n}\n\n// Prepare consistent output\nreturn [\n  {\n    json: {\n      SF_Task_ID: matchingTask.json.Id,\n      call_id: matchingTask.json.Dialpad__CallId__c ?? null,\n      SourceType: isLead ? \"Lead\" : \"Opportunity\",\n      SourceId: recordId,\n      Company: record.Company ?? record.Name ?? null // Lead.Company or Opportunity.Name\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3712,
+        48
+      ],
+      "id": "a2a347b9-870e-43c2-9a17-5d70a1644e74",
+      "name": "Code7"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ebf1de57-316d-494a-9ae5-70a6d59648bd",
+              "leftValue": "={{ $json.OpportunityId_Array }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "a7d1a98f-ae78-45a5-8504-f62b41f7f10b",
+              "leftValue": "={{ $json.LeadId_Array }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3184,
+        48
+      ],
+      "id": "9053ef52-0673-4dfc-af01-c3d9efa626d5",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4d9eb98d-0a34-48b7-aee4-1913fba28161",
+              "leftValue": "={{ $json }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3040,
+        496
+      ],
+      "id": "55a6b008-e26e-4843-b257-e9de637171ae",
+      "name": "If7"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "31bd55b3-8831-46fe-9644-d5fb754fb838",
+              "leftValue": "={{ $json.OpportunityId_Array }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "empty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "9f67eae9-3bd9-4ffc-bdb9-948f5ebb1d57",
+              "leftValue": "={{ $json.LeadId_Array }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2512,
+        32
+      ],
+      "id": "9679c318-0a1e-44ac-badd-bcb609741032",
+      "name": "If8"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "87ae7efa-6a86-4617-91b4-fe7d10934ef3",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        304
+      ],
+      "id": "3f215d94-4a37-4fe1-a2bf-55087501d7bf",
+      "name": "If9"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a43e2393-6125-4d99-829b-bd5dd72e758f",
+              "name": "entry_point_call_id",
+              "value": "4553819971502080",
+              "type": "string"
+            },
+            {
+              "id": "241258d3-1fd7-4e2a-b6da-9b8f10c9a9f4",
+              "name": "contact.email",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "3020adce-dc73-4d49-bd78-c415d277d19d",
+              "name": "contact.name",
+              "value": "Robert Hirsch",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -96,
+        448
+      ],
+      "id": "706fc2ff-221a-49bd-aefd-75b567dbc3bb",
+      "name": "Edit Fields10"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1392,
+        432
+      ],
+      "id": "b23c39ef-b4ce-4aae-9fdd-a900910ea884",
+      "name": "Edit Fields11"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ecd8d2cf-9c52-41ff-ad05-80cc54455820",
+              "name": "has_Lead_ID",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "470d90ca-c26e-482f-963e-6c3a20e873fa",
+              "name": "entry_point_call_id",
+              "value": "={{ $('Loop Over Items4').item.json.entry_point_call_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2800,
+        -160
+      ],
+      "id": "d193d22b-25d3-48f8-b4ea-39536b781720",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "DialPad_Calls",
+        "updateKey": "=entry_point_call_id",
+        "fields": "has_Lead_ID",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        2992,
+        -160
+      ],
+      "id": "b9735049-a0de-4a69-b386-6b5fd98dc404",
+      "name": "update Dialpad Calls2",
+      "alwaysOutputData": false,
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ecd8d2cf-9c52-41ff-ad05-80cc54455820",
+              "name": "has_Lead_ID",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "470d90ca-c26e-482f-963e-6c3a20e873fa",
+              "name": "entry_point_call_id",
+              "value": "={{ $('Loop Over Items4').item.json.entry_point_call_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3344,
+        624
+      ],
+      "id": "0b54bf57-b50b-4681-8a16-034a62641850",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "DialPad_Calls",
+        "updateKey": "=entry_point_call_id",
+        "fields": "has_Lead_ID",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        3616,
+        688
+      ],
+      "id": "6cb2e178-36c2-4620-9eaa-cfe1b8a9f409",
+      "name": "update Dialpad Calls3",
+      "alwaysOutputData": false,
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a6aabe16-897e-4a22-853d-2d5c7ffc25c9",
+              "leftValue": "={{$json}}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1952,
+        432
+      ],
+      "id": "13f2d73e-eb5f-44ac-8d5f-b1e71ad4aa3c",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ecd8d2cf-9c52-41ff-ad05-80cc54455820",
+              "name": "has_transcript",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "470d90ca-c26e-482f-963e-6c3a20e873fa",
+              "name": "entry_point_call_id",
+              "value": "={{ $('Loop Over Items4').item.json.entry_point_call_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2240,
+        640
+      ],
+      "id": "18294ae6-886d-4962-b385-3e29a6911ecb",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "DialPad_Calls",
+        "updateKey": "=entry_point_call_id",
+        "fields": "has_transcript",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        2464,
+        688
+      ],
+      "id": "51704d38-1a96-42f2-abd8-c2c7fdfa547a",
+      "name": "update Dialpad Calls4",
+      "alwaysOutputData": false,
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 2
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -832,
+        144
+      ],
+      "id": "5bee3ba7-2618-4ff3-81a4-e79651f45255",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "daa975f5-94d1-4820-9a31-0d274ffb9cd3",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        928,
+        272
+      ],
+      "id": "d45acea0-c6fb-4903-b723-1ade2287ddce",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ecd8d2cf-9c52-41ff-ad05-80cc54455820",
+              "name": "has_SF_TASK_ID",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "470d90ca-c26e-482f-963e-6c3a20e873fa",
+              "name": "entry_point_call_id",
+              "value": "={{ $('Loop Over Items4').item.json.entry_point_call_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1232,
+        688
+      ],
+      "id": "af1c8f31-d9d4-45e0-b803-8a68af0b8fef",
+      "name": "Edit Fields12"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "DialPad_Calls",
+        "updateKey": "=entry_point_call_id",
+        "fields": "has_SF_TASK_ID",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        1440,
+        688
+      ],
+      "id": "ca56b797-a9c4-42d3-917a-206674be59a2",
+      "name": "update Dialpad Calls5",
+      "alwaysOutputData": false,
+      "credentials": {
+        "mongoDb": {
+          "id": "D0wQGJq9PREKHRcJ",
+          "name": "EHB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "search",
+        "query": "=SELECT Id, Name, StageName, CloseDate, AccountId, CreatedDate \nFROM Opportunity \nWHERE Id IN ({{ $json.OpportunityId_Array.map(id => `'${id}'`).join(', ') }}) \nORDER BY CreatedDate DESC \nLIMIT 1"
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1,
+      "position": [
+        3440,
+        -80
+      ],
+      "id": "8c8f0c9b-0b51-482d-9ca1-6ef2f60087d6",
+      "name": "Perform a query2",
+      "alwaysOutputData": false,
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "CBdxVaEpIAhpORgk",
+          "name": "Salesforce account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "GetCallIDsDialPad2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GetCallIDsDialPad2": {
+      "main": [
+        [
+          {
+            "node": "Filter6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items4": {
+      "main": [
+        [],
+        [
+          {
+            "node": "If9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter6": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields5": {
+      "main": [
+        [
+          {
+            "node": "update Ai Score collection1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update Ai Score collection1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update Dialpad Calls1": {
+      "main": [
+        [
+          {
+            "node": "Wait3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields6": {
+      "main": [
+        [
+          {
+            "node": "update Dialpad Calls1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FindSFTask By Query": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code5": {
+      "main": [
+        [
+          {
+            "node": "MongoDB2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB2": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If5": {
+      "main": [
+        [
+          {
+            "node": "Get many leads3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get many leads2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many leads2": {
+      "main": [
+        [
+          {
+            "node": "If7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields7": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many leads3": {
+      "main": [
+        [
+          {
+            "node": "If7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If6": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code6": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields8": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields9": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Perform a query": {
+      "main": [
+        [
+          {
+            "node": "Code7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "If8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code7": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Perform a query2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Perform a query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If7": {
+      "main": [
+        [
+          {
+            "node": "If6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If8": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If9": {
+      "main": [
+        [
+          {
+            "node": "FindSFTask By Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields10": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields11": {
+      "main": [
+        [
+          {
+            "node": "Code5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "update Dialpad Calls2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update Dialpad Calls2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "update Dialpad Calls3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update Dialpad Calls3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "If5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "update Dialpad Calls4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update Dialpad Calls4": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "GetCallIDsDialPad2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields12": {
+      "main": [
+        [
+          {
+            "node": "update Dialpad Calls5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update Dialpad Calls5": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Perform a query2": {
+      "main": [
+        [
+          {
+            "node": "Code7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "6db7cf0a-5033-4df7-8216-22ac00c30156",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1492f4d88835c9aa4ef9f92114084d45e62f070cbfca1060935e9b804d7507de"
+  },
+  "id": "mAwRjSZgNIs3C8MC",
+  "tags": []
+}

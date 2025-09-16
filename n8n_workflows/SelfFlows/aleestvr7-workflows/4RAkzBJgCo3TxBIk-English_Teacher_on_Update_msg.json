@@ -1,0 +1,941 @@
+{
+  "name": "English_Teacher_on Update msg",
+  "nodes": [
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.edited_message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "d19044af-c93c-4244-8f50-6ef317442a10"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "text input"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "667d8912-a2f7-4475-a881-98e304a0e755",
+                    "leftValue": "={{ $json.message.voice.mime_type }}",
+                    "rightValue": "audio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio input"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -1088,
+        -144
+      ],
+      "id": "236e5f1b-895a-406b-b040-ad2bd0e06ea1",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "db50fb65-30a3-4703-9b95-6ff60220ec01",
+              "name": "user_prompt",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "e52bfcbb-537f-42da-94c7-d9741c91f17e",
+              "name": "user_id",
+              "value": "={{ $json.message.from.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -768,
+        -160
+      ],
+      "id": "386ba7dc-7cae-4a3f-b913-507f6e5db1b6",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1697b616-e28a-44e4-acc3-c5506caf66ce",
+              "name": "user_prompt",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "e727b20e-e8b4-4934-b83f-cc64b500ebfa",
+              "name": "message.chat.id",
+              "value": "={{ $json.message.from.id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -544,
+        32
+      ],
+      "id": "c822f1bc-428d-4f24-b841-7352a93b1537",
+      "name": "Edit Fields5"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ab010bdb-8c48-4ebf-b4dd-8ebc1832725d",
+              "leftValue": "={{ $json.user_prompt }}",
+              "rightValue": "/start",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -528,
+        -160
+      ],
+      "id": "68031e29-4c93-4d6b-82b8-396f4f92ed8a",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -912,
+        32
+      ],
+      "id": "a2fa0e32-01a4-4371-ad7f-5bd0634aa198",
+      "name": "Get a file",
+      "webhookId": "dd148c4e-1734-4979-a7ab-0f2d7c941340",
+      "credentials": {
+        "telegramApi": {
+          "id": "PjIj2mWYeXABWsrx",
+          "name": "Jenny English Tutor"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -752,
+        32
+      ],
+      "id": "0afb579e-7de4-4b3f-a7b2-1aebf0a9453c",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "Rj2xLGqmzzMXhFQv",
+          "name": "Capi"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "28570f64-518c-4bd2-a9ab-d6daa176a3d0",
+              "name": "welcome_msg",
+              "value": "=👋 Welcome! I’m Jenny — your gentle English coach.\nPost or reply with your English text and I’ll:\n\n• ✅ spot the key mistakes\n• ✏️ give a minimal correction\n• 💡 add a one-line explanation\n• 🎥 share a short teaching video you can watch to learn the rule\n\nHow to use me\n\nJust write in English, or reply to a message and mention @YourBotHandle.\n\nI’ll keep things brief and positive. No full rewrites—only the parts that need fixing.\n\nProgress & privacy\n\nI track simple learning metrics (e.g., error types and frequency) so you can see improvement over time.\n\nWant to review or reset your data? Send me a DM with /data.\n\nHave fun, ask questions, and let’s level up your English together! 🚀",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -224,
+        -368
+      ],
+      "id": "56a0b160-8ac2-49e5-a940-dc35e9b01adf",
+      "name": "Edit Fields6"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "={{ $json.welcome_msg }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -32,
+        -368
+      ],
+      "id": "819ad4ec-7c5a-4e4c-ae68-a67e96e4a858",
+      "name": "Send a text message4",
+      "webhookId": "a0c04661-06d0-4838-839f-c82009cb4def",
+      "credentials": {
+        "telegramApi": {
+          "id": "PjIj2mWYeXABWsrx",
+          "name": "Jenny English Tutor"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.user_prompt }}",
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "=<system_prompt>\nYOU ARE THE WORLD’S BEST LANGUAGE IDENTIFIER, TRAINED TO DETECT WHETHER AN INPUT TEXT IS IN ENGLISH (\"en\"), PERSIAN/FARSI (\"fa\"), OR FINGILISH (PERSIAN WRITTEN WITH LATIN CHARACTERS, ALSO \"fa\"). YOUR SOLE TASK IS TO TAKE ANY USER INPUT AND OUTPUT A JSON OBJECT IN THE FOLLOWING FORMAT:\n\n{\n  \"text\": \"input text\",\n  \"is_english\": true or false\n}\n\n###INSTRUCTIONS###\n\n1. ALWAYS INCLUDE THE ORIGINAL INPUT IN THE \"text\" FIELD\n2. ALWAYS OUTPUT ONLY JSON, NO EXPLANATION OR EXTRA TEXT\n3. USE \"true\" IF THE TEXT IS CLEARLY ENGLISH\n4. USE \"false\" IF THE TEXT IS PERSIAN, REGARDLESS OF WHETHER IT IS WRITTEN IN:\n   - PERSIAN SCRIPT (فارسی)\n   - FINGILISH (PERSIAN LANGUAGE USING ENGLISH LETTERS, E.G., \"salam chetori?\")\n5. IF THE TEXT IS AMBIGUOUS, PRIORITIZE CONTEXT:\n   - IF IT MATCHES PERSIAN VOCABULARY/STRUCTURE EVEN IN LATIN CHARACTERS → CLASSIFY AS \"fa\"\n   - OTHERWISE DEFAULT TO \"en\"\n\n###CHAIN OF THOUGHTS###\n\nFOLLOW THIS INTERNAL PROCESS BEFORE DECIDING:\n1. UNDERSTAND: READ the input carefully\n2. BASICS: IDENTIFY whether words look like English words or Persian words\n3. BREAK DOWN: CHECK script type → Latin alphabet vs Persian script\n4. ANALYZE:\n   - IF Persian alphabet detected → \"fa\"\n   - IF Latin alphabet but vocabulary/phrases align with Persian (Fingilish) → \"fa\"\n   - IF Latin alphabet and vocabulary is English → \"en\"\n5. BUILD: Formulate the correct \"lang\" classification\n6. EDGE CASES: If a mix, choose the dominant language\n7. FINAL ANSWER: OUTPUT JSON ONLY in required format\n\n###WHAT NOT TO DO###\n- NEVER OUTPUT ANYTHING EXCEPT THE JSON\n- NEVER ADD EXPLANATIONS, NOTES, OR EXTRA CHARACTERS\n- NEVER OUTPUT INVALID JSON\n- NEVER INVENT LANGUAGES OTHER THAN \"en\" OR \"fa\"\n- NEVER MISCLASSIFY FINGILISH AS ENGLISH — ALWAYS TREAT IT AS \"fa\"\n\n###FEW-SHOT EXAMPLES###\n\nINPUT: \"hello how are you?\"\nOUTPUT:\n{\n  \"text\": \"hello how are you?\",\n  \"is_english\": true\n}\n\nINPUT: \"سلام خوبی؟\"\nOUTPUT:\n{\n  \"text\": \"سلام خوبی؟\",\n  \"is_english\": false\n}\n\nINPUT: \"salam khoobi?\"\nOUTPUT:\n{\n  \"text\": \"salam khoobi?\",\n  \"is_english\": false\n}\n\n</system_prompt>"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -240,
+        -112
+      ],
+      "id": "e79f4639-5aab-4768-9f09-7360bd2c1edb",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        64
+      ],
+      "id": "113bedd4-0359-4b16-af30-e8b15e426f7b",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6ATURFd9w4y7rmc3",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-20b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -352,
+        64
+      ],
+      "id": "29c66dc3-d8b8-4158-a6e8-1dbecc39ec11",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "x53SFKHZcY59sCZD",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = items.map(item => {\n  let raw = item.json.output || \"\";\n\n  // Remove ```json and ``` markers\n  let cleaned = raw.replace(/```json|```/g, \"\").trim();\n\n  // Parse into JSON\n  let parsed;\n  try {\n    parsed = JSON.parse(cleaned);\n  } catch (err) {\n    parsed = { error: \"Invalid JSON\", raw: cleaned };\n  }\n\n  return {\n    json: parsed\n  };\n});\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        64,
+        -112
+      ],
+      "id": "e4a94795-c592-47dd-bd48-01d6104d7f63",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1e8b9c9a-ecce-4521-906b-97c294028172",
+              "leftValue": "={{ $json.is_english }}",
+              "rightValue": "en",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        256,
+        -112
+      ],
+      "id": "50ca9f27-e60d-46cd-ace8-b3332d65b2ad",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "=### 1) Role\nYou are **Jenny** a gentle, encouraging English coach for a Telegram group where people casually practice English. You spot mistakes kindly, suggest minimal fixes, and give a short, friendly explanation plus one helpful teaching video per issue from an Airtable tool called `related_videos`. Keep it positive and brief\n***\n### 2) Task\nGiven a user message (any length):\n1.\tDetect issues in: grammar, vocabulary/lexis, spelling/typos, punctuation, syntax/word order, register/tone, articles, prepositions, verb tense/aspect, subject–verb agreement, countability, collocations/idioms, capitalization, consistency (US/UK), and clarity (wordiness/ambiguity).\n2.\tFor each issue, return:\n    *\tthe minimal span that’s problematic,\n    *\ta minimal correction,\n    *\ta brief explanation (max 1–2 sentences, plain and friendly),\n    *\tone related video (title + URL) retrieved via the `related_videos` Airtable tool using topic tags inferred from the issue.\n3.\tLimit to the most useful top 10 issues (rank by impact on meaning + frequency). If more exist, cap at 10 and note the count in `metrics.omitted_issues`.\n4.\tIf there are no errors, return an empty `issues` array and include a supportive note in `metrics.feedback_note`.\n5.\tDo not rewrite the whole message; only provide minimal corrections for the flagged spans.\n6.\tRespect the user’s spelling variety (US/UK) if clearly signaled; otherwise default to International English.\n***\n### 3) Context\n*\tTelegram group chat is informal: messages may include emojis, usernames, URLs, code, or non-English text—don’t flag these unless they cause an actual English usage error.\n*\tPrefer learning impact over pedantry: fix what helps clarity, correctness, and natural flow.\n*\tAirtable integration (tool name: `related_videos`):\n    *\tExpected call (conceptual): `related_videos.search(topics: [str], max_results: int=3)`\n    *\tReturned fields: `title`, `url`, `topic_tags`, `level` (A1–C2 optional), `airtable_id`.\n    *\tTopic tag mapping examples (extend as needed):\n        *\tarticles → `articles`\n        *\tprepositions → `prepositions`\n        *\tverb tense/aspect → `tenses`, `present perfect`, `past simple`\n        *\tsubject–verb agreement → `subject-verb agreement`\n        *\tcountability → `countability`\n        *\tcollocations/idioms/word choice → `collocations`, `idioms`, `word choice`\n        *\tpunctuation → `punctuation`, `comma usage`\n        *\tcapitalization → `capitalization`\n        *\tconsistency (US/UK) → `US vs UK spelling`\n*\tIf no matching video is found for an issue, leave its `video` field empty and add a short suggestion in `metrics.video_search_notes`.\n***\n### 4) Reasoning\n*(Internal—do not reveal step-by-step thoughts.)*\n1.\tNormalize input (detect predominant language; analyze English parts).\n2.\tScan sentence by sentence; select minimal spans; merge duplicates; mark recurring patterns.\n3.\tRank by impact (meaning change > grammar accuracy > style).\n4.\tTag each issue with 1–2 topic tags for video retrieval; pick the single best video (or none).\n5.\tKeep explanations friendly and concise; avoid jargon; no chain-of-thought.\n6. Full Correct Text; write the finalize version of the correct text\n6.\tPrepare metrics (counts, densities, CEFR estimate if confident, etc.).\n***\n### 5) Output format\nReturn one JSON object only (no extra text). Schema:\n```json\n{\n  \"meta\": {\n    \"detected_language\": \"en\",\n    \"variety\": \"US|UK|International\",\n    \"word_count\": 0,\n    \"timestamp_utc\": \"2025-01-01T12:00:00Z\"\n  },\n  \"issues\": [\n    {\n      \"id\": \"ISSUE-001\",\n      \"span_text\": \"problem fragment\",\n      \"char_start\": 0,\n      \"char_end\": 0,\n      \"category\": \"grammar|vocabulary|spelling|punctuation|syntax|register|articles|prepositions|tenses|agreement|countability|collocation|capitalization|consistency|clarity\",\n      \"subcategory\": \"e.g., comma splice / third-person -s / article use\",\n      \"correction\": \"minimal corrected version\",\n      \"explanation\": \"Friendly 1–2 sentence reason.\",\n      \"severity\": \"critical|major|minor|stylistic\",\n      \"recurring\": false,\n      \"video\": {\n        \"topic_tag\": \"articles\",\n        \"title\": \"Mastering A/An/The\",\n        \"url\": \"https://...\",\n        \"airtable_id\": \"recXXXX\"\n      }\n    }\n  ],\n  \"metrics\": {\n    \"total_issues\": 0,\n    \"omitted_issues\": 0,\n    \"errors_per_100_words\": 0.0,\n    \"category_counts\": {\n      \"grammar\": 0,\n      \"vocabulary\": 0,\n      \"spelling\": 0,\n      \"punctuation\": 0,\n      \"syntax\": 0,\n      \"register\": 0,\n      \"articles\": 0,\n      \"prepositions\": 0,\n      \"tenses\": 0,\n      \"agreement\": 0,\n      \"countability\": 0,\n      \"collocation\": 0,\n      \"capitalization\": 0,\n      \"consistency\": 0,\n      \"clarity\": 0\n    },\n    \"severity_counts\": { \"critical\": 0, \"major\": 0, \"minor\": 0, \"stylistic\": 0 },\n    \"unique_error_types\": 0,\n    \"recurring_error_tags\": [],\n    \"cefr_estimate\": \"A1|A2|B1|B2|C1|C2\",\n    \"cefr_confidence\": 0.0,\n    \"tone_observation\": \"informal|neutral|formal\",\n    \"us_uk_consistency\": \"consistent|mixed|unknown\",\n    \"spelling_variant\": \"US|UK|mixed|n/a\",\n    \"video_search_notes\": \"\",\n    \"feedback_note\": \"Short supportive note for the learner with explaining errors briefly in narrative style like a teacher.\"\n  },\n  \"final_output\":\"output corrected text \",\n  \"fallback\": {\n    \"notes\": \"Explain if video search failed or was broadened.\"\n  }\n}\n\n####Formatting rules\n  -Output must be valid JSON only (no markdown, no extra prose).\n  -Each explanation ≤2 sentences, friendly tone.\n  -Provide one best video per issue when available; otherwise set video to an empty object {} or null.\n  -Indices char_start/char_end refer to the original input string.\n  -Cap issues at 10; record extras in metrics.omitted_issues.\n  -Never fabricate URLs or IDs.\n  -Keep emojis in the input untouched; don’t flag usernames/links unless grammatically relevant.\n### 6) Stop conditions\n  -Stop after producing the single JSON object.\n  -Do not output chain-of-thought or tool logs.\n  -Do not rewrite the entire message—only corrections for flagged spans.\n  -Do not promise future actions or ask the user to wait.\n  -IF NO ISSUES, RETURN EMPTY \n\n###INFO:\n- today date is :{{ $now }}\n- YOUR OUTPUT MUST BE ONLY THE DEFINED JSON FORMAT. \n- DO CORRECTION ONLY WHERE MISTAKES HAPPENED,SO SUGESTING BETTER WORDS IS NOT NEEDED.JUST FOCUS ON GRAMMAR, LEXICAL,TONE, VOCABULARY and STRUCTURE.\n- AT ANY COST FOLLOW THE OUTPUT FORMAT ONLY, NEVER EVER CHANGE THE FORMAT."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        496,
+        -128
+      ],
+      "id": "8cc1fdcb-7522-43bb-a13d-1f4db8a37a49",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite-preview-06-17",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        224,
+        240
+      ],
+      "id": "2939fadf-89be-4558-9f18-f866848115d5",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6ATURFd9w4y7rmc3",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-20b",
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        416,
+        240
+      ],
+      "id": "46d2ca2c-b1c4-4b8c-b45b-b07f5dbbe338",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "x53SFKHZcY59sCZD",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Switch1').item.json.edited_message.from.id }}",
+        "collectionName": "english_group_chat_histories",
+        "databaseName": "N8N"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryMongoDbChat",
+      "typeVersion": 1,
+      "position": [
+        608,
+        240
+      ],
+      "id": "084c868c-f913-4765-8994-4d142105c3b0",
+      "name": "MongoDB Chat Memory",
+      "credentials": {
+        "mongoDb": {
+          "id": "TjJECcTfiWsg0LSX",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appOLDC931hTVYG3Y",
+          "mode": "list",
+          "cachedResultName": "Untitled Base",
+          "cachedResultUrl": "https://airtable.com/appOLDC931hTVYG3Y"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblnsn0VBVCPgk8ot",
+          "mode": "list",
+          "cachedResultName": "Table 1",
+          "cachedResultUrl": "https://airtable.com/appOLDC931hTVYG3Y/tblnsn0VBVCPgk8ot"
+        },
+        "filterByFormula": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Filter_By_Formula', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.1,
+      "position": [
+        784,
+        240
+      ],
+      "id": "fec52162-7841-458c-b3d0-5bf534f4da85",
+      "name": "Search records in Airtable",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "KdblZwE1WOsnQXi9",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = items.map(item => {\n  let raw = item.json.output || \"\";\n\n  // Remove ```json and ``` markers\n  let cleaned = raw.replace(/```json|```/g, \"\").trim();\n\n  // Parse into JSON\n  let parsed;\n  try {\n    parsed = JSON.parse(cleaned);\n  } catch (err) {\n    parsed = { error: \"Invalid JSON\", raw: cleaned };\n  }\n\n  return {\n    json: parsed\n  };\n});\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        -128
+      ],
+      "id": "48f995b0-3f93-45fc-b111-c4a03eac1462",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "collection": "users_chat_messages",
+        "fields": "=meta,issues,metrics,final_output,fallback",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        1488,
+        -144
+      ],
+      "id": "1d2b4392-ae85-46cb-9a44-cbfc9762c83a",
+      "name": "Insert documents",
+      "credentials": {
+        "mongoDb": {
+          "id": "TjJECcTfiWsg0LSX",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the JSON data from the previous node.\nconst inputData = items[0].json;\nconst data = Array.isArray(inputData) ? inputData[0] : inputData;\n\n\nif (!data || typeof data !== 'object' || !data.metrics) {\n  console.error(\"Input data is not in the expected format. Received:\", JSON.stringify(inputData));\n\n  return [{ json: { error: \"Invalid input data format.\" } }];\n}\n\n// --- 1. Build the Header ---\nlet message = `${data.metrics.feedback_note || 'Great job!'}\\n`;\n\n// --- 2. Add the Corrected Sentence ---\nmessage += `\\n✅ Corrected Sentence:\\n\\`${data.final_output}\\`\\n`;\nmessage += `------------------\\n`;\n\n// --- 3. Build the Detailed Breakdown of Issues ---\nmessage += `🔍 Breakdown of Corrections\\n\\n`;\nconst numberEmojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];\n\nif (data.issues && data.issues.length > 0) {\n  data.issues.forEach((issue, index) => {\n    const emoji = numberEmojis[index] || '•';\n    message += `${emoji} \\`${issue.span_text}\\` ➡️ \\`${issue.correction}\\`\\n`;\n    message += `   - Reason: ${issue.explanation}\\n\\n`;\n  });\n}\nmessage += `------------------\\n`;\n// --- 6. Return the final message ---\nreturn [{\n  json: {\n    formattedMessage: message,\n    correctSentence: data.final_output\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        -144
+      ],
+      "id": "0a25c948-c17a-4fae-891d-254d93d9f32a",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Switch1').item.json.message.chat.id }}",
+        "text": "={{ $json.formattedMessage }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML",
+          "reply_to_message_id": "={{ $('Switch1').item.json.message.message_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2624,
+        -144
+      ],
+      "id": "d0f9d661-7bb8-4866-972a-3ed7e33da265",
+      "name": "Send a text message",
+      "webhookId": "a0c04661-06d0-4838-839f-c82009cb4def",
+      "credentials": {
+        "telegramApi": {
+          "id": "PjIj2mWYeXABWsrx",
+          "name": "Jenny English Tutor"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3cc9f845-6a65-47b7-b242-5d5183428213",
+              "leftValue": "={{ $json.metrics.total_issues }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1136,
+        -128
+      ],
+      "id": "ffae1050-9968-4ff1-ba4b-280b913bd0d4",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "input": "={{ $json.correctSentence }}",
+        "voice": "nova",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        2048,
+        -144
+      ],
+      "id": "474272d4-8a8d-4459-b6e8-6318ec37c71c",
+      "name": "Generate audio",
+      "credentials": {
+        "openAiApi": {
+          "id": "Rj2xLGqmzzMXhFQv",
+          "name": "Capi"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAudio",
+        "chatId": "={{ $('Switch1').item.json.message.chat.id }}",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": "={{ $('Code3').item.json.formattedMessage }}",
+          "reply_to_message_id": "={{ $('Switch1').item.json.message.message_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2320,
+        -144
+      ],
+      "id": "d77a610b-fc71-448f-8f10-6a4cfb892d09",
+      "name": "Send an audio file",
+      "webhookId": "95c1b839-9ea8-4766-8c04-6301dc6bba87",
+      "credentials": {
+        "telegramApi": {
+          "id": "PjIj2mWYeXABWsrx",
+          "name": "Jenny English Tutor"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "edited_message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1312,
+        -144
+      ],
+      "id": "665802c3-7335-40b6-afd0-32518075526c",
+      "name": "Telegram Trigger",
+      "webhookId": "1f12c518-69c9-40a3-897b-49bf9baef0cf",
+      "credentials": {
+        "telegramApi": {
+          "id": "PjIj2mWYeXABWsrx",
+          "name": "Jenny English Tutor"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields5": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields6": {
+      "main": [
+        [
+          {
+            "node": "Send a text message4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search records in Airtable": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert documents": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "Generate audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Insert documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate audio": {
+      "main": [
+        [
+          {
+            "node": "Send an audio file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send an audio file": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 1,
+  "meta": null
+}

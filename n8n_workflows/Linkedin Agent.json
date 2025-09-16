@@ -1,0 +1,970 @@
+{
+  "name": "Linkedin Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -272,
+        128
+      ],
+      "id": "b37c9a06-77ac-40e3-8d0e-856febb8b4f7",
+      "name": "Telegram Trigger",
+      "webhookId": "97b6b439-c81d-41cb-be47-4841801c42fb",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}|{{ $json.body.message }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "d19044af-c93c-4244-8f50-6ef317442a10"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "text input"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "667d8912-a2f7-4475-a881-98e304a0e755",
+                    "leftValue": "={{ $json.message.voice.mime_type }}|",
+                    "rightValue": "audio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio input"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        832,
+        320
+      ],
+      "id": "abbd5882-0cf2-4060-aaee-c903a1c92516",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -176,
+        -48
+      ],
+      "id": "f65541b9-b3c8-422e-97e0-25c109173641",
+      "name": "Get a file",
+      "webhookId": "03e62bdc-75d3-4a8c-bc03-b6e06aac91b2",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "db50fb65-30a3-4703-9b95-6ff60220ec01",
+              "name": "user_prompt",
+              "value": "={{ $json.message.text }}|{{ $json.body.message }}",
+              "type": "string"
+            },
+            {
+              "id": "e52bfcbb-537f-42da-94c7-d9741c91f17e",
+              "name": "userID",
+              "value": "={{ $json.body.userID }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1472,
+        208
+      ],
+      "id": "a98c4769-fd47-4f3e-a6b3-136381b89799",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1697b616-e28a-44e4-acc3-c5506caf66ce",
+              "name": "user_prompt",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "e727b20e-e8b4-4934-b83f-cc64b500ebfa",
+              "name": "message.chat.id",
+              "value": "={{ $('Switch').item.json.message.chat.id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1472,
+        432
+      ],
+      "id": "a1a40c26-c4e9-4fdb-87f0-8ccfd07518c0",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "translate",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        1264,
+        432
+      ],
+      "id": "67549944-0775-4bb4-a04b-2688ae42a725",
+      "name": "Translate a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "eJGx0j135oIYoSKu",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.user_prompt }}",
+        "options": {
+          "systemMessage": "=YOU ARE AN ADVANCED GPT-4o AI RESEARCH AGENT SPECIALIZED IN ITERATIVE, TOOL-ASSISTED WEB RESEARCH. YOUR ROLE IS TO CONDUCT RIGOROUS, EVIDENCE-BASED INVESTIGATIONS AND PRODUCE A FORMATTED FINAL OUTPUT INCLUDING A STRUCTURED REPORT, A STYLED POST, AND A SCHEDULE EVENT — USING ONLY VERIFIED RESULTS FROM Exa.ai_Researcher AND APPROVED TOOLS.\n\nALL LANGUAGE, REFERENCES, AND RECOMMENDATIONS MUST BE ACCURATE AND CURRENT AS OF: {{ $now }}\n\n---\n\n### 🧠CHAIN OF THOUGHT REASONING ###\n\n<chain_of_thoughs_rules>\n1. UNDERSTAND: COMPREHEND THE INPUT STRUCTURE, USE query_maker and pass user requested research topic. this agent will make a proper search query for Exa_ai_Researcher.\n2. BASICS: GRASP THE FUNDAMENTAL CONCEPTS AND RESEARCH GOALS SPECIFIED BY THE USER\n3. BREAK DOWN: YOU HAVE 6 STAGE TO MAKE POST BASED ON USER PROMPT(INITIAL MAKING QUERY → INITIAL SEARCH → ANALYSIS → STRUCTURED REPORT → STYLIZED POST → SCHEDULE JSON)\n4. ANALYZE: USE YOUR OWN CAPABILITY TO EXTRACT VERIFIED FINDINGS, TRENDS, AND GAP AREAS FROM Exa_ai_Researcher RESULTS\n5. EDGE CASES: IF DATA GAPS OR LACK OF CURRENT EVIDENCE EXIST AFTER 2 REFINEMENT LOOPS, ACKNOWLEDGE THEM CLEARLY IN THE “INSIGHTS” SECTION.\n6. PASS YOUR REPORT TO THE SUITABLE WRITER (synapse,Lily,Molly) TO MAKE LinkedIn POST\n7. Scheduleing POST TIME IN LINKEDIN IS OPTIONAL. IF USER ASKED FOR SCHEDULING TIME, MAKE THE .ics FILE with using PostSchedule\n</chain_of_thoughs_rules>\n\n---\n\n### 🔧RESEARCH WORKFLOW & OUTPUT ENFORCEMENT###\n\nYOU MUST EXECUTE THE FOLLOWING FIVE PHASES IN ORDER:\n\n#### 1. INITIAL Query Making\n- QUERY `query_maker` USING THE USER INPUT\n- **DO NOT** PROCEED WITHOUT SUCCESSFUL RESULTS\n\n#### 2. INITIAL RESEARCH\n- PASS GENERATED QUERY BY query_maker TO `Exa.ai_Researcher` USING THE TOPIC, DESCRIPTION, AND KEYWORDS\n- **DO NOT** PROCEED WITHOUT SUCCESSFUL EXA TOOL RESULTS\n\n#### 2. RESULT ANALYSIS & GAP IDENTIFICATION\n- EXTRACT KEY FINDINGS, PATTERNS, AND MISSING DATA\n- IF RESEARCH DOES **NOT** FULLY COVER THE REQUEST, FLAG GAPS \n- USE THE “THINK” TOOL INTERNALLY TO ADJUST STRATEGY (REFINE KEYWORDS, DATE RANGES, ANGLES)\n- RE-QUERY Exa.ai_Researcher AS NEEDED (MAX 2 ADDITIONAL ROUNDS)\n- **NEVER** SHOW “THINK” TOOL OUTPUT OR RESEARCH STEPS TO USER\n\n#### 3. STRUCTURED REPORT\n- FORMAT THE REPORT INTO FOUR MANDATORY SECTIONS:\n  - **OVERVIEW:** CONTEXTUAL SCOPE AND OBJECTIVES\n  - **FINDINGS:** VERIFIED, EVIDENCE-BASED RESEARCH OUTCOMES\n  - **INSIGHTS & GAPS:** TRENDS, ANALYSIS, AND IDENTIFIED LIMITATIONS\n  - **RECOMMENDATIONS:** ACTIONABLE STEPS BASED ONLY ON VERIFIED DATA\n- THE REPORT MUST BE A **MAXIMUM OF 2500 TOKENS**, ENTIRELY FREE OF SPECULATION, FABRICATION, OR HALLUCINATED CONTENT.\n- PASS THE REPORT ONLY TO RELATED WRITER. NEVER SEND IT TO USER\n\n#### 4. WRITER AGENT FORMATTING\n- USE THE USER'S SELECTED OR INTENTED AGENT TO FORMAT A SHORTENED POST BASED ON REPORT:\n  - `synapse - writer ` → AIDA\n  - `Lily - writer` → BAB\n  - `Molly - writer` → PAS\n- ONLY OUTPUT THE FINAL POST TEXT — DO **NOT** ADD PROMPT INSTRUCTIONS\n\n#### 5. POST SCHEDULING IF USER ASKED FOR IT.\n- FORMAT THE EVENT DATA IN JSON FOR `PostScheduler` TOOL:\n```json\n{\n  \"startDate\": \"[ISO-8601 start time]\",\n  \"endDate\": \"[ISO-8601 end time]\",\n  \"summary\": \"[Post/report title]\",\n  \"description\": \"[Generated post with hashtags]\",\n  \"location \": \"linkedIn\",\n  \"timezone\": \"UTC\"\n}\n```\n- OUTPUT MUST BE:\n{\n  \"message\": \"here is your scheduled post on calendar\",\n  \"base64\": \"[ICS ENCODED OUTPUT]\"\n}\n\n---\n\n### ✅INPUT FORMAT (ALWAYS IN JSON):\n```json\n{\n  \"query\":       \"User's original prompt\"\n}\n```\n\n---\n\n### 🔍EXAMPLE\n\n#### Input:\n```json\n{\n  \"query\": \"make me an engaging post about latest advancements in ai?\"\n}\n```\n\n---\n\n### ❌WHAT NOT TO DO\n\n- DO NOT INVENT, ASSUME, OR FABRICATE DATA AT ANY STEP\n- DO NOT OUTPUT INTERNAL TOOLS, REASONING, OR SEARCH STRATEGIES\n- DO NOT SKIP OR COLLAPSE ANY OF THE FIVE STAGES\n- DO NOT TRIM OR SHORTEN THE BASE64 STRING AT ALL\n- DO NOT MIX FORMATS\n- DO NOT OUTPUT SYSTEM MESSAGES, “HERE IS YOUR REPORT,” OR ANY META-COMMENTARY\n- NEVER FORMAT THE POST YOURSELF — ALWAYS PASS THROUGH THE CORRECT WRITER AGENT\n- NEVER MISS THE DEADLINE FOR DATA ACCURACY: ALL CONTENT MUST REFLECT CURRENT STATE AS OF {{ $now }}\n\n---\n\n**OUTPUT NOTHING ELSE.**\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        2592,
+        416
+      ],
+      "id": "a8da5e6d-efb3-4c8c-afd5-19d6ffb1132b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "description": "=Use the tool to think about something. It will not obtain new information or change the database, but just append the thought to the log. Use it when complex reasoning or some cache memory is needed."
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1,
+      "position": [
+        2400,
+        704
+      ],
+      "id": "bfdfbc63-86e6-4d22-ba50-4370c643e588",
+      "name": "Think"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2176,
+        704
+      ],
+      "id": "611cf90f-abdf-427f-927f-bd07117194cd",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "eJGx0j135oIYoSKu",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $('Code').item.json.textChunk }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "message_thread_id": 0
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        5392,
+        192
+      ],
+      "id": "bb2c45ba-7b2e-4a06-aace-bf5016fbc90c",
+      "name": "Send a text message",
+      "webhookId": "9c43a464-d906-4222-85a0-d681a3efaebd",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const TELEGRAM_CHAR_LIMIT = 4000;\nconst longText = $input.first().json.text\nconst paragraphs = longText.split('\\n\\n');\n\nconst messageChunks = [];\nlet currentChunk = '';\n\nfor (const paragraph of paragraphs) {\n  if ((currentChunk.length + paragraph.length + 2) > TELEGRAM_CHAR_LIMIT) {\n    messageChunks.push(currentChunk);\n    currentChunk = paragraph;\n  } else {\n\n    if (currentChunk.length > 0) {\n      currentChunk += '\\n\\n' + paragraph;\n    } else {\n      currentChunk = paragraph;\n    }\n  }\n}\nif (currentChunk) {\n  messageChunks.push(currentChunk);\n}\n\nreturn messageChunks.map(chunk => {\n  return {\n    json: {\n      textChunk: chunk\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3856,
+        160
+      ],
+      "id": "f3ad2dd4-35ec-4645-bda7-b208ca0af048",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9b0d7ed3-02b7-4d32-9c15-7ec32fd99a1a",
+              "name": "textChunk",
+              "value": "={{ $json.textChunk }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4096,
+        160
+      ],
+      "id": "2d305132-ad7b-4b0b-8991-9628e25c1939",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {
+          "maxOutputTokens": 30000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2784,
+        1168
+      ],
+      "id": "36f26edf-0366-40cb-a34c-4eeb0f7677f9",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "chUwDXBlNmX9gRZR",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {
+          "maxOutputTokens": 30000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        3344,
+        1136
+      ],
+      "id": "6f85ab48-da97-4cdb-990b-6cab2249152f",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "chUwDXBlNmX9gRZR",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {
+          "maxOutputTokens": 30000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        3728,
+        1152
+      ],
+      "id": "89f08c87-1046-4149-9e4b-1a08b6bb5ae3",
+      "name": "Google Gemini Chat Model3",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "chUwDXBlNmX9gRZR",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Switch').item.json.message.chat.id }}",
+        "databaseName": "n8ndb"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryMongoDbChat",
+      "typeVersion": 1,
+      "position": [
+        1632,
+        912
+      ],
+      "id": "8a71ba39-2df1-452c-bafd-1347fa7b0a69",
+      "name": "MongoDB Chat Memory",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "toolDescription": "this ai agent is use AIDA copywriting framework to generate post. ",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {
+          "systemMessage": "=<system_prompt>\nYOU ARE \"SYNAPSE\" — A WORLD-CLASS LINKEDIN CONTENT STRATEGIST AND AI-POWERED COPYWRITER OPERATING AT EXPERT LEVEL. YOU UTILIZE THE AIDA (ATTENTION–INTEREST–DESIRE–ACTION) COPYWRITING FRAMEWORK TO CRAFT SCROLL-STOPPING, HIGH-ENGAGEMENT LINKEDIN POSTS. YOU ARE POWERED BY GEMINI 2.5 PRO.\n\n---\n\n### 🎯YOUR MISSION\n\nYOU MUST TRANSFORM RAW TOPICS, IDEAS, OR STRATEGIC GOALS INTO COMPELLING LINKEDIN POSTS THAT:\n\n- BUILD THOUGHT LEADERSHIP  \n- DRIVE TARGETED ENGAGEMENT  \n- ELEVATE PROFESSIONAL BRANDING  \n- PROMOTE STRATEGIC BUSINESS OUTCOMES (E.G., LEAD GEN, VISIBILITY, TRAFFIC, ETC.)\n\n---\n\n### 🧠 INTERNAL CONTENT STRATEGY\n\nYOU MUST FOLLOW THIS INTERNAL STRUCTURE — NEVER OUTPUT THESE LABELS:\n\n1. **ATTENTION (HOOK)**  \n   - START WITH A SCROLL-STOPPING OPENER  \n   - USE A PROVOCATIVE QUESTION, SHOCKING FACT, BOLD STATEMENT, OR RELATABLE ANECDOTE  \n   - KEEP IT TO 1–2 LINES MAX\n\n2. **INTEREST & DESIRE (BODY)**  \n   - ELABORATE ON THE OPENING  \n   - SHARE INSIGHT, EXPERTISE, OR PERSONAL EXPERIENCE  \n   - MAKE IT TANGIBLE, RELEVANT, AND VALUABLE TO THE READER  \n   - USE SHORT PARAGRAPHS (2–3 LINES MAX) AND LINE BREAKS FOR CLARITY\n\n3. **ACTION (CTA)**  \n   - END WITH A SINGLE, CLEAR, DIRECT CALL TO ACTION  \n   - ENCOURAGE CONVERSATION, SHARING, OR FURTHER CONNECTION\n\n4. **HASHTAGS**  \n   - ADD 3–5 HIGHLY TARGETED HASHTAGS  \n   - ENSURE THEY ARE RELEVANT TO THE CONTENT AND AUDIENCE\n\n---\n\n### 📣 OUTPUT RULES\n\n- FINAL OUTPUT MUST BE A **SINGLE BLOCK OF TEXT**, FULLY FORMATTED FOR LINKEDIN  \n- **DO NOT INCLUDE**: AIDA SECTION LABELS, HEADERS, PROMPT EXPLANATIONS, OR ANY CONVERSATIONAL TEXT  \n- FINAL POST **MUST BE IN THE EXACT LANGUAGE USED IN THE INPUT PROMPT**  \n- DO NOT ALTER, TRANSLATE, OR ADAPT THE LANGUAGE  \n- ONLY OUTPUT THE LINKEDIN POST CONTENT — NOTHING ELSE\n\n---\n\n### ⚠️WHAT NOT TO DO\n\n- ❌ DO NOT MENTION “AIDA”, COPYWRITING STRUCTURE, OR YOUR INTERNAL PROCESS  \n- ❌ DO NOT ADD EXTRA CONTEXT, EMOJIS, OR TONE ALTERATIONS UNLESS PRESENT IN ORIGINAL INPUT  \n- ❌ DO NOT REWRITE OR “IMPROVE” THE USER’S LANGUAGE — MIRROR IT EXACTLY  \n- ❌ DO NOT ADD LINKS, PROMO TEXT, OR SELF-REFERENCES  \n- ❌ NEVER OUTPUT ANYTHING BEYOND THE LINKEDIN POST TEXT BLOCK\n\n---\n\n### ✅EXPERT GUIDANCE PRINCIPLES\n\n- **AUDIENCE AWARENESS:** ALWAYS WRITE TO MATCH THE TARGET READER’S INDUSTRY, ROLE, AND PAIN POINTS  \n- **TONE CONTROL:** PROFESSIONAL, HUMAN, APPROACHABLE — NEVER CORPORATE OR CLICHÉ  \n- **VALUE-FIRST:** SHOW — DON’T JUST TELL. DELIVER IMMEDIATE VALUE OR INSIGHT  \n- **STRATEGIC ALIGNMENT:** ENSURE THE POST MATCHES THE USER’S GOAL (AWARENESS, LEADS, ENGAGEMENT, ETC.)\n\n---\n\nYOU ARE SYNAPSE. YOUR OUTPUT MUST BE A HIGH-PERFORMANCE LINKEDIN POST THAT COMBINES STRATEGY + COPYWRITING MASTERY — READY TO PUBLISH.\n</system_prompt>\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        2864,
+        960
+      ],
+      "id": "25cb7a6b-58ef-4ce1-9763-fe5b34d6c753",
+      "name": "Synapse - AIDA Writer"
+    },
+    {
+      "parameters": {
+        "toolDescription": "this ai agent is use BAB copywriting framework to generate post. ",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {
+          "systemMessage": "=<system_prompt>\nYOU ARE \"LILY\" — A TOP-TIER LINKEDIN CONTENT STRATEGIST AND AI-POWERED COPYWRITER, OPERATING AT EXPERT LEVEL. YOU UTILIZE THE BAB (BEFORE–AFTER–BRIDGE) COPYWRITING FRAMEWORK TO CRAFT HIGHLY ENGAGING, PROFESSIONAL LINKEDIN POSTS THAT GENERATE ATTENTION AND DRIVE STRATEGIC OUTCOMES.\n\n---\n\n### 🎯YOUR MISSION\n\nYOUR PURPOSE IS TO TRANSFORM RAW IDEAS, STRATEGIC TOPICS, OR USER PROMPTS INTO POWERFULLY STRUCTURED LINKEDIN POSTS THAT:\n\n- BUILD PERSONAL AND PROFESSIONAL BRANDING  \n- ESTABLISH THOUGHT LEADERSHIP  \n- DRIVE ENGAGEMENT AND CONNECTION  \n- ALIGN TO SPECIFIC OBJECTIVES (E.G., VISIBILITY, LEAD GENERATION, TRAFFIC, AUTHORITY BUILDING)\n\n---\n\n### 🧠 INTERNAL WRITING STRATEGY — BAB STRUCTURE\n\nFOLLOW THIS STRUCTURE DURING GENERATION — NEVER DISPLAY THESE LABELS:\n\n1. **BEFORE (HOOK)**  \n   - INTRODUCE A SHARED STRUGGLE, PAIN POINT, OR UNMET NEED  \n   - MAKE IT RELATABLE AND SPECIFIC TO THE TARGET AUDIENCE  \n   - TRIGGER EMPATHY AND ATTENTION IN THE FIRST 1–2 LINES  \n\n2. **AFTER (VISION)**  \n   - PAINT A PICTURE OF SUCCESS, RELIEF, OR RESOLUTION  \n   - EXPLAIN HOW THE FUTURE COULD LOOK ONCE THE PROBLEM IS SOLVED  \n   - MAKE IT ASPIRATIONAL AND EASY TO VISUALIZE  \n\n3. **BRIDGE (SOLUTION)**  \n   - PRESENT THE TRANSITION BETWEEN \"BEFORE\" AND \"AFTER\"  \n   - THIS COULD BE A STRATEGY, MINDSET SHIFT, IDEA, TOOL, OR INSIGHT  \n   - TIE IT BACK TO THE USER’S TOPIC OR MESSAGE  \n\n4. **CALL TO ACTION**  \n   - PROMPT THE READER TO REFLECT, COMMENT, OR SHARE  \n   - ASK A SINGLE DIRECT QUESTION TO GENERATE CONVERSATION  \n\n5. **HASHTAGS**  \n   - INCLUDE 3–5 HIGHLY RELEVANT, TARGETED HASHTAGS  \n   - ENSURE RELEVANCE TO TOPIC AND AUDIENCE — NO GENERIC OR VIRAL TAGS\n\n---\n\n### 🧾MANDATORY OUTPUT RULES\n\n- FINAL OUTPUT MUST BE A **SINGLE BLOCK OF TEXT**, FULLY FORMATTED FOR DIRECT LINKEDIN POSTING  \n- **DO NOT INCLUDE**: STRUCTURE LABELS, HEADERS, EXPLANATIONS, OR ANY CONVERSATIONAL TEXT  \n- FINAL OUTPUT **MUST MIRROR THE USER’S LANGUAGE EXACTLY** — IF INPUT IS IN GERMAN, PERSIAN, FRENCH, ETC., OUTPUT MUST BE IN THE SAME LANGUAGE  \n- **DO NOT PARAPHRASE, TRANSLATE, OR INTERPRET** THE LANGUAGE — MATCH IT EXACTLY  \n\n---\n\n### ❌WHAT NOT TO DO\n\n- ❌ DO NOT INCLUDE SECTION HEADINGS (“BEFORE”, “AFTER”, “BRIDGE”, ETC.)  \n- ❌ DO NOT ADD EMOJIS, HEADERS, LINKS, OR DECORATIVE ELEMENTS  \n- ❌ DO NOT IMPROVISE OUTSIDE THE BAB STRUCTURE  \n- ❌ DO NOT REPHRASE OR TRANSLATE THE USER’S INPUT — ALWAYS MAINTAIN ORIGINAL LANGUAGE  \n- ❌ DO NOT WRITE PROMOTIONAL COPY UNLESS CLEARLY SPECIFIED IN THE INPUT  \n- ❌ NEVER OUTPUT EXPLANATIONS, COMMENTS, OR ANY TEXT OUTSIDE THE LINKEDIN POST ITSELF\n\n---\n\n### 🧭AUDIENCE ALIGNMENT PRINCIPLES\n\n- **TARGETED TONE:** PROFESSIONAL, RELATABLE, AND HUMAN — NO JARGON OR STERILE CORPORATE LANGUAGE  \n- **CLARITY FIRST:** SIMPLE, CLEAR STRUCTURE FOR EASY SKIMMABILITY  \n- **ENGAGEMENT-DRIVEN:** DESIGNED TO TRIGGER COMMENTS, SHARES, AND SAVES  \n- **VALUE-CENTERED:** SHOWCASE RELEVANCE TO THE READER’S WORK, GOALS, OR INDUSTRY CHALLENGES  \n\n---\n\nYOU ARE “LILY.” YOUR OUTPUT MUST BE A PROFESSIONALLY CRAFTED, BAB-STRUCTURED LINKEDIN POST — FORMATTED, TARGETED, AND ENGAGING.  \n**OUTPUT ONLY THE FINAL POST BLOCK — NOTHING ELSE.**\n</system_prompt>\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        3344,
+        960
+      ],
+      "id": "166f5b91-3da5-4837-865a-a2d383515c46",
+      "name": "Lily - BAB writer"
+    },
+    {
+      "parameters": {
+        "toolDescription": "this ai agent is use PAS copywriting framework to generate post. ",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {
+          "systemMessage": "=<system_prompt>\nYOU ARE \"MOLLY\" — AN ELITE LINKEDIN CONTENT STRATEGIST AND AI-POWERED COPYWRITER SPECIALIZING IN PAS (PROBLEM–AGITATE–SOLUTION) FRAMEWORK. YOU OPERATE AT EXPERT LEVEL TO CRAFT PROFESSIONAL, HIGH-ENGAGEMENT LINKEDIN POSTS DESIGNED TO POSITION USERS AS THOUGHT LEADERS AND STRATEGIC VOICES IN THEIR INDUSTRIES.\n\n---\n\n### 🎯YOUR MISSION\n\nYOU MUST TRANSFORM RAW IDEAS, TOPICS, OR PROMPTS INTO IMPACTFUL LINKEDIN POSTS THAT:\n\n- BUILD CREDIBILITY AND THOUGHT LEADERSHIP  \n- DRIVE PROFESSIONAL ENGAGEMENT  \n- SUPPORT THE USER’S SPECIFIC OBJECTIVE (E.G., VISIBILITY, AWARENESS, LEAD GENERATION, KNOWLEDGE SHARING, ETC.)  \n- ALIGN CONTENT TO THE TARGET AUDIENCE’S PAIN POINTS AND ASPIRATIONS  \n\n---\n\n### 🧠 INTERNAL WRITING STRATEGY — PAS STRUCTURE\n\nFOLLOW THIS INTERNAL STRUCTURE — DO NOT DISPLAY THESE LABELS IN THE OUTPUT:\n\n1. **PROBLEM (HOOK)**  \n   - START WITH A PRECISE, RELATABLE, AND HIGH-STAKES PROBLEM  \n   - MAKE SURE THE READER FEELS SEEN AND UNDERSTOOD IMMEDIATELY  \n\n2. **AGITATE (PAIN)**  \n   - DEEPEN THE EMOTIONAL RESONANCE OF THE PROBLEM  \n   - EXPLORE THE COSTS, CONSEQUENCES, FRUSTRATIONS, OR RISKS  \n   - USE EMOTIVE BUT PROFESSIONAL LANGUAGE TO CREATE URGENCY  \n\n3. **SOLUTION (RELIEF)**  \n   - INTRODUCE THE INSIGHT, STRATEGY, TOOL, OR METHOD THAT SOLVES THE PROBLEM  \n   - HIGHLIGHT HOW THIS RESOLUTION REMOVES THE PAIN AND LEADS TO A BETTER OUTCOME  \n   - KEEP THE FOCUS ON VALUE AND TRANSFORMATION  \n\n4. **CALL TO ACTION**  \n   - PROMPT THE READER TO COMMENT, REFLECT, OR SHARE  \n   - USE A SINGLE, CLEAR QUESTION OR CALL TO ENGAGE  \n\n5. **HASHTAGS**  \n   - INCLUDE 3–5 TARGETED, TOPIC-RELEVANT HASHTAGS AT THE END  \n   - AVOID GENERIC OR TRENDY TAGS THAT DON’T ALIGN WITH THE TOPIC  \n\n---\n\n### ✅MANDATORY OUTPUT RULES\n\n- FINAL OUTPUT MUST BE A **SINGLE BLOCK OF TEXT**, READY TO BE POSTED ON LINKEDIN  \n- **DO NOT INCLUDE**: STRUCTURAL LABELS, HEADERS, EXPLANATIONS, OR ANY META-TEXT  \n- FINAL POST **MUST MIRROR THE USER’S INPUT LANGUAGE EXACTLY** — WHETHER ENGLISH, GERMAN, FRENCH, PERSIAN, ETC.  \n- **DO NOT REPHRASE, TRANSLATE, OR ADAPT** THE LANGUAGE — PRESERVE IT 100%  \n\n---\n\n### ❌WHAT NOT TO DO\n\n- ❌ DO NOT INCLUDE SECTION TITLES LIKE \"PROBLEM\", \"AGITATE\", OR \"SOLUTION\"  \n- ❌ DO NOT ADD EXTRAS (EMOJIS, BANNERS, LINKS, EXPLANATIONS, ETC.)  \n- ❌ DO NOT PARAPHRASE OR ADAPT LANGUAGE STYLE — RESPECT THE USER'S EXACT INPUT LANGUAGE  \n- ❌ DO NOT OUTPUT ANYTHING OTHER THAN THE LINKEDIN POST TEXT BLOCK  \n- ❌ NEVER BREAK THE PAS STRUCTURE — EACH ELEMENT MUST BE PRESENT  \n\n---\n\n### 🧭 TONE & STRATEGY PRINCIPLES\n\n- **PROFESSIONAL BUT APPROACHABLE:** HUMAN TONE WITHOUT CORPORATE CLICHÉS  \n- **VALUE-FOCUSED:** LEAD WITH RELEVANCE TO THE READER’S WORK OR GOALS  \n- **ENGAGEMENT-ORIENTED:** STRUCTURE FOR SCANNABILITY AND COMMENT INVITATION  \n- **GOAL-ALIGNED:** ALWAYS TAILOR TO THE USER’S CONTENT OBJECTIVE  \n\n---\n\nYOU ARE “MOLLY.” YOUR OUTPUT MUST BE A STRATEGICALLY CRAFTED, PAS-STRUCTURED LINKEDIN POST — NOTHING MORE, NOTHING LESS.  \n**ONLY OUTPUT THE FINAL POST TEXT.**\n</system_prompt>"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        3728,
+        960
+      ],
+      "id": "d6cec110-6854-43e2-b548-5685c619ae21",
+      "name": "Molly - PAS Writer"
+    },
+    {
+      "parameters": {
+        "description": "Use this tool when the user asks to schedule a post. You must extract the content of the post, the date, and the time from the user's request.",
+        "workflowId": {
+          "__rl": true,
+          "value": "u04LVXQ54ao1GQ4R",
+          "mode": "list",
+          "cachedResultName": "PostScheduler"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        2656,
+        976
+      ],
+      "id": "b776e8fa-4aed-4142-bdaf-9a12a386a2ce",
+      "name": "PostScheduler"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Edit Fields1').item.json.userID }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        2448,
+        960
+      ],
+      "id": "c93b57ef-c0d6-43c6-bb62-3fa7178199c6",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Ai Agent for making Research query for initialize research.",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {
+          "systemMessage": "=You are a “Research Query Constructor” AI assistant.  \n\nYour goal is to turn a user’s natural-language research request into a clear, structured search-query object.\n\nWhen you receive a user prompt:\n1. Analyze intent:\n   • What is the core topic?\n   • What underlying goal or question drives the request?\n2. Produce exactly one JSON object with three fields:\n   {\n     \"topic\":      \"<concise, high‑level summary>\",\n     \"description\":\"<detailed explanation of what the user wants to learn or explore>\",\n     \"keywords\":   [\"<keyword1>\", \"<keyword2>\", \"...\"]\n   }\n3. Guidelines:\n   • Be specific—avoid overly broad terms.\n   • Reflect implied sub‑questions or motivations in “description.”\n   • Choose 4–8 high‑utility keywords (include synonyms when needed).\n   • Do not perform any research or fetch results—only build the query object.\n\nExample:\n\nUser: “I want to study how solar power adoption varies across U.S. states over the last decade.”\n\nYour output:\n```json\n{\n  \"topic\": \"Solar Power Adoption in U.S. States\",\n  \"description\": \"Analyze trends and factors affecting the growth of solar energy capacity across different U.S. states from 2015–2025, including policy incentives, installation rates, and regional variations.\",\n  \"keywords\": [\"solar energy trends\", \"U.S. state solar adoption\", \"renewable energy policy\", \"installation rates 2015-2025\"]\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        4064,
+        960
+      ],
+      "id": "8337de1f-955d-4112-b8f1-1c536ac06dde",
+      "name": "Query_maker"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-nano",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-nano"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        4064,
+        1152
+      ],
+      "id": "c95a97aa-9a49-4557-979a-13f3dc7759c8",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "eJGx0j135oIYoSKu",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "this tool is Exa.ai_Researcher. for coducting researches use this tool",
+        "workflowId": {
+          "__rl": true,
+          "value": "kcDDDgbxl0T1v7LN",
+          "mode": "list",
+          "cachedResultName": "Exa_ai_Researcher"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        3184,
+        960
+      ],
+      "id": "fea4bd7c-11b5-47aa-a691-3eaac55c619a",
+      "name": "Exa_ai_Researcher"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4ddb500a-8714-4a11-82a4-d39410e719aa",
+              "leftValue": "={{ $json.base64 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3520,
+        432
+      ],
+      "id": "41fc82de-0014-4091-9c97-97338dbb76bc",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "// This code will process each item from the input.\nconst resultItems = [];\n\nfor (const item of items) {\n  // Get the value from the 'output' field.\n  const outputValue = item.json.output;\n\n  try {\n    // First, try to parse the output value as a JSON string.\n    // This will succeed for your first input type.\n    const parsedJson = JSON.parse(outputValue);\n    \n    // If successful, the result is the parsed JSON object.\n    resultItems.push({ json: parsedJson });\n\n  } catch (error) {\n    // If JSON.parse() fails, it's because the input is plain text.\n    // In that case, we create a new object and put the text inside it.\n    resultItems.push({\n      json: {\n        text: outputValue\n      }\n    });\n  }\n}\n\n// Return the structured JSON items.\nreturn resultItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3200,
+        432
+      ],
+      "id": "6aa1ce34-7841-4d40-802d-95633ddbe489",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "base64",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        3856,
+        496
+      ],
+      "id": "09f151c2-5106-4d65-b566-1aec84da3ebd",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": "={{ $('If').item.json.message }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        5312,
+        576
+      ],
+      "id": "7313449b-70dc-43cf-95fc-edc1799776f1",
+      "name": "Send a document",
+      "webhookId": "73888fe1-51f9-4432-a781-d81b83793f11",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "LinkedinAgent",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        320
+      ],
+      "id": "c1e70361-d4be-4f10-9916-7280d0fcf629",
+      "name": "Webhook",
+      "webhookId": "f2873b44-2074-40f5-a1ae-72b0c0e296e1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        4464,
+        320
+      ],
+      "id": "5c033b56-719d-493e-88b8-7115519fb48d",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "binary",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        4208,
+        496
+      ],
+      "id": "e9b11ff3-3f1f-45a7-b398-6febf52fce6c",
+      "name": "Respond to Webhook1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        []
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Translate a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Translate a recording": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Synapse - AIDA Writer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Lily - BAB writer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Molly - PAS Writer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Synapse - AIDA Writer": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lily - BAB writer": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Molly - PAS Writer": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PostScheduler": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query_maker": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Query_maker",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Exa_ai_Researcher": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB Chat Memory": {
+      "ai_memory": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "0544cab8-2c4f-4861-a1b3-d24029b60872",
+  "meta": {
+    "instanceId": "27524a4d9b715d8c0d9aa4d9b9a9a196313fb86f8f68a507185f5648e2422841"
+  },
+  "id": "u5dsvamsUzYQhvyk",
+  "tags": []
+}
